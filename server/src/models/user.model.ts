@@ -1,4 +1,14 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
+
+export interface IUser extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  password: string;
+  role: "candidate" | "recruiter" | "admin";
+  isVerified: boolean;
+  isActive: boolean;
+}
 
 const userSchema = new Schema(
   {
@@ -17,11 +27,12 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["candidate", "company", "admin"],
+      enum: ["candidate", "recruiter", "admin"],
     },
     isVerified: {
       type: Boolean,
       default: false,
+      required: true,
     },
     isActive: {
       type: Boolean,
@@ -33,5 +44,5 @@ const userSchema = new Schema(
   },
 );
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model<IUser>("User", userSchema);
 export default User;
