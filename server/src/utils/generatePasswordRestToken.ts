@@ -2,19 +2,19 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 dotenv.config();
 
-export const generateAccessToken = (userId: string, role: string): string => {
-  const secret = process.env.ACCESS_TOKEN_SECRET;
+export const generatePasswordResetToken = (userId: string): string => {
+  const secret = process.env.PASSWORD_RESET_TOKEN_SECRET;
   if (!secret) {
     throw new Error("JWT environment variables are missing");
   }
   return jwt.sign(
     {
       userId,
-      role,
+      purpose: "reset-password",
     },
     secret,
     {
-      expiresIn: "55m",
+      expiresIn: "15m",
     },
   );
 };

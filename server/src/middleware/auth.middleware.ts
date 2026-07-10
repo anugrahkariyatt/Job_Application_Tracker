@@ -34,8 +34,14 @@ export const authenticate = async (
     if (user.isActive === false) {
       return next(new AppError("Account is disabled", 403));
     }
+    console.log("User", req.user);
 
-    req.user = user;
+    req.user = {
+      id: user._id.toString(),
+      role: user.role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+    };
     next();
   } catch (error) {
     next(error);
