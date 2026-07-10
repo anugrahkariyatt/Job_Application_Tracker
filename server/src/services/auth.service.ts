@@ -23,7 +23,7 @@ export const registerUser = async (data: RegisterInput) => {
   if (existingUser) {
     throw new AppError("Email already exists", 409);
   }
-  const hashedPassword = await data.password;
+  const hashedPassword = await hashValue(data.password);
 
   const user = await User.create({
     name: data.name,
@@ -41,9 +41,11 @@ export const registerUser = async (data: RegisterInput) => {
 };
 
 export const loginUser = async (data: LoginInput) => {
+
   const user = await User.findOne({
     email: data.email,
   });
+
   if (!user) {
     throw new AppError("Invalid email or password", 401);
   }
@@ -52,6 +54,7 @@ export const loginUser = async (data: LoginInput) => {
   }
 
   const isPasswordValid = await compareValue(data.password, user.password);
+
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
   }
@@ -142,7 +145,6 @@ export const logoutUser = async (refreshToken: string) => {
 };
 export const verifyUserPassword = async (password: string, userId: string) => {
   const user = await User.findById(userId);
-  console.log(">>>>>>>>>user", user);
   const hashedPassword = user.password;
   const isPasswordValid = await compareValue(password, hashedPassword);
   if (!isPasswordValid) {
@@ -157,7 +159,6 @@ export const verifyUserPassword = async (password: string, userId: string) => {
 
 export const updateUserPassword = async (password: string, token: string) => {
   const isValidpasswordtoken = await verifyPasswordVerificationToken(token);
-  console.log("Is", isValidpasswordtoken);
 
   if (!isValidpasswordtoken) {
     throw new AppError("Invalid password verifcation token", 401);

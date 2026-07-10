@@ -58,6 +58,7 @@ export const login = async (
         errors: z.flattenError(validation.error),
       });
     }
+
     const result = await loginUser(validation.data);
 
     res.cookie("refreshToken", result.refreshToken, {
