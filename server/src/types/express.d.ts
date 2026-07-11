@@ -1,9 +1,14 @@
-import { IUser } from "../models/user.model.js";
-
 declare global {
   namespace Express {
+    interface AuthUser {
+      id: string;
+      role: "candidate" | "recruiter" | "admin";
+      isVerified: boolean;
+      isActive: boolean;
+    }
+
     interface Request {
-      user?: IUser;
+      user?: AuthUser;
     }
   }
 }
