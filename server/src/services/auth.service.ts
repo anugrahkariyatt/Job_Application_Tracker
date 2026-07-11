@@ -4,7 +4,7 @@ import { generateAccessToken } from "../utils/generateAccessToken.js";
 import { generateRefreshToken } from "../utils/generateRefreshToken.js";
 import { compareValue, hashValue } from "../utils/bcrypt.js";
 import { LoginInput, RegisterInput } from "../validations/auth.validation.js";
-import RefreshToken from "../models/RefreshToken.js";
+import RefreshToken from "../models/refreshToken.model.js";
 import { verifyRefreshToken } from "../utils/verifyRefreshToken.js";
 import { generatePasswordVerificationToken } from "../utils/generatePasswordVerificationToken.js";
 import { verifyPasswordVerificationToken } from "../utils/verifyPasswordVerificationToken.js";
