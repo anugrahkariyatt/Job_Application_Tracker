@@ -153,7 +153,7 @@ export const verifyPassword = async (
 
     const { password } = validation.data;
 
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     const verificationToken = await verifyUserPassword(password, userId);
 
