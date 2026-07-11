@@ -18,10 +18,6 @@ router.patch(
   "/logo",
   authenticate,
   authorize("recruiter"),
-  (req, res, next) => {
-    console.log("Content-Type:", req.headers["content-type"]);
-    next();
-  },
   upload.single("logo"),
   updateLogo,
 );
@@ -29,10 +25,6 @@ router.patch(
   "/cover-image",
   authenticate,
   authorize("recruiter"),
-  (req, res, next) => {
-    console.log("Content-Type:", req.headers["content-type"]);
-    next();
-  },
   upload.single("coverImage"),
   updateCoverImage,
 );
