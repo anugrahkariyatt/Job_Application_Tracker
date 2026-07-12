@@ -7,6 +7,7 @@ import {
   getJobByIdController,
   getMyJobsController,
   updateJobController,
+  updateJobStatusController,
 } from "../controllers/job.controller.js";
 
 const router = Router();
@@ -35,5 +36,12 @@ router.delete(
 );
 
 router.get("/:jobId", getJobByIdController);
+
+router.patch(
+  "/:jobId/status",
+  authenticate,
+  authorize("recruiter"),
+  updateJobStatusController,
+);
 
 export default router;

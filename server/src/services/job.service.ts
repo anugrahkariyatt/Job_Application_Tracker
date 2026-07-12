@@ -4,6 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   CreateJobInput,
   UpdateJobInput,
+  UpdateJobStatusInput,
 } from "../validations/jobs.validation.js";
 
 export const createJob = async (ownerId: string, data: CreateJobInput) => {
@@ -101,4 +102,36 @@ export const deleteJob = async (ownerId: string, jobId: string) => {
   await job.deleteOne();
 
   return;
+};
+
+export const updateJobStatus = async (
+  ownerId: string,
+  jobId: string,
+  status: UpdateJobStatusInput["status"],
+) => {
+  const company = await Company.findOne({ ownerId });
+
+  if (!company) {
+    throw new AppError("Company not found", 404);
+  }
+
+  const job = await Job.findById(jobId);
+
+  if (!job) {
+    throw new AppError("Job not found", 404);
+  }
+
+  if (job.companyId.toString() !== company._id.toString()) {
+    throw new AppError("You are not authorized to update this job", 403);
+  }
+
+  if (job.status === status) {
+    throw new AppError(`Job is already ${status.toLowerCase()}`, 400);
+  }
+
+  job.status = status;
+
+  await job.save();
+
+  return job;
 };

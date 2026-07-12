@@ -131,5 +131,9 @@ export const updateJobSchema = z
     },
   );
 
+export const updateJobStatusSchema = z.object({
+  status: z.enum(["Open", "Closed"]),
+});
+export type UpdateJobStatusInput = z.infer<typeof updateJobStatusSchema>;
 export type UpdateJobInput = z.infer<typeof updateJobSchema>;
 export type CreateJobInput = z.infer<typeof createJobSchema>;

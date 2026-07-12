@@ -3,6 +3,7 @@ import {
   createJobSchema,
   getJobSchema,
   updateJobSchema,
+  updateJobStatusSchema,
 } from "../validations/jobs.validation.js";
 import {
   createJob,
@@ -10,6 +11,7 @@ import {
   getJobById,
   getMyJobs,
   updateJob,
+  updateJobStatus,
 } from "../services/job.service.js";
 import z from "zod";
 
@@ -136,6 +138,43 @@ export const deleteJobController = async (
     return res.status(200).json({
       success: true,
       message: "Job deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateJobStatusController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const validation = updateJobStatusSchema.safeParse(req.body);
+    const paramsValidation = getJobSchema.safeParse(req.params);
+    if (paramsValidation.error) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
+    const result = await updateJobStatus(
+      req.user!.id,
+      paramsValidation.data.jobId,
+      validation.data.status,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Job status updated successfully",
+      data: result,
     });
   } catch (error) {
     next(error);
