@@ -9,9 +9,10 @@ export const errorHandler = (
   next: NextFunction,
 ) => {
   if (err instanceof multer.MulterError) {
+    console.error("<<<<<<[MulterError]>>>>>>", err);
+
     if (err.code === "LIMIT_FILE_SIZE") {
       console.error("<<<<<<[MulterError]>>>>>>", err);
-
       return res.status(400).json({
         success: false,
         message: "Image is too large. Maximum allowed size is 2MB.",

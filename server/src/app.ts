@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
-import healthRoutes from "./routes/health.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import companyRoutes from "./routes/company.routes.js";
 import jobRoutes from "./routes/job.routes.js";
+import candidateRoutes from "./routes/candidate.route.js";
 
 const app = express();
 
@@ -26,6 +26,9 @@ app.use(cookieParser());
 app.use("/api/company", companyRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
+
+//job seeker
+app.use("/api/candidate", candidateRoutes);
 
 // error handler middleware
 app.use(errorHandler);

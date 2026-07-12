@@ -34,7 +34,6 @@ export const authenticate = async (
     if (user.isActive === false) {
       return next(new AppError("Account is disabled", 403));
     }
-    console.log("User", req.user);
 
     req.user = {
       id: user._id.toString(),
@@ -42,6 +41,8 @@ export const authenticate = async (
       isVerified: user.isVerified,
       isActive: user.isActive,
     };
+    console.log(req.user);
+
     next();
   } catch (error) {
     next(error);
