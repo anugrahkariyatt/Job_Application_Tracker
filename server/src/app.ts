@@ -10,6 +10,7 @@ import candidateRoutes from "./routes/candidate.route.js";
 import skillRoutes from "./routes/skill.routes.js";
 import educationRoutes from "./routes/education.routes.js";
 import experienceRoutes from "./routes/experience.route.js";
+import applicationRoutes from "./routes/application.route.js";
 
 const app = express();
 
@@ -35,6 +36,9 @@ app.use("/api/candidate", candidateRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/education", educationRoutes);
 app.use("/api/experience", experienceRoutes);
+
+//for both
+app.use("/api/application", applicationRoutes);
 // error handler middleware
 app.use(errorHandler);
 

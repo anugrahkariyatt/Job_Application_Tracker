@@ -14,7 +14,7 @@ export const generateAccessToken = (userId: string, role: string): string => {
     },
     secret,
     {
-      expiresIn: "55m",
+      expiresIn: "3h",
     },
   );
 };
