@@ -11,7 +11,7 @@ import skillRoutes from "./routes/skill.routes.js";
 import educationRoutes from "./routes/education.routes.js";
 import experienceRoutes from "./routes/experience.route.js";
 import applicationRoutes from "./routes/application.route.js";
-
+import subscriptionRoutes from "./routes/subscription.route.js";
 const app = express();
 
 app.use(
@@ -39,6 +39,8 @@ app.use("/api/experience", experienceRoutes);
 
 //for both
 app.use("/api/application", applicationRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+
 // error handler middleware
 app.use(errorHandler);
 
