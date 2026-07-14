@@ -13,6 +13,7 @@ import experienceRoutes from "./routes/experience.route.js";
 import applicationRoutes from "./routes/application.route.js";
 import subscriptionRoutes from "./routes/subscription.route.js";
 import jobAlertRoutes from "./routes/jobAlert.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 const app = express();
 
 app.use(
@@ -41,7 +42,7 @@ app.use("/api/job-alerts", jobAlertRoutes);
 //for both
 app.use("/api/application", applicationRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
-
+app.use("/api/notifications", notificationRoutes);
 // error handler middleware
 app.use(errorHandler);
 
