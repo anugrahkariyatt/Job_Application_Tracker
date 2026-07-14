@@ -5,6 +5,7 @@ import Job from "../models/job.model.js";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { IApplication } from "../models/application.model.js";
+import { createNotification } from "./notification.service.js";
 
 export const applyForJob = async (userId: string, jobId: string) => {
   const user = await User.findById(userId);
@@ -124,5 +125,47 @@ export const updateApplicationStatus = async (
   }
   application.status = status;
   await application.save();
-  return;
+
+  const candidate = await Candidate.findById(application.candidateId);
+
+  if (!candidate) {
+    throw new AppError("Candidate profile not found", 404);
+  }
+  
+  let title = "";
+  let message = "";
+
+  switch (status) {
+    case "Applied":
+      title = "Application Received";
+      message = "Your application has been received.";
+      break;
+
+    case "Under Review":
+      title = "Application Under Review";
+      message = "Your application is now under review.";
+      break;
+
+    case "Shortlisted":
+      title = "Application Shortlisted";
+      message = "Congratulations! You have been shortlisted.";
+      break;
+
+    case "Rejected":
+      title = "Application Rejected";
+      message = "Unfortunately, your application was not selected.";
+      break;
+
+    case "Hired":
+      title = "Congratulations!";
+      message = "Congratulations! You have been hired.";
+      break;
+  }
+  await createNotification(
+    candidate.userId.toString(),
+    title,
+    message,
+    "APPLICATION",
+  );
+  return application;
 };

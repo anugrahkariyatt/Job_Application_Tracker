@@ -2,10 +2,8 @@ import User from "../models/user.model.js";
 import Candidate from "../models/candidate.model.js";
 import CompanyProfile from "../models/company.model.js";
 import Job from "../models/job.model.js";
-import Application from "../models/application.model.js";
-import Subscription from "../models/subscription.model.js";
-import JobAlert from "../models/jobAlert.model.js";
 import { AppError } from "../utils/AppError.js";
+import { createNotification } from "./notification.service.js";
 
 export const getDashboard = async () => {
   const totalUsers = await User.countDocuments();
@@ -91,6 +89,25 @@ export const updateCompanyVerification = async (
   company.verified = verified;
 
   await company.save();
+  let title = "";
+  let message = "";
+
+  if (verified) {
+    title = "Company Verified";
+    message =
+      "Congratulations! Your company profile has been verified. You can now continue using all company features.";
+  } else {
+    title = "Company Verification Removed";
+    message =
+      "Your company verification has been removed. Please contact support if you believe this is a mistake.";
+  }
+
+  await createNotification(
+    company.ownerId.toString(),
+    title,
+    message,
+    "SYSTEM",
+  );
 
   return company;
 };
@@ -115,6 +132,28 @@ export const updateCompanyStatus = async (
   company.isActive = isActive;
 
   await company.save();
+
+  let title = "";
+  let message = "";
+
+  if (isActive) {
+    title = "Company Account Reactivated";
+    message =
+      "Your company account has been reactivated. You can now access all company features.";
+  } else {
+    title = "Company Account Suspended";
+    message =
+      "Your company account has been suspended. You cannot post or manage jobs until your account is reactivated.";
+  }
+
+  await createNotification(
+    company.ownerId.toString(),
+    title,
+    message,
+    "SYSTEM",
+  );
+
+  return company;
 
   return company;
 };
