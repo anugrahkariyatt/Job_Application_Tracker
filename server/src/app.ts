@@ -12,6 +12,7 @@ import educationRoutes from "./routes/education.routes.js";
 import experienceRoutes from "./routes/experience.route.js";
 import applicationRoutes from "./routes/application.route.js";
 import subscriptionRoutes from "./routes/subscription.route.js";
+import jobAlertRoutes from "./routes/jobAlert.route.js";
 const app = express();
 
 app.use(
@@ -36,7 +37,7 @@ app.use("/api/candidate", candidateRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/education", educationRoutes);
 app.use("/api/experience", experienceRoutes);
-
+app.use("/api/job-alerts", jobAlertRoutes);
 //for both
 app.use("/api/application", applicationRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
