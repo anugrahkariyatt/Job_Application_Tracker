@@ -9,17 +9,10 @@ export const authenticate = async (
   next: NextFunction,
 ) => {
   try {
-    const authorization = req.headers.authorization;
 
-    if (!authorization) {
-      return next(new AppError("Authorization header is missing", 401));
-    }
 
-    if (!authorization.startsWith("Bearer ")) {
-      return next(new AppError("Invalid authorization format", 401));
-    }
-
-    const accessToken = authorization.split(" ")[1];
+    // const accessToken = authorization.split(" ")[1];
+    const accessToken = req.cookies.accessToken;
 
     if (!accessToken) {
       return next(new AppError("Access token is missing", 401));

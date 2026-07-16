@@ -10,6 +10,7 @@ import {
   sendVerificationEmailService,
   resetUserPassword,
   verifyEmailService,
+  getCurrentUser,
 } from "../services/auth.service.js";
 import {
   loginSchema,
@@ -39,7 +40,7 @@ export const register = async (
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
-      data: result,
+      user: result,
     });
   } catch (error) {
     next(error);
@@ -61,6 +62,13 @@ export const login = async (
 
     const result = await loginUser(validation.data);
 
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -71,7 +79,6 @@ export const login = async (
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      accessToken: result.accessToken,
       user: result.user,
     });
   } catch (error) {
@@ -92,6 +99,12 @@ export const refresh = async (
     }
 
     const result = await refreshUser(refreshToken);
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
@@ -102,7 +115,7 @@ export const refresh = async (
 
     return res.status(200).json({
       success: true,
-      accessToken: result.accessToken,
+      message: "Token refreshed successfully",
     });
   } catch (error) {
     next(error);
@@ -282,6 +295,30 @@ export const verifyEmail = async (
     return res.status(200).json({
       success: true,
       message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCurrentUserController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+    const result = await getCurrentUser(userId);
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: result._id.toString(),
+        name: result.name,
+        email: result.email,
+        role: result.role,
+        isVerified: result.isVerified,
+        isActive: result.isActive,
+      },
     });
   } catch (error) {
     next(error);

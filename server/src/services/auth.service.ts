@@ -41,7 +41,6 @@ export const registerUser = async (data: RegisterInput) => {
 };
 
 export const loginUser = async (data: LoginInput) => {
-
   const user = await User.findOne({
     email: data.email,
   });
@@ -273,4 +272,14 @@ export const verifyEmailService = async (token: string) => {
   return {
     message: "Email verified successfully",
   };
+};
+
+export const getCurrentUser = async (userId: string) => {
+  const user = await User.findById(userId).select(
+    "name email role isVerified isActive",
+  );
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+  return user;
 };
