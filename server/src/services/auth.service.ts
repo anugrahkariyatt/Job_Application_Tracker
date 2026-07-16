@@ -75,6 +75,8 @@ export const loginUser = async (data: LoginInput) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
     },
     accessToken,
     refreshToken,
