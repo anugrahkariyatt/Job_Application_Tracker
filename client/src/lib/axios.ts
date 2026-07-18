@@ -33,11 +33,20 @@ axiosInstance.interceptors.response.use(
 
     // Check if the error status is 401 (Unauthorized) and the request has not been retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // If the error is from the refresh endpoint itself, do not retry to avoid infinite loop
-      if (originalRequest.url === "/api/auth/refresh") {
-        store.dispatch(clearUser());
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+      // If the error is from login, register, or refresh, do not retry and bypass to prevent loops
+      const bypassUrls = ["/api/auth/login", "/api/auth/register", "/api/auth/refresh"];
+      const isBypassUrl = bypassUrls.some((url) => originalRequest.url?.includes(url));
+
+      if (isBypassUrl) {
+        if (originalRequest.url?.includes("/api/auth/refresh")) {
+          store.dispatch(clearUser());
+          if (typeof window !== "undefined") {
+            const publicPaths = ["/login", "/register", "/", "/test", "/forgot-password", "/reset-password"];
+            const currentPath = window.location.pathname;
+            if (!publicPaths.includes(currentPath)) {
+              window.location.href = "/login";
+            }
+          }
         }
         return Promise.reject(error);
       }
@@ -70,7 +79,11 @@ axiosInstance.interceptors.response.use(
         processQueue(refreshError, null);
         store.dispatch(clearUser());
         if (typeof window !== "undefined") {
-          window.location.href = "/login";
+          const publicPaths = ["/login", "/register", "/", "/test", "/forgot-password", "/reset-password"];
+          const currentPath = window.location.pathname;
+          if (!publicPaths.includes(currentPath)) {
+            window.location.href = "/login";
+          }
         }
         return Promise.reject(refreshError);
       }
