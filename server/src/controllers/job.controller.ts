@@ -14,6 +14,8 @@ import {
   updateJobStatus,
 } from "../services/job.service.js";
 import z from "zod";
+import Company from "../models/company.model.js";
+import Job from "../models/job.model.js";
 
 export const createJobController = async (
   req: Request,
@@ -46,11 +48,32 @@ export const getMyJobsController = async (
   next: NextFunction,
 ) => {
   try {
-    const result = await getMyJobs(req.user!.id);
+    const { search, status, page, limit } = req.query;
+
+    const result = await getMyJobs(req.user!.id, {
+      search: search as string,
+      status: status as string,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    const stats = company
+      ? {
+          total: await Job.countDocuments({ companyId: company._id }),
+          open: await Job.countDocuments({ companyId: company._id, status: "Open" }),
+          closed: await Job.countDocuments({ companyId: company._id, status: "Closed" }),
+          draft: await Job.countDocuments({ companyId: company._id, status: "Draft" }),
+        }
+      : { total: 0, open: 0, closed: 0, draft: 0 };
 
     return res.status(200).json({
       success: true,
-      data: result,
+      data: {
+        jobs: result.jobs,
+        totalCount: result.totalCount,
+        stats,
+      },
     });
   } catch (error) {
     next(error);
@@ -175,6 +198,26 @@ export const updateJobStatusController = async (
       success: true,
       message: "Job status updated successfully",
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllJobsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const jobs = await Job.find({ status: "Open" })
+      .populate("companyId", "companyName logo location industry description")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Jobs fetched successfully",
+      data: jobs,
     });
   } catch (error) {
     next(error);

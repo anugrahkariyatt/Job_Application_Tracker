@@ -22,20 +22,42 @@ export const createJob = async (ownerId: string, data: CreateJobInput) => {
   return job;
 };
 
-export const getMyJobs = async (ownerId: string) => {
+export const getMyJobs = async (
+  ownerId: string,
+  filters: { search?: string; status?: string; page?: number; limit?: number } = {}
+) => {
   const company = await Company.findOne({ ownerId });
 
   if (!company) {
     throw new AppError("Company not found", 404);
   }
 
-  const jobs = await Job.find({
-    companyId: company._id,
-  }).sort({
-    createdAt: -1,
-  });
+  const query: any = { companyId: company._id };
 
-  return jobs;
+  if (filters.status && filters.status !== "All") {
+    query.status = filters.status;
+  }
+
+  if (filters.search) {
+    const searchRegex = new RegExp(filters.search, "i");
+    query.$or = [
+      { title: searchRegex },
+      { location: searchRegex },
+      { skills: { $in: [searchRegex] } },
+    ];
+  }
+
+  const page = Number(filters.page) || 1;
+  const limit = Number(filters.limit) || 9;
+  const skip = (page - 1) * limit;
+
+  const totalCount = await Job.countDocuments(query);
+  const jobs = await Job.find(query)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  return { jobs, totalCount };
 };
 
 export const getJobById = async (jobId: string) => {

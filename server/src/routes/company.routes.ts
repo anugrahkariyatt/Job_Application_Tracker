@@ -8,9 +8,11 @@ import {
   updateCompany,
   updateLogo,
   updateCoverImage,
+  getRecruiterDashboardStats,
 } from "../controllers/company.controllers.js";
 const router = Router();
 
+router.get("/dashboard-stats", authenticate, authorize("recruiter"), getRecruiterDashboardStats);
 router.post("/", authenticate, authorize("recruiter"), createCompany);
 router.get("/", authenticate, authorize("recruiter"), getMyCompany);
 router.patch("/", authenticate, authorize("recruiter"), updateCompany);
