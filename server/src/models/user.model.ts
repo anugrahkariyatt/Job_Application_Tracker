@@ -8,6 +8,13 @@ export interface IUser extends Document {
   role: "candidate" | "recruiter" | "admin";
   isVerified: boolean;
   isActive: boolean;
+  preferences: {
+    applicationReceived: boolean;
+    candidateWithdrew: boolean;
+    jobExpiring: boolean;
+    companyUpdates: boolean;
+    systemAlerts: boolean;
+  };
 }
 
 const userSchema = new Schema(
@@ -37,6 +44,13 @@ const userSchema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    preferences: {
+      applicationReceived: { type: Boolean, default: true },
+      candidateWithdrew: { type: Boolean, default: true },
+      jobExpiring: { type: Boolean, default: true },
+      companyUpdates: { type: Boolean, default: false },
+      systemAlerts: { type: Boolean, default: true },
     },
   },
   {

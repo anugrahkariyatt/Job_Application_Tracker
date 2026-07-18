@@ -7,6 +7,13 @@ export interface User {
   role: UserRole;
   isVerified: boolean;
   isActive: boolean;
+  preferences?: {
+    applicationReceived: boolean;
+    candidateWithdrew: boolean;
+    jobExpiring: boolean;
+    companyUpdates: boolean;
+    systemAlerts: boolean;
+  };
 }
 
 export interface LoginRequest {

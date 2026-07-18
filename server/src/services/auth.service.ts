@@ -1,5 +1,14 @@
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
+import Company from "../models/company.model.js";
+import Job from "../models/job.model.js";
+import Application from "../models/application.model.js";
+import Candidate from "../models/candidate.model.js";
+import Education from "../models/education.model.js";
+import Experience from "../models/experience.model.js";
+import Skill from "../models/skill.model.js";
+import JobAlert from "../models/jobAlert.model.js";
+import Subscription from "../models/subscription.model.js";
 import { generateAccessToken } from "../utils/generateAccessToken.js";
 import { generateRefreshToken } from "../utils/generateRefreshToken.js";
 import { compareValue, hashValue } from "../utils/bcrypt.js";
@@ -48,15 +57,19 @@ export const loginUser = async (data: LoginInput) => {
   if (!user) {
     throw new AppError("Invalid email or password", 401);
   }
-  if (!user.isActive) {
-    throw new AppError("Account is disabled", 403);
-  }
 
   const isPasswordValid = await compareValue(data.password, user.password);
 
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
   }
+
+  // Reactivate user if they log back in
+  if (!user.isActive) {
+    user.isActive = true;
+    await user.save();
+  }
+
   const accessToken = generateAccessToken(user._id.toString(), user.role);
 
   const refreshToken = generateRefreshToken(user._id.toString(), user.role);
@@ -77,6 +90,7 @@ export const loginUser = async (data: LoginInput) => {
       role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
+      preferences: user.preferences,
     },
     accessToken,
     refreshToken,
@@ -200,7 +214,7 @@ export const sendPasswordResetLink = async (email: string) => {
 };
 
 export const resetUserPassword = async (token: string, newPassword: string) => {
-  const decoded = verifyPasswordResetToken(token);
+  const decoded = verifyPasswordResetToken(token) as { userId: string; purpose: string };
 
   if (decoded.purpose !== "reset-password") {
     throw new AppError("Invalid reset token", 401);
@@ -220,8 +234,30 @@ export const resetUserPassword = async (token: string, newPassword: string) => {
   await RefreshToken.deleteMany({
     user: user._id,
   });
+
+  const accessToken = generateAccessToken(user._id.toString(), user.role!);
+  const refreshToken = generateRefreshToken(user._id.toString(), user.role!);
+  const hashedRefreshToken = await hashValue(refreshToken);
+
+  await RefreshToken.create({
+    user: user._id,
+    token: hashedRefreshToken,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
   return {
     message: "Password reset successfully",
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role!,
+      isVerified: user.isVerified,
+      isActive: user.isActive,
+      preferences: user.preferences,
+    },
+    accessToken,
+    refreshToken,
   };
 };
 
@@ -278,10 +314,76 @@ export const verifyEmailService = async (token: string) => {
 
 export const getCurrentUser = async (userId: string) => {
   const user = await User.findById(userId).select(
-    "name email role isVerified isActive",
+    "name email role isVerified isActive preferences",
   );
   if (!user) {
     throw new AppError("User not found", 404);
   }
   return user;
+};
+
+export const updateUserPreferencesService = async (userId: string, preferences: any) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  user.preferences = {
+    ...user.preferences,
+    ...preferences,
+  };
+
+  await user.save();
+  return user.preferences;
+};
+
+export const deactivateUserService = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  user.isActive = false;
+  await user.save();
+
+  await RefreshToken.deleteMany({ user: userId });
+  return { success: true };
+};
+
+export const deleteUserService = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  // Delete all refresh tokens
+  await RefreshToken.deleteMany({ user: userId });
+
+  // If recruiter, delete company & jobs & applications
+  if (user.role === "recruiter") {
+    const company = await Company.findOne({ ownerId: userId });
+    if (company) {
+      const companyId = company._id;
+      await Job.deleteMany({ companyId });
+      await Application.deleteMany({ companyId });
+      await Company.findByIdAndDelete(companyId);
+    }
+  } else if (user.role === "candidate") {
+    // Cascade delete all candidate associated records
+    const candidate = await Candidate.findOne({ userId: userId });
+    if (candidate) {
+      const candidateId = candidate._id;
+      await Education.deleteMany({ candidateId });
+      await Experience.deleteMany({ candidateId });
+      await Skill.deleteMany({ candidateId });
+      await JobAlert.deleteMany({ candidateId });
+      await Subscription.deleteMany({ candidateId });
+      await Application.deleteMany({ candidateId });
+      await Candidate.findByIdAndDelete(candidateId);
+    }
+  }
+
+  // Delete user
+  await User.findByIdAndDelete(userId);
+  return { success: true };
 };
