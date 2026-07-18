@@ -16,7 +16,7 @@ interface AuthInitializerProps {
   children: React.ReactNode;
 }
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/test"];
+const PUBLIC_PATHS = ["/", "/login", "/register", "/test", "/forgot-password", "/reset-password"];
 
 export default function AuthInitializer({ children }: AuthInitializerProps) {
   const router = useRouter();
