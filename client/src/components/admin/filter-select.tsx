@@ -1,0 +1,43 @@
+'use client';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+export interface FilterOption {
+  label: string;
+  value: string;
+}
+
+export function FilterSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: FilterOption[];
+  placeholder?: string;
+  className?: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className={className ?? 'w-[160px]'}>
+        <SelectValue placeholder={placeholder ?? 'Filter'} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}

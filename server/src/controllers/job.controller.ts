@@ -210,9 +210,88 @@ export const getAllJobsController = async (
   next: NextFunction,
 ) => {
   try {
-    const jobs = await Job.find({ status: "Open" })
+    const {
+      search,
+      employmentTypes,
+      experienceLevels,
+      location,
+      remote,
+      salaryMin,
+      sortBy,
+      companyId,
+    } = req.query;
+
+    const filterQuery: any = { status: "Open" };
+    if (companyId) {
+      filterQuery.companyId = companyId;
+    }
+
+    // 1. Search text filter (title, skills, description)
+    if (search) {
+      const searchRegex = new RegExp(search as string, "i");
+      filterQuery.$or = [
+        { title: searchRegex },
+        { skills: { $in: [searchRegex] } },
+        { description: searchRegex },
+      ];
+    }
+
+    // 2. Employment types filter
+    if (employmentTypes) {
+      const typesList = (employmentTypes as string)
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (typesList.length > 0) {
+        filterQuery.employmentType = { $in: typesList };
+      }
+    }
+
+    // 3. Experience level filter
+    if (experienceLevels) {
+      const levelsList = (experienceLevels as string)
+        .split(",")
+        .map((l) => {
+          const val = l.trim();
+          if (val === "Entry") return "Fresher";
+          if (val === "Mid") return "Mid-Level";
+          return val;
+        })
+        .filter(Boolean);
+      if (levelsList.length > 0) {
+        filterQuery.experienceLevel = { $in: levelsList };
+      }
+    }
+
+    // 4. Remote filter
+    if (remote === "true") {
+      filterQuery.remote = true;
+    }
+
+    // 5. Location filter
+    if (location) {
+      filterQuery.location = new RegExp(location as string, "i");
+    }
+
+    // 6. Minimum Salary filter
+    if (salaryMin) {
+      const minVal = Number(salaryMin) * 1000;
+      if (!isNaN(minVal)) {
+        filterQuery.salaryMin = { $gte: minVal };
+      }
+    }
+
+    // 7. Sorting setup
+    let sortObj: any = { createdAt: -1 };
+    if (sortBy === "salary_high") {
+      sortObj = { salaryMin: -1, salaryMax: -1 };
+    } else if (sortBy === "salary_low") {
+      sortObj = { salaryMin: 1, salaryMax: 1 };
+    }
+
+    const jobs = await Job.find(filterQuery)
       .populate("companyId", "companyName logo location industry description")
-      .sort({ createdAt: -1 });
+      .sort(sortObj);
 
     return res.status(200).json({
       success: true,

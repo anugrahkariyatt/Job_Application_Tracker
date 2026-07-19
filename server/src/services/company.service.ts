@@ -86,3 +86,11 @@ export const updateCompanyCoverImage = async (
 
   return company;
 };
+
+export const getCompanyByIdService = async (id: string) => {
+  const company = await Company.findById(id);
+  if (!company) {
+    throw new AppError("Company not found", 404);
+  }
+  return company;
+};

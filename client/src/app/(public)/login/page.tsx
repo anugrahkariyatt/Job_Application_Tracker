@@ -34,7 +34,13 @@ export default function LoginPage() {
       if (response.success && response.user) {
         dispatch(setUser(response.user));
         toast.success("Successfully logged in!");
-        router.push("/dashboard");
+        if (response.user.role === "candidate") {
+          router.push("/candidate");
+        } else if (response.user.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         toast.error(response.message || "Login failed");
       }
