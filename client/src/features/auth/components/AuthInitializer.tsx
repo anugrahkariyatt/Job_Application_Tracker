@@ -59,6 +59,8 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
       if (pathname === "/login" || pathname === "/register") {
         if (user?.role === "candidate") {
           router.push("/candidate");
+        } else if (user?.role === "admin") {
+          router.push("/admin");
         } else {
           router.push("/dashboard");
         }

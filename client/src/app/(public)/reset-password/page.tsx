@@ -59,6 +59,8 @@ function ResetPasswordForm() {
         toast.success("Password reset successfully! You are now logged in.");
         if (response.data.user.role === "candidate") {
           router.push("/candidate");
+        } else if (response.data.user.role === "admin") {
+          router.push("/admin");
         } else {
           router.push("/dashboard");
         }

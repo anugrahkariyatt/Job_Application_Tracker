@@ -38,6 +38,8 @@ export default function RegisterPage() {
         toast.success("Account created successfully!");
         if (response.user.role === "candidate") {
           router.push("/candidate");
+        } else if (response.user.role === "admin") {
+          router.push("/admin");
         } else {
           router.push("/dashboard");
         }
