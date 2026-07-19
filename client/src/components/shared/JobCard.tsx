@@ -15,6 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +49,21 @@ export function JobCard({
   onOpen,
   onDelete,
 }: JobCardProps) {
+  const pathname = usePathname();
   const jobId = job._id || job.id;
+
+  const isRecruiter = pathname.startsWith('/recruiter');
+  const isCandidate = pathname.startsWith('/candidate');
+  const isAdmin = pathname.startsWith('/admin');
+
+  let detailsLink = `/jobs/${jobId}`;
+  if (isRecruiter) {
+    detailsLink = `/recruiter/jobs/${jobId}`;
+  } else if (isCandidate) {
+    detailsLink = `/candidate/jobs/${jobId}`;
+  } else if (isAdmin) {
+    detailsLink = `/admin/jobs/${jobId}`;
+  }
 
   const logo = companyLogo || (job.companyId as any)?.logo;
   const name = companyName || (job.companyId as any)?.companyName || 'Company';
@@ -70,7 +85,7 @@ export function JobCard({
     >
       <div className="flex items-start gap-3">
         {logo ? (
-          <Link href={`/jobs/${jobId}`} className="shrink-0">
+          <Link href={detailsLink} className="shrink-0">
             <img
               src={logo}
               alt={name}
@@ -85,7 +100,7 @@ export function JobCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <Link href={`/jobs/${jobId}`} className="hover:text-primary transition-colors block">
+              <Link href={detailsLink} className="hover:text-primary transition-colors block">
                 <h3 className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
                   {job.title}
                 </h3>
@@ -108,7 +123,7 @@ export function JobCard({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
                     <DropdownMenuItem asChild>
-                      <Link href={`/jobs/${jobId}`}>
+                      <Link href={detailsLink}>
                         <Eye className="mr-2 h-4 w-4" /> View Details
                       </Link>
                     </DropdownMenuItem>
@@ -171,7 +186,7 @@ export function JobCard({
                 <Eye className="h-3.5 w-3.5" />
                 <span className="font-medium text-foreground">{viewsCount}</span> views
               </span>
-              <Link href={`/jobs/${jobId}`} className="ml-auto flex items-center gap-1 font-medium text-primary hover:underline">
+              <Link href={detailsLink} className="ml-auto flex items-center gap-1 font-medium text-primary hover:underline">
                 View <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
