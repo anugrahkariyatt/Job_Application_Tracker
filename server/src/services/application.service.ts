@@ -25,7 +25,7 @@ export const applyForJob = async (userId: string, jobId: string) => {
     throw new AppError("Candidate profile not found", 404);
   }
   const existingApplication = await Application.findOne({
-    candidateId: user._id,
+    candidateId: candidate._id,
     jobId,
   });
   if (existingApplication) {
@@ -40,31 +40,36 @@ export const applyForJob = async (userId: string, jobId: string) => {
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError("User not found", 404);
+  const candidate = await Candidate.findOne({ userId });
+  if (!candidate) {
+    throw new AppError("Candidate profile not found", 404);
   }
 
-  const application = await Application.findOne({
-    candidateId: user._id,
+  const applications = await Application.find({
+    candidateId: candidate._id,
+  }).populate({
+    path: "jobId",
+    populate: {
+      path: "companyId",
+    },
   });
 
-  return application;
+  return applications;
 };
 
 export const deleteApplication = async (
   userId: string,
   applicationId: string,
 ) => {
-  const user = await User.findOne({ _id: userId });
-  if (!user) {
+  const candidate = await Candidate.findOne({ userId });
+  if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
   const application = await Application.findOne({ _id: applicationId });
   if (!application) {
     throw new AppError("Application not found", 404);
   }
-  if (application.candidateId.toString() !== user._id.toString()) {
+  if (application.candidateId.toString() !== candidate._id.toString()) {
     throw new AppError(
       "You are not authorized to delete this application",
       403,

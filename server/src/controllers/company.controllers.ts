@@ -11,6 +11,7 @@ import {
   updateCompanyDetails,
   updateCompanyLogo,
   updateCompanyCoverImage,
+  getCompanyByIdService,
 } from "../services/company.service.js";
 import User from "../models/user.model.js";
 import Job from "../models/job.model.js";
@@ -361,6 +362,23 @@ export const getRecruiterDashboardStats = async (
         jobsOverTime,
         viewsVsApplications,
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCompanyByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await getCompanyByIdService(req.params.id as string);
+    return res.status(200).json({
+      success: true,
+      message: "Get company details successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

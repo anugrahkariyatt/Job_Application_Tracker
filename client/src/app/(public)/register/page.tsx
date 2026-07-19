@@ -36,7 +36,11 @@ export default function RegisterPage() {
       if (response.success && response.user) {
         dispatch(setUser(response.user));
         toast.success("Account created successfully!");
-        router.push("/dashboard");
+        if (response.user.role === "candidate") {
+          router.push("/candidate");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         toast.error(response.message || "Registration failed");
       }

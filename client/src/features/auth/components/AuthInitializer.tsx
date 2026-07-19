@@ -57,7 +57,11 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
     if (isAuthenticated) {
       // Authenticated users shouldn't see login or registration pages
       if (pathname === "/login" || pathname === "/register") {
-        router.push("/dashboard");
+        if (user?.role === "candidate") {
+          router.push("/candidate");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } else {
       // Unauthenticated users trying to access private dashboard pages are redirected

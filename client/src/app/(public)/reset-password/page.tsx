@@ -57,7 +57,11 @@ function ResetPasswordForm() {
       if (response.data?.success && response.data?.user) {
         dispatch(setUser(response.data.user));
         toast.success("Password reset successfully! You are now logged in.");
-        router.push("/dashboard");
+        if (response.data.user.role === "candidate") {
+          router.push("/candidate");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         toast.error(response.data?.message || "Failed to reset password.");
       }
