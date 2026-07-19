@@ -100,7 +100,7 @@ export default function CompanyProfilePage() {
           You haven't created a company profile yet. Build your company profile so candidates can learn about your workplace and open roles.
         </p>
         <Link
-          href="/company/edit"
+          href="/recruiter/company/edit"
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover shadow-lg"
         >
           Setup Company Profile
@@ -133,11 +133,11 @@ export default function CompanyProfilePage() {
       <PageHeader
         title="Company Profile"
         description="Your company's public profile page — like a LinkedIn company page."
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Company Profile' }]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Company Profile' }]}
         actions={
           <>
             <Link
-              href="/company/edit"
+              href="/recruiter/company/edit"
               className="inline-flex h-10 items-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent"
             >
               <Pencil className="h-4 w-4" />

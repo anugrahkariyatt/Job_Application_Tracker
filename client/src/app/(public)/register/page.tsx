@@ -41,7 +41,7 @@ export default function RegisterPage() {
         } else if (response.user.role === "admin") {
           router.push("/admin");
         } else {
-          router.push("/dashboard");
+          router.push("/recruiter/dashboard");
         }
       } else {
         toast.error(response.message || "Registration failed");

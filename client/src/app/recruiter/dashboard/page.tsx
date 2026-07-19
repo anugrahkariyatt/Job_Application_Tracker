@@ -134,7 +134,7 @@ export default function DashboardPage() {
           Welcome {user?.name}! Before accessing your recruiter dashboard, you need to set up a company profile so candidates can see who they are applying to.
         </p>
         <Link
-          href="/company/edit"
+          href="/recruiter/company/edit"
           className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover shadow-lg"
         >
           Create Company Profile
@@ -171,11 +171,11 @@ export default function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description={`Welcome back, ${user?.name || "Recruiter"}. Here's what's happening at ${company?.name || "your company"}.`}
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Dashboard' }]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Dashboard' }]}
         icon={TrendingUp}
         actions={
           <Link
-            href="/jobs/new"
+            href="/recruiter/jobs/new"
             className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
           >
             <PlusCircle className="h-4 w-4" />
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                 Recent Job Postings
               </CardTitle>
               <Link
-                href="/jobs"
+                href="/recruiter/jobs"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 View all jobs <ArrowRight className="h-3.5 w-3.5" />
@@ -254,7 +254,7 @@ export default function DashboardPage() {
               ) : (
                 <div className="col-span-2 flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-sm">
                   <p>No job postings yet.</p>
-                  <Link href="/jobs/new" className="text-primary hover:underline font-medium mt-1">
+                  <Link href="/recruiter/jobs/new" className="text-primary hover:underline font-medium mt-1">
                     Post your first job now!
                   </Link>
                 </div>
@@ -306,7 +306,7 @@ export default function DashboardPage() {
                 Notifications
               </CardTitle>
               <Link
-                href="/notifications"
+                href="/recruiter/notifications"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
@@ -593,7 +593,7 @@ export default function DashboardPage() {
             Recent Applications
           </CardTitle>
           <Link
-            href="/applicants"
+            href="/recruiter/applicants"
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             View all applicants <ArrowRight className="h-3.5 w-3.5" />

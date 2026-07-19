@@ -118,7 +118,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
     return (
       <div className="text-center py-12">
         <p className="text-destructive font-medium">Job posting not found.</p>
-        <Link href="/jobs" className="text-primary hover:underline mt-2 inline-block">
+        <Link href="/recruiter/jobs" className="text-primary hover:underline mt-2 inline-block">
           Back to Jobs List
         </Link>
       </div>
@@ -134,8 +134,8 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
         title={job.title}
         description={`${job.employmentType} · ${job.experienceLevel} · ${job.remote ? 'Remote' : 'Onsite'}`}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'My Jobs', href: '/jobs' },
+          { label: 'Dashboard', href: '/recruiter/dashboard' },
+          { label: 'My Jobs', href: '/recruiter/jobs' },
           { label: job.title },
         ]}
         actions={

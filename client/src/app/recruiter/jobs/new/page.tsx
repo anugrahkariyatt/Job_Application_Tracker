@@ -134,7 +134,7 @@ export default function CreateJobPage() {
         title="Post a Job"
         description="Create a new job opening for your company."
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Dashboard', href: '/recruiter/dashboard' },
           { label: 'Post a Job' },
         ]}
         icon={PlusCircle}
@@ -362,7 +362,7 @@ export default function CreateJobPage() {
       </Card>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/jobs">
+        <Link href="/recruiter/jobs">
           <Button variant="outline">Cancel</Button>
         </Link>
         <Button variant="outline" onClick={() => submitJob('Draft')} disabled={saving}>

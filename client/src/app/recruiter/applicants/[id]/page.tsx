@@ -154,7 +154,7 @@ export default function ApplicationDetailsPage({
     return (
       <div className="text-center py-12">
         <p className="text-destructive font-medium">Application not found.</p>
-        <Link href="/applicants" className="text-primary hover:underline mt-2 inline-block">
+        <Link href="/recruiter/applicants" className="text-primary hover:underline mt-2 inline-block">
           Back to Applicants List
         </Link>
       </div>
@@ -172,8 +172,8 @@ export default function ApplicationDetailsPage({
         title={user.name || 'Candidate'}
         description={candidate.headline || 'Software Engineer'}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Applicants', href: '/applicants' },
+          { label: 'Dashboard', href: '/recruiter/dashboard' },
+          { label: 'Applicants', href: '/recruiter/applicants' },
           { label: user.name || 'Applicant' },
         ]}
         icon={Users}

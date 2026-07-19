@@ -160,7 +160,7 @@ export default function ApplicantsPage() {
       <PageHeader
         title="Applicants"
         description="Browse candidates who applied to your job postings — like LinkedIn Recruiter."
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Applicants' }]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Applicants' }]}
         icon={Users}
       />
 
@@ -251,7 +251,7 @@ export default function ApplicantsPage() {
                     )}
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/applicants/${app._id}`}
+                        href={`/recruiter/applicants/${app._id}`}
                         className="text-sm font-semibold text-foreground hover:text-primary"
                       >
                         {user.name || 'Candidate'}
@@ -273,7 +273,7 @@ export default function ApplicantsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem asChild>
-                          <Link href={`/applicants/${app._id}`}>
+                          <Link href={`/recruiter/applicants/${app._id}`}>
                             <Eye className="mr-2 h-4 w-4" /> View Profile
                           </Link>
                         </DropdownMenuItem>

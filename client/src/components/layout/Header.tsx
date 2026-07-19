@@ -23,6 +23,8 @@ import { logout } from '@/features/auth/api/auth.api';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
   const router = useRouter();
@@ -100,7 +102,7 @@ export function Header() {
 
       <div className="ml-auto flex items-center gap-1.5">
         <Link
-          href="/notifications"
+          href="/recruiter/notifications"
           className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label="Notifications"
         >
@@ -114,28 +116,16 @@ export function Header() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-md p-1 pl-1.5 hover:bg-accent">
-              {company?.logo ? (
-                <img
-                  src={company.logo}
-                  alt={company.companyName}
-                  className="h-8 w-8 rounded-full object-cover ring-1 ring-border"
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-xs ring-1 ring-border">
-                  {(user?.name || 'A').charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="hidden flex-col items-start leading-tight sm:flex">
-                <span className="text-sm font-medium text-foreground">
-                  {user?.name || 'Jordan Reyes'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {company?.companyName || 'Company'}
-                </span>
-              </div>
-              <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:block" />
-            </button>
+            <Button
+              variant="ghost"
+              className="relative h-9 w-9 rounded-full bg-muted"
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="bg-primary/5 text-primary text-xs font-semibold">
+                  {(user?.name || "R").charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="flex flex-col">
@@ -146,13 +136,13 @@ export function Header() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/company">
+              <Link href="/recruiter/company">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/settings">
+              <Link href="/recruiter/settings">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Link>

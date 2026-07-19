@@ -214,13 +214,13 @@ export default function EditCompanyPage() {
         title={noCompany ? 'Setup Company Profile' : 'Edit Company Profile'}
         description="Update your company's information and branding."
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Company Profile', href: '/company' },
+          { label: 'Dashboard', href: '/recruiter/dashboard' },
+          { label: 'Company Profile', href: '/recruiter/company' },
           { label: 'Edit' },
         ]}
         actions={
           <>
-            <Link href="/company">
+            <Link href="/recruiter/company">
               <Button variant="outline" size="sm">
                 <X className="mr-1.5 h-4 w-4" />
                 Cancel
@@ -458,7 +458,7 @@ export default function EditCompanyPage() {
       </Card>
 
       <div className="flex items-center justify-end gap-2">
-        <Link href="/company">
+        <Link href="/recruiter/company">
           <Button variant="outline">Cancel</Button>
         </Link>
         <Button onClick={handleSave} disabled={saving}>

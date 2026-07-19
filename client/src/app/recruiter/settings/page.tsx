@@ -236,7 +236,7 @@ export default function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Manage your account, notifications, and company preferences."
-        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Settings' }]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Settings' }]}
         icon={SettingsIcon}
       />
 

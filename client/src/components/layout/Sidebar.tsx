@@ -60,18 +60,18 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   }, [user]);
 
   const navItems: NavItem[] = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Company Profile", href: "/company", icon: Building2 },
-    { label: "Create Job", href: "/jobs/new", icon: PlusCircle },
-    { label: "My Jobs", href: "/jobs", icon: Briefcase },
-    { label: "Applicants", href: "/applicants", icon: Users },
+    { label: "Dashboard", href: "/recruiter/dashboard", icon: LayoutDashboard },
+    { label: "Company Profile", href: "/recruiter/company", icon: Building2 },
+    { label: "Create Job", href: "/recruiter/jobs/new", icon: PlusCircle },
+    { label: "My Jobs", href: "/recruiter/jobs", icon: Briefcase },
+    { label: "Applicants", href: "/recruiter/applicants", icon: Users },
     {
       label: "Notifications",
-      href: "/notifications",
+      href: "/recruiter/notifications",
       icon: Bell,
       badge: unreadCount,
     },
-    { label: "Settings", href: "/settings", icon: Settings },
+    { label: "Settings", href: "/recruiter/settings", icon: Settings },
   ];
 
   return (
@@ -99,12 +99,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/dashboard" &&
-              item.href !== "/jobs" &&
+            (item.href !== "/recruiter/dashboard" &&
+              item.href !== "/recruiter/jobs" &&
               pathname.startsWith(item.href)) ||
-            (item.href === "/jobs" &&
-              pathname.startsWith("/jobs") &&
-              pathname !== "/jobs/new");
+            (item.href === "/recruiter/jobs" &&
+              pathname.startsWith("/recruiter/jobs") &&
+              pathname !== "/recruiter/jobs/new");
           const Icon = item.icon;
           return (
             <Link

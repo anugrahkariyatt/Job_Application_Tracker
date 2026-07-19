@@ -62,7 +62,7 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
         } else if (user?.role === "admin") {
           router.push("/admin");
         } else {
-          router.push("/dashboard");
+          router.push("/recruiter/dashboard");
         }
       }
     } else {

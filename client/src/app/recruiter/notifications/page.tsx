@@ -146,7 +146,7 @@ export default function NotificationsPage() {
         title="Notifications"
         description={`${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}.`}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Dashboard', href: '/recruiter/dashboard' },
           { label: 'Notifications' },
         ]}
         icon={Bell}
