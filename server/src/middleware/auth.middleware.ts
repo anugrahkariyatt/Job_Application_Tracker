@@ -11,7 +11,6 @@ export const authenticate = async (
   try {
 
 
-    // const accessToken = authorization.split(" ")[1];
     const accessToken = req.cookies.accessToken;
 
     if (!accessToken) {
@@ -34,7 +33,6 @@ export const authenticate = async (
       isVerified: user.isVerified,
       isActive: user.isActive,
     };
-    console.log(req.user);
 
     next();
   } catch (error) {

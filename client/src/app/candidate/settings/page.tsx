@@ -256,7 +256,7 @@ export default function SettingsPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action is permanent and cannot be undone. All your applications, resume, and profile data will be permanently purged from Limenzy.
+                      This action is permanent and cannot be undone. All your applications, resume, and profile data will be permanently purged from Techno Careers.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

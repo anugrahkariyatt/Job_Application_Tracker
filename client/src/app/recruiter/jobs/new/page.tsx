@@ -111,7 +111,7 @@ export default function CreateJobPage() {
             ? 'Job published successfully! It is now live.'
             : 'Job saved as draft.'
         );
-        router.push('/jobs');
+        router.push('/recruiter/jobs');
       }
     } catch (err: any) {
       console.error('Error creating job:', err);

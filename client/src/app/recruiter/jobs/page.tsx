@@ -303,7 +303,7 @@ export default function MyJobsPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/jobs/${jobId}`}
+                      href={`/recruiter/jobs/${jobId}`}
                       className="text-sm font-semibold text-foreground hover:text-primary"
                     >
                       {job.title}
@@ -334,7 +334,7 @@ export default function MyJobsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-44">
                         <DropdownMenuItem asChild>
-                          <Link href={`/jobs/${jobId}`}>
+                          <Link href={`/recruiter/jobs/${jobId}`}>
                             <Eye className="mr-2 h-4 w-4" /> View
                           </Link>
                         </DropdownMenuItem>

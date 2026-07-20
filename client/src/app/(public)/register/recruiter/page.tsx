@@ -5,28 +5,31 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
-import { login } from "@/features/auth/api/auth.api";
+import { register } from "@/features/auth/api/auth.api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, User, Loader2 } from "lucide-react";
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().trim().min(3, "Full name must be at least 3 characters").max(50, "Full name cannot exceed 50 characters"),
   email: z.string().trim().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type FormErrors = {
+  name?: string;
   email?: string;
   password?: string;
 };
 
-export default function LoginPage() {
+export default function RecruiterRegisterPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,10 +39,11 @@ export default function LoginPage() {
     e.preventDefault();
     setErrors({});
 
-    const validation = loginSchema.safeParse({ email, password });
+    const validation = registerSchema.safeParse({ name, email, password });
     if (!validation.success) {
       const fieldErrors = validation.error.flatten().fieldErrors;
       setErrors({
+        name: fieldErrors.name?.[0],
         email: fieldErrors.email?.[0],
         password: fieldErrors.password?.[0],
       });
@@ -48,23 +52,17 @@ export default function LoginPage() {
 
     try {
       setIsLoading(true);
-      const response = await login({ email, password });
+      const response = await register({ name, email, password, role: "recruiter" });
 
       if (response.success && response.user) {
         dispatch(setUser(response.user));
-        toast.success("Successfully logged in!");
-        if (response.user.role === "candidate") {
-          router.push("/candidate");
-        } else if (response.user.role === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/recruiter/dashboard");
-        }
+        toast.success("Recruiter account created successfully!");
+        router.push("/recruiter/dashboard");
       } else {
-        toast.error(response.message || "Login failed");
+        toast.error(response.message || "Registration failed");
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Invalid email or password.";
+      const errorMsg = error.response?.data?.message || "Registration failed. Try a different email.";
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -79,13 +77,35 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md border-border/40 bg-background/60 backdrop-blur-xl shadow-2xl transition-all">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-extrabold tracking-tight">Welcome Back</CardTitle>
+          <CardTitle className="text-3xl font-extrabold tracking-tight">Join as Recruiter</CardTitle>
           <CardDescription>
-            Enter your credentials to access your job applications portal
+            Post jobs, review applicant submissions, and manage company verification.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
+            <div className="space-y-1">
+              <Label htmlFor="name">Full Name</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: undefined })); }}
+                  className={`pl-10 ${errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                  disabled={isLoading}
+                />
+              </div>
+              {errors.name && (
+                <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                  <span>⚠</span> {errors.name}
+                </p>
+              )}
+            </div>
+
             {/* Email */}
             <div className="space-y-1">
               <Label htmlFor="email">Email Address</Label>
@@ -110,12 +130,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -139,18 +154,25 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
+                  Creating account...
                 </>
               ) : (
-                "Log In"
+                "Sign Up"
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+              Log in
+            </Link>
+          </div>
+
+          <div className="mt-4 text-center text-xs text-muted-foreground">
+            Are you a job seeker?{" "}
             <Link href="/register/candidate" className="font-semibold text-primary hover:underline">
-              Create an account
+              Register as Candidate
             </Link>
           </div>
         </CardContent>

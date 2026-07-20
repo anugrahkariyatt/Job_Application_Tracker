@@ -38,7 +38,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-base font-semibold tracking-tight">Limenzy</span>
+          <span className="text-base font-semibold tracking-tight">Techno Careers</span>
           <span className="text-xs text-muted-foreground">Admin Console</span>
         </div>
       </div>

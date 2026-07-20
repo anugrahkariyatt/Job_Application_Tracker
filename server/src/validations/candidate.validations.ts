@@ -1,11 +1,20 @@
 import { z } from "zod";
 
 export const createCandidateSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(3, "Name must be at least 3 characters")
+    .max(50, "Name cannot exceed 50 characters"),
   phone: z
     .string()
     .trim()
     .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number cannot exceed 15 digits"),
+    .max(15, "Phone number cannot exceed 15 digits")
+    .regex(
+      /^\+?[0-9]{10,15}$/,
+      "Invalid phone number format. Must contain 10-15 digits, optionally starting with '+'",
+    ),
 
   location: z
     .string()

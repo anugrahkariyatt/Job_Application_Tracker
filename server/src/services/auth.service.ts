@@ -25,6 +25,8 @@ import {
 import { verifyPasswordResetToken } from "../utils/verifyPasswordResetToken.js";
 import { verifyEmailVerificationToken } from "../utils/verifyEmailVerificationToken.js";
 import { generateEmailVerificationToken } from "../utils/generateEmailVerificationToken.js";
+
+
 export const registerUser = async (data: RegisterInput) => {
   const existingUser = await User.findOne({
     email: data.email,
@@ -41,6 +43,7 @@ export const registerUser = async (data: RegisterInput) => {
     role: data.role,
   });
 
+  
   return {
     id: user._id.toString(),
     name: user.name,

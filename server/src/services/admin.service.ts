@@ -86,11 +86,16 @@ export const updateUserStatus = async (userId: string, isActive: boolean) => {
 export const getAllCompanies = async (query: {
   search?: string;
   status?: string;
+  verified?: string;
 }) => {
   const filter: any = {};
 
   if (query.status && query.status !== "all") {
     filter.isActive = query.status === "Active";
+  }
+
+  if (query.verified !== undefined && query.verified !== "") {
+    filter.verified = query.verified === "true";
   }
 
   if (query.search) {

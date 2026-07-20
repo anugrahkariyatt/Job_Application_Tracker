@@ -12,55 +12,65 @@ const features = [
     icon: Search,
     title: "Smart Job Search",
     description:
-      "Discover opportunities that match your skills, experience, and career goals.",
+      "Find opportunities that align perfectly with your expertise, industry preferences, and target location.",
+    color: "bg-blue-500/10 text-blue-500",
   },
   {
     icon: ClipboardCheck,
     title: "Application Tracking",
     description:
-      "Track every application from Applied to Hired in one organized dashboard.",
+      "Track your complete pipeline progress from Applied to Review, Interview, and Hired in a unified workspace.",
+    color: "bg-emerald-500/10 text-emerald-500",
   },
   {
     icon: Bell,
     title: "Real-time Notifications",
     description:
-      "Receive instant updates whenever recruiters review or update your application.",
+      "Receive instant updates whenever recruiters view your profile, download your resume, or schedule interviews.",
+    color: "bg-amber-500/10 text-amber-500",
   },
   {
     icon: BriefcaseBusiness,
     title: "Job Alerts",
     description:
-      "Stay informed with personalized job recommendations based on your preferences.",
+      "Stay ahead of the game with automatic recommendations tailored to your career criteria.",
+    color: "bg-purple-500/10 text-purple-500",
   },
   {
     icon: Building2,
     title: "Company Subscriptions",
     description:
-      "Follow companies and receive notifications whenever they publish new jobs.",
+      "Follow leading firms and get first-priority notifications as soon as they publish new opportunities.",
+    color: "bg-indigo-500/10 text-indigo-500",
   },
   {
     icon: ShieldCheck,
     title: "Verified Companies",
     description:
-      "Apply with confidence to trusted organizations verified by our platform.",
+      "Apply securely to authenticated organizations manually vetted by our platform team.",
+    color: "bg-rose-500/10 text-rose-500",
   },
 ];
 
 export default function Features() {
   return (
-    <section className="bg-background py-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto mb-14 max-w-3xl text-center">
-          <h2 className="text-4xl font-bold text-text">
-            Everything You Need for Your Career Journey
-          </h2>
+    <section className="relative bg-surface/30 py-24 lg:py-32">
+      {/* Background gradients */}
+      <div className="absolute top-0 right-1/4 -z-10 h-96 w-96 rounded-full bg-primary/5 opacity-40 blur-[100px]"></div>
+      <div className="absolute bottom-0 left-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-blue-500/5 opacity-30 blur-[120px]"></div>
 
-          <p className="mt-4 text-lg text-text-secondary">
-            From discovering opportunities to tracking every application, manage
-            your entire hiring journey in one platform.
+      <div className="mx-auto max-w-7xl px-6">
+        {/* Section Header */}
+        <div className="mx-auto mb-20 max-w-3xl text-center space-y-4">
+          <h2 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
+            Everything You Need to Navigate Your Career
+          </h2>
+          <p className="text-lg text-text-secondary">
+            From smart search filters to automated tracking, manage your entire job hunt efficiently inside one secure platform.
           </p>
         </div>
 
+        {/* Features Grid */}
         <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
@@ -68,19 +78,26 @@ export default function Features() {
             return (
               <div
                 key={feature.title}
-                className="rounded-2xl border border-border bg-surface p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/20"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-light">
-                  <Icon className="text-primary" size={28} />
+                {/* Accent glow on hover */}
+                <div className="absolute inset-x-0 bottom-0 h-1 w-0 bg-primary transition-all duration-300 group-hover:w-full"></div>
+
+                <div className="space-y-6">
+                  {/* Icon Block */}
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${feature.color}`}>
+                    <Icon size={24} />
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-text">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-text-secondary leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
-
-                <h3 className="mt-6 text-xl font-semibold text-text">
-                  {feature.title}
-                </h3>
-
-                <p className="mt-3 text-text-secondary">
-                  {feature.description}
-                </p>
               </div>
             );
           })}

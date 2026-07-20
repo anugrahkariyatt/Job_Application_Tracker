@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, ChevronDown, Settings, User, LogOut } from 'lucide-react';
+import { Search, ChevronDown, Settings, User, LogOut, Bell } from 'lucide-react';
 import { MobileSidebar } from './mobile-sidebar';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
@@ -22,6 +23,27 @@ export function Navbar() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await axiosInstance.get('/api/notifications');
+      if (response.data?.success) {
+        const unread = response.data.data.filter((n: any) => !n.isRead).length;
+        setUnreadCount(unread);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications count:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    // Poll every 30 seconds for new notifications
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -38,7 +60,7 @@ export function Navbar() {
   };
 
   const name = user?.name || 'Admin User';
-  const email = user?.email || 'admin@limenzy.com';
+  const email = user?.email || 'admin@technocareers.com';
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -60,6 +82,19 @@ export function Navbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <a
+          href="/admin/notifications"
+          className="relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground mr-1.5 transition-colors"
+          aria-label="Notifications"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+              {unreadCount}
+            </span>
+          )}
+        </a>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-accent">

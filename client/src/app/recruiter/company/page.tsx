@@ -237,7 +237,7 @@ export default function CompanyProfilePage() {
                 activeJobs.map((job) => (
                   <Link
                     key={job._id}
-                    href={`/jobs/${job._id}`}
+                    href={`/recruiter/jobs/${job._id}`}
                     className="flex items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/30 hover:bg-primary/5"
                   >
                     {company.logo ? (

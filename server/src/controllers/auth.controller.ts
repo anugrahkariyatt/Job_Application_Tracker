@@ -22,6 +22,7 @@ import {
   updatePasswordSchema,
   resetPasswordSchema,
   verifyPasswordSchema,
+  updatePreferencesSchema,
 } from "../validations/auth.validation.js";
 import { z } from "zod";
 import { AppError } from "../utils/AppError.js";
@@ -356,8 +357,17 @@ export const updatePreferences = async (
   next: NextFunction,
 ) => {
   try {
+    const validation = updatePreferencesSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
     const userId = req.user!.id;
-    const { preferences } = req.body;
+    const { preferences } = validation.data;
     const updatedPreferences = await updateUserPreferencesService(userId, preferences);
     return res.status(200).json({
       success: true,

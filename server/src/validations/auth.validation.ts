@@ -37,3 +37,17 @@ export const resetPasswordSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const updatePreferencesSchema = z.object({
+  preferences: z.object({
+    applicationReceived: z.boolean().optional(),
+    candidateWithdrew: z.boolean().optional(),
+    jobExpiring: z.boolean().optional(),
+    companyUpdates: z.boolean().optional(),
+    systemAlerts: z.boolean().optional(),
+  }),
+});
+
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+
+

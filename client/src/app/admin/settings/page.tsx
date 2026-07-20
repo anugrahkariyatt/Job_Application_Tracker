@@ -16,9 +16,9 @@ import { toast } from 'sonner';
 export default function SettingsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [name, setName] = useState('Admin User');
-  const [email, setEmail] = useState('admin@limenzy.com');
-  const [platformName, setPlatformName] = useState('Limenzy');
-  const [supportEmail, setSupportEmail] = useState('support@limenzy.com');
+  const [email, setEmail] = useState('admin@technocareers.com');
+  const [platformName, setPlatformName] = useState('Techno Careers');
+  const [supportEmail, setSupportEmail] = useState('support@technocareers.com');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

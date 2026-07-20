@@ -76,9 +76,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="flex h-16 items-center gap-2 border-b px-4">
         <Link href="/candidate" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-sm font-bold">L</span>
+            <span className="text-sm font-bold">T</span>
           </div>
-          {!collapsed && <span className="text-lg font-bold tracking-tight">Limenzy</span>}
+          {!collapsed && <span className="text-lg font-bold tracking-tight">Techno Careers</span>}
         </Link>
       </div>
 

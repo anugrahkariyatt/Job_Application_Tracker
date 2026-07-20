@@ -1,6 +1,78 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { z } from 'zod';
+
+const optionalUrlSchema = z.preprocess((val) => {
+  if (typeof val !== "string" || !val.trim()) return undefined;
+  if (!/^https?:\/\//i.test(val)) return `https://${val}`;
+  return val;
+}, z.string().trim().url("Invalid URL format").optional().or(z.literal("")));
+
+const companyProfileSchema = z.object({
+  companyName: z
+    .string()
+    .trim()
+    .min(3, "Company name must be at least 3 characters")
+    .max(100, "Company name cannot exceed 100 characters"),
+  industry: z
+    .string()
+    .trim()
+    .min(2, "Industry must be at least 2 characters")
+    .max(50, "Industry cannot exceed 50 characters"),
+  companySize: z
+    .string()
+    .trim()
+    .max(50, "Company size cannot exceed 50 characters")
+    .optional()
+    .or(z.literal("")),
+  website: optionalUrlSchema,
+  email: z
+    .string()
+    .trim()
+    .email("Invalid email format")
+    .optional()
+    .or(z.literal("")),
+  phone: z
+    .string()
+    .trim()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(15, "Phone number cannot exceed 15 digits")
+    .regex(/^\+?[0-9]{10,15}$/, "Invalid phone number format. Must contain 10-15 digits, optionally starting with '+'")
+    .optional()
+    .or(z.literal("")),
+  description: z
+    .string()
+    .trim()
+    .min(10, "Description must be at least 10 characters")
+    .max(2000, "Description cannot exceed 2000 characters")
+    .optional()
+    .or(z.literal("")),
+  foundedYear: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+    z
+      .number()
+      .int("Founded year must be an integer")
+      .min(1800, "Founded year must be 1800 or later")
+      .max(new Date().getFullYear() + 1, "Founded year cannot be in the future")
+      .optional()
+  ),
+  headquarters: z
+    .string()
+    .trim()
+    .max(100, "Headquarters location cannot exceed 100 characters")
+    .optional()
+    .or(z.literal("")),
+  address: z
+    .string()
+    .trim()
+    .max(200, "Address details cannot exceed 200 characters")
+    .optional()
+    .or(z.literal("")),
+  linkedin: optionalUrlSchema,
+  twitter: optionalUrlSchema,
+  facebook: optionalUrlSchema,
+});
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
@@ -45,6 +117,23 @@ export default function EditCompanyPage() {
     description: '',
   });
 
+  type FormErrors = {
+    companyName?: string;
+    industry?: string;
+    companySize?: string;
+    website?: string;
+    email?: string;
+    phone?: string;
+    headquarters?: string;
+    address?: string;
+    foundedYear?: string;
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+    description?: string;
+  };
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
+
   useEffect(() => {
     const fetchCompany = async () => {
       try {
@@ -70,6 +159,8 @@ export default function EditCompanyPage() {
           setCompanyLogo(c.logo || '');
           setCompanyCover(c.coverImage || '');
           setNoCompany(false);
+        } else {
+          setNoCompany(true);
         }
       } catch (err: any) {
         console.error('Error fetching company details:', err);
@@ -86,6 +177,7 @@ export default function EditCompanyPage() {
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,10 +195,12 @@ export default function EditCompanyPage() {
       if (response.data?.success) {
         setCompanyLogo(response.data.data.logo);
         toast.success('Logo uploaded successfully!');
+        setNoCompany(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Logo upload error:', err);
-      toast.error('Failed to upload logo.');
+      const errorMsg = err.response?.data?.message || 'Failed to upload logo.';
+      toast.error(errorMsg);
     } finally {
       setLogoUploading(false);
     }
@@ -127,38 +221,62 @@ export default function EditCompanyPage() {
       if (response.data?.success) {
         setCompanyCover(response.data.data.coverImage);
         toast.success('Cover image uploaded successfully!');
+        setNoCompany(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Cover upload error:', err);
-      toast.error('Failed to upload cover image.');
+      const errorMsg = err.response?.data?.message || 'Failed to upload cover image.';
+      toast.error(errorMsg);
     } finally {
       setCoverUploading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!form.companyName || !form.industry) {
-      toast.error('Company Name and Industry are required.');
+    setFieldErrors({});
+    // Validate with Zod
+    const validation = companyProfileSchema.safeParse({
+      ...form,
+      foundedYear: form.foundedYear ? Number(form.foundedYear) : undefined,
+    });
+
+    if (!validation.success) {
+      const fe = validation.error.flatten().fieldErrors;
+      setFieldErrors({
+        companyName: fe.companyName?.[0],
+        industry: fe.industry?.[0],
+        companySize: fe.companySize?.[0],
+        website: fe.website?.[0],
+        email: fe.email?.[0],
+        phone: fe.phone?.[0],
+        headquarters: fe.headquarters?.[0],
+        address: fe.address?.[0],
+        foundedYear: fe.foundedYear?.[0],
+        linkedin: fe.linkedin?.[0],
+        twitter: fe.twitter?.[0],
+        facebook: fe.facebook?.[0],
+        description: fe.description?.[0],
+      });
       return;
     }
 
     // Sanitize empty strings for URL fields to satisfy Zod validation
     const payload: any = {
-      companyName: form.companyName,
-      industry: form.industry,
+      companyName: validation.data.companyName,
+      industry: validation.data.industry,
     };
 
-    if (form.companySize) payload.companySize = form.companySize;
-    if (form.website?.trim()) payload.website = form.website.trim();
-    if (form.email?.trim()) payload.email = form.email.trim();
-    if (form.phone?.trim()) payload.phone = form.phone.trim();
-    if (form.description?.trim()) payload.description = form.description.trim();
-    if (form.foundedYear) payload.foundedYear = Number(form.foundedYear);
-    if (form.headquarters?.trim()) payload.headquarters = form.headquarters.trim();
-    if (form.address?.trim()) payload.address = form.address.trim();
-    if (form.linkedin?.trim()) payload.linkedin = form.linkedin.trim();
-    if (form.twitter?.trim()) payload.twitter = form.twitter.trim();
-    if (form.facebook?.trim()) payload.facebook = form.facebook.trim();
+    if (validation.data.companySize) payload.companySize = validation.data.companySize;
+    if (validation.data.website) payload.website = validation.data.website;
+    if (validation.data.email) payload.email = validation.data.email;
+    if (validation.data.phone) payload.phone = validation.data.phone;
+    if (validation.data.description) payload.description = validation.data.description;
+    if (validation.data.foundedYear) payload.foundedYear = validation.data.foundedYear;
+    if (validation.data.headquarters) payload.headquarters = validation.data.headquarters;
+    if (validation.data.address) payload.address = validation.data.address;
+    if (validation.data.linkedin) payload.linkedin = validation.data.linkedin;
+    if (validation.data.twitter) payload.twitter = validation.data.twitter;
+    if (validation.data.facebook) payload.facebook = validation.data.facebook;
 
     try {
       setSaving(true);
@@ -176,7 +294,7 @@ export default function EditCompanyPage() {
 
       if (response.data?.success) {
         toast.success('Company profile saved successfully.');
-        router.push('/company');
+        router.push('/recruiter/company');
       }
     } catch (err: any) {
       console.error('Error saving company profile:', err);
@@ -270,7 +388,7 @@ export default function EditCompanyPage() {
               className="hidden"
             />
             <div
-              onClick={() => !noCompany && !coverUploading && coverInputRef.current?.click()}
+              onClick={() => !coverUploading && coverInputRef.current?.click()}
               className="relative h-36 w-full overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
             >
               {companyCover ? (
@@ -318,7 +436,7 @@ export default function EditCompanyPage() {
                 </div>
               )}
               <div
-                onClick={() => !noCompany && !logoUploading && logoInputRef.current?.click()}
+                onClick={() => !logoUploading && logoInputRef.current?.click()}
                 className="flex h-16 cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-border px-6 hover:border-primary/30 hover:bg-primary/5 transition-colors"
               >
                 {logoUploading ? (
@@ -346,12 +464,14 @@ export default function EditCompanyPage() {
               value={form.companyName}
               onChange={(v) => handleChange('companyName', v)}
               disabled={saving}
+              error={fieldErrors.companyName}
             />
             <FormField
               label="Industry *"
               value={form.industry}
               onChange={(v) => handleChange('industry', v)}
               disabled={saving}
+              error={fieldErrors.industry}
             />
             <FormField
               label="Company Size"
@@ -359,6 +479,7 @@ export default function EditCompanyPage() {
               value={form.companySize}
               onChange={(v) => handleChange('companySize', v)}
               disabled={saving || noCompany}
+              error={fieldErrors.companySize}
             />
             <FormField
               label="Founded Year"
@@ -366,6 +487,7 @@ export default function EditCompanyPage() {
               value={form.foundedYear}
               onChange={(v) => handleChange('foundedYear', v)}
               disabled={saving || noCompany}
+              error={fieldErrors.foundedYear}
             />
             <FormField
               label="Website"
@@ -373,6 +495,7 @@ export default function EditCompanyPage() {
               value={form.website}
               onChange={(v) => handleChange('website', v)}
               disabled={saving || noCompany}
+              error={fieldErrors.website}
             />
             <FormField
               label="Email"
@@ -381,6 +504,7 @@ export default function EditCompanyPage() {
               onChange={(v) => handleChange('email', v)}
               type="email"
               disabled={saving || noCompany}
+              error={fieldErrors.email}
             />
             <FormField
               label="Phone"
@@ -388,6 +512,7 @@ export default function EditCompanyPage() {
               value={form.phone}
               onChange={(v) => handleChange('phone', v)}
               disabled={saving || noCompany}
+              error={fieldErrors.phone}
             />
             <FormField
               label="Headquarters"
@@ -395,6 +520,7 @@ export default function EditCompanyPage() {
               value={form.headquarters}
               onChange={(v) => handleChange('headquarters', v)}
               disabled={saving || noCompany}
+              error={fieldErrors.headquarters}
             />
           </div>
           <div className="mt-4">
@@ -419,7 +545,11 @@ export default function EditCompanyPage() {
             onChange={(e) => handleChange('description', e.target.value)}
             rows={5}
             disabled={saving}
+            className={fieldErrors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}
           />
+          {fieldErrors.description && (
+            <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{fieldErrors.description}</p>
+          )}
           <p className="mt-1.5 text-xs text-muted-foreground">
             Tell candidates what makes your company unique.
           </p>
@@ -438,6 +568,7 @@ export default function EditCompanyPage() {
               value={form.linkedin}
               onChange={(v) => handleChange('linkedin', v)}
               disabled={saving}
+              error={fieldErrors.linkedin}
             />
             <FormField
               label="Twitter"
@@ -445,6 +576,7 @@ export default function EditCompanyPage() {
               value={form.twitter}
               onChange={(v) => handleChange('twitter', v)}
               disabled={saving}
+              error={fieldErrors.twitter}
             />
             <FormField
               label="Facebook"
@@ -452,6 +584,7 @@ export default function EditCompanyPage() {
               value={form.facebook}
               onChange={(v) => handleChange('facebook', v)}
               disabled={saving}
+              error={fieldErrors.facebook}
             />
           </div>
         </CardContent>
@@ -486,6 +619,7 @@ function FormField({
   type = 'text',
   placeholder = '',
   disabled = false,
+  error,
 }: {
   label: string;
   value: string;
@@ -493,6 +627,7 @@ function FormField({
   type?: string;
   placeholder?: string;
   disabled?: boolean;
+  error?: string;
 }) {
   return (
     <div>
@@ -503,7 +638,11 @@ function FormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
+        className={error ? 'border-red-500 focus-visible:ring-red-500' : ''}
       />
+      {error && (
+        <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{error}</p>
+      )}
     </div>
   );
 }

@@ -4,14 +4,14 @@ import { z } from "zod";
 import {
   getUserSchema,
   updateUserStatusSchema,
-} from "../validations/admin.validation.js";
-import { getAllUsers, updateUserStatus } from "../services/admin.service.js";
-
-import {
   getCompanySchema,
   updateCompanyStatusSchema,
   updateCompanyVerificationSchema,
+  getJobSchema,
+  getApplicationSchema,
+  updateApplicationStatusSchema,
 } from "../validations/admin.validation.js";
+import { getAllUsers, updateUserStatus } from "../services/admin.service.js";
 
 import {
   getAllCompanies,
@@ -269,9 +269,6 @@ export const getAllJobsController = async (
   }
 };
 
-const getJobSchema = z.object({
-  jobId: z.string().min(1, "Job ID is required"),
-});
 
 export const deleteJobController = async (
   req: Request,
@@ -315,13 +312,6 @@ export const getAllApplicationsController = async (
   }
 };
 
-const getApplicationSchema = z.object({
-  applicationId: z.string().min(1, "Application ID is required"),
-});
-
-const updateApplicationStatusSchema = z.object({
-  status: z.string().min(1, "Status is required"),
-});
 
 export const getJobByIdController = async (
   req: Request,
