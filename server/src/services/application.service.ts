@@ -6,7 +6,10 @@ import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { IApplication } from "../models/application.model.js";
 import { createNotification } from "./notification.service.js";
-import { sendApplicationEmail, sendApplicationSubmittedEmail } from "./mail.service.js";
+import {
+  sendApplicationStatusEmail,
+  sendApplicationSubmittedEmail,
+} from "./mail.service.js";
 
 export const applyForJob = async (userId: string, jobId: string) => {
   const user = await User.findById(userId);
@@ -149,6 +152,16 @@ export const updateApplicationStatus = async (
     throw new AppError("Candidate profile not found", 404);
   }
 
+  const user = await User.findById(candidate.userId);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+  const job = await Job.findById(application.jobId);
+
+  if (!job) {
+    throw new AppError("Job not found", 404);
+  }
   let title = "";
   let message = "";
 
@@ -184,5 +197,14 @@ export const updateApplicationStatus = async (
     message,
     "APPLICATION",
   );
+
+  await sendApplicationStatusEmail({
+    email: user.email,
+    candidateName: user.name,
+    jobTitle: job.title,
+    companyName: company.companyName,
+    status: application.status,
+  });
+
   return application;
 };

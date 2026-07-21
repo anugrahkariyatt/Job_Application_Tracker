@@ -19,6 +19,30 @@ interface ApplicationSubmittedEmailPayload {
   companyName: string;
   applicationDate: string;
 }
+
+interface ApplicationStatusEmailPayload {
+  email: string;
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  status: string;
+}
+
+export const sendApplicationStatusEmail = async (
+  payload: ApplicationStatusEmailPayload,
+): Promise<void> => {
+  try {
+    console.log("payload",payload);
+
+    await n8nClient.post("/send-email", {
+      type: "application-status-updated",
+      ...payload,
+    });
+  } catch (error) {
+    console.error("Email Service Error:", error);
+    throw new AppError("Unable to send application status email", 500);
+  }
+};
 export const sendApplicationSubmittedEmail = async (
   payload: ApplicationSubmittedEmailPayload,
 ): Promise<void> => {
