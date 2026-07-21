@@ -16,13 +16,23 @@ interface AuthInitializerProps {
   children: React.ReactNode;
 }
 
-const PUBLIC_PATHS = ["/", "/login", "/register", "/register/candidate", "/register/recruiter", "/test", "/forgot-password", "/reset-password"];
+const PUBLIC_PATHS = [
+  "/",
+  "/login",
+  "/register",
+  "/register/candidate",
+  "/register/recruiter",
+  "/test",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+];
 
 export default function AuthInitializer({ children }: AuthInitializerProps) {
   const router = useRouter();
   const pathname = usePathname() || "";
   const dispatch = useAppDispatch();
-  
+
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const initialized = useAppSelector((state) => state.auth.initialized);
@@ -52,8 +62,9 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
   useEffect(() => {
     if (!initialized) return;
 
-    const isPublic = PUBLIC_PATHS.includes(pathname);
-
+    const isPublic = PUBLIC_PATHS.some(
+      (path) => pathname === path || pathname.startsWith(path + "/"),
+    );
     if (isAuthenticated) {
       // Authenticated users shouldn't see login or registration pages
       if (

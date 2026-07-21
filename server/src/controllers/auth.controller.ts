@@ -14,6 +14,7 @@ import {
   updateUserPreferencesService,
   deactivateUserService,
   deleteUserService,
+  resendVerificationEmailService,
 } from "../services/auth.service.js";
 import {
   loginSchema,
@@ -303,6 +304,32 @@ export const sendVerificationEmail = async (
   }
 };
 
+export const resendVerificationEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const validation = forgotPasswordSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
+    const result = await resendVerificationEmailService(validation.data.email);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const verifyEmail = async (
   req: Request,
   res: Response,
@@ -368,7 +395,10 @@ export const updatePreferences = async (
 
     const userId = req.user!.id;
     const { preferences } = validation.data;
-    const updatedPreferences = await updateUserPreferencesService(userId, preferences);
+    const updatedPreferences = await updateUserPreferencesService(
+      userId,
+      preferences,
+    );
     return res.status(200).json({
       success: true,
       message: "Preferences updated successfully",

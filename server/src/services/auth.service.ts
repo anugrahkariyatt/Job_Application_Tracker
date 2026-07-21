@@ -26,7 +26,6 @@ import { verifyPasswordResetToken } from "../utils/verifyPasswordResetToken.js";
 import { verifyEmailVerificationToken } from "../utils/verifyEmailVerificationToken.js";
 import { generateEmailVerificationToken } from "../utils/generateEmailVerificationToken.js";
 
-
 export const registerUser = async (data: RegisterInput) => {
   const existingUser = await User.findOne({
     email: data.email,
@@ -43,7 +42,8 @@ export const registerUser = async (data: RegisterInput) => {
     role: data.role,
   });
 
-  
+  await sendVerificationEmailService(user._id.toString());
+
   return {
     id: user._id.toString(),
     name: user.name,
@@ -65,6 +65,10 @@ export const loginUser = async (data: LoginInput) => {
 
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
+  }
+
+  if (!user.isVerified) {
+    throw new AppError("Please verify your email before logging in.", 403);
   }
 
   // Reactivate user if they log back in
@@ -207,7 +211,7 @@ export const sendPasswordResetLink = async (email: string) => {
   const resetToken = await generatePasswordResetToken(user._id.toString());
   const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
   await sendPasswordResetEmail({
-    to: "anugrahk489@gmail.com",
+    to: user.email,
     resetLink,
   });
 
@@ -217,7 +221,10 @@ export const sendPasswordResetLink = async (email: string) => {
 };
 
 export const resetUserPassword = async (token: string, newPassword: string) => {
-  const decoded = verifyPasswordResetToken(token) as { userId: string; purpose: string };
+  const decoded = verifyPasswordResetToken(token) as {
+    userId: string;
+    purpose: string;
+  };
 
   if (decoded.purpose !== "reset-password") {
     throw new AppError("Invalid reset token", 401);
@@ -280,7 +287,31 @@ export const sendVerificationEmailService = async (userId: string) => {
   const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
 
   await sendVerificationEmail({
-    to: "anugrahk489@gmail.com",
+    to: user.email,
+    verificationLink,
+  });
+  return {
+    message: "Verification email sent successfully",
+  };
+};
+
+export const resendVerificationEmailService = async (email: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (user.isVerified) {
+    throw new AppError("Email is already verified", 400);
+  }
+
+  const verificationToken = generateEmailVerificationToken(user._id.toString());
+
+  const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+
+  await sendVerificationEmail({
+    to: user.email,
     verificationLink,
   });
 
@@ -325,7 +356,10 @@ export const getCurrentUser = async (userId: string) => {
   return user;
 };
 
-export const updateUserPreferencesService = async (userId: string, preferences: any) => {
+export const updateUserPreferencesService = async (
+  userId: string,
+  preferences: any,
+) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new AppError("User not found", 404);

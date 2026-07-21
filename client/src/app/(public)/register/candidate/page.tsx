@@ -6,7 +6,13 @@ import { z } from "zod";
 import { useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import { register } from "@/features/auth/api/auth.api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,7 +21,11 @@ import Link from "next/link";
 import { Lock, Mail, User, Loader2 } from "lucide-react";
 
 const registerSchema = z.object({
-  name: z.string().trim().min(3, "Full name must be at least 3 characters").max(50, "Full name cannot exceed 50 characters"),
+  name: z
+    .string()
+    .trim()
+    .min(3, "Full name must be at least 3 characters")
+    .max(50, "Full name cannot exceed 50 characters"),
   email: z.string().trim().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
@@ -52,17 +62,23 @@ export default function CandidateRegisterPage() {
 
     try {
       setIsLoading(true);
-      const response = await register({ name, email, password, role: "candidate" });
+      const response = await register({
+        name,
+        email,
+        password,
+        role: "candidate",
+      });
 
       if (response.success && response.user) {
-        dispatch(setUser(response.user));
         toast.success("Candidate account created successfully!");
-        router.push("/candidate");
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       } else {
         toast.error(response.message || "Registration failed");
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Registration failed. Try a different email.";
+      const errorMsg =
+        error.response?.data?.message ||
+        "Registration failed. Try a different email.";
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -77,9 +93,12 @@ export default function CandidateRegisterPage() {
 
       <Card className="w-full max-w-md border-border/40 bg-background/60 backdrop-blur-xl shadow-2xl transition-all">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-extrabold tracking-tight">Join as Candidate</CardTitle>
+          <CardTitle className="text-3xl font-extrabold tracking-tight">
+            Join as Candidate
+          </CardTitle>
           <CardDescription>
-            Create your profile, apply to jobs, and track every application status.
+            Create your profile, apply to jobs, and track every application
+            status.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -94,7 +113,10 @@ export default function CandidateRegisterPage() {
                   type="text"
                   placeholder="John Doe"
                   value={name}
-                  onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: undefined })); }}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setErrors((prev) => ({ ...prev, name: undefined }));
+                  }}
                   className={`pl-10 ${errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   disabled={isLoading}
                 />
@@ -116,7 +138,10 @@ export default function CandidateRegisterPage() {
                   type="email"
                   placeholder="name@example.com"
                   value={email}
-                  onChange={(e) => { setEmail(e.target.value); setErrors((prev) => ({ ...prev, email: undefined })); }}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrors((prev) => ({ ...prev, email: undefined }));
+                  }}
                   className={`pl-10 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   disabled={isLoading}
                 />
@@ -138,7 +163,10 @@ export default function CandidateRegisterPage() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setErrors((prev) => ({ ...prev, password: undefined })); }}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
                   className={`pl-10 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                   disabled={isLoading}
                 />
@@ -150,7 +178,11 @@ export default function CandidateRegisterPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full h-10 mt-2 font-medium" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full h-10 mt-2 font-medium"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -164,14 +196,20 @@ export default function CandidateRegisterPage() {
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link
+              href="/login"
+              className="font-semibold text-primary hover:underline"
+            >
               Log in
             </Link>
           </div>
 
           <div className="mt-4 text-center text-xs text-muted-foreground">
             Are you a recruiter?{" "}
-            <Link href="/register/recruiter" className="font-semibold text-primary hover:underline">
+            <Link
+              href="/register/recruiter"
+              className="font-semibold text-primary hover:underline"
+            >
               Register as Recruiter
             </Link>
           </div>

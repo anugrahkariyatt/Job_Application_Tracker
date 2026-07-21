@@ -1,59 +1,50 @@
-import transporter from "../config/mail.config.js";
+import axios from "axios";
+import { AppError } from "../utils/AppError.js";
+import { n8nClient } from "../config/axios.config.js";
 
-interface SendPasswordResetEmailProps {
+interface VerificationEmailOptions {
+  to: string;
+  verificationLink: string;
+}
+
+interface PasswordResetEmailOptions {
   to: string;
   resetLink: string;
 }
 
-export const sendPasswordResetEmail = async ({
-  to,
-  resetLink,
-}: SendPasswordResetEmailProps) => {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to,
-    subject: "Reset Your Password",
-    html: `
-      <h2>Password Reset Request</h2>
-
-      <p>You requested to reset your password.</p>
-
-      <p>
-        Click the link below to reset your password:
-      </p>
-
-      <a href="${resetLink}">
-        Reset Password
-      </a>
-
-      <p>This link will expire in 15 minutes.</p>
-
-      <p>If you didn't request a password reset, you can safely ignore this email.</p>
-    `,
-  });
-};
-
 export const sendVerificationEmail = async ({
   to,
   verificationLink,
-}: {
-  to: string;
-  verificationLink: string;
-}) => {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to,
-    subject: "Verify Your Email",
-    html: `
-      <h2>Welcome!</h2>
+}: VerificationEmailOptions): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "verification",
+      email: to,
+      verificationLink,
+    });
+  } catch (error) {
+    throw new AppError("Unable to send verification email", 500);
+  }
+};
 
-      <p>Please verify your email by clicking the link below.</p>
+export const sendPasswordResetEmail = async ({
+  to,
+  resetLink,
+}: PasswordResetEmailOptions): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "forgot-password",
+      email: to,
+      resetLink,
+    });
+  } catch (error) {
+    console.error("n8n Email Error:", error);
 
-      <a href="${verificationLink}">
-        Verify Email
-      </a>
+    if (axios.isAxiosError(error)) {
+      console.log("Status:", error.response?.status);
+      console.log("Response:", error.response?.data);
+    }
 
-      <p>This link expires in 24 hours.</p>
-    `,
-  });
+    throw new AppError("Unable to send verification email", 500);
+  }
 };

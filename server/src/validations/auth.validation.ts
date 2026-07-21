@@ -19,7 +19,7 @@ export const loginSchema = z.object({
 });
 
 export const forgotPasswordSchema = z.object({
-  email: z.email("Invalid email address"),
+  email: z.string().trim().email("Invalid email address"),
 });
 export const verifyPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -37,7 +37,7 @@ export const resetPasswordSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
-
+export type ResendVerificationEmailInput = z.infer<typeof forgotPasswordSchema>;
 export const updatePreferencesSchema = z.object({
   preferences: z.object({
     applicationReceived: z.boolean().optional(),
@@ -49,5 +49,3 @@ export const updatePreferencesSchema = z.object({
 });
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
-
-
