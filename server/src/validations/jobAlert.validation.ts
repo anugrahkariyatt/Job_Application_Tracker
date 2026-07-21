@@ -17,7 +17,24 @@ export const createJobAlertSchema = z.object({
   remote: z.boolean(),
 });
 
-export const updateJobAlertSchema = createJobAlertSchema;
+export const updateJobAlertSchema = z.object({
+  keywords: z
+    .array(z.string().min(1))
+    .min(1, "At least one keyword is required")
+    .optional(),
+
+  location: z.string().optional(),
+
+  employmentType: z.enum([
+    "Full-time",
+    "Part-time",
+    "Contract",
+    "Internship",
+  ]).optional(),
+
+  remote: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+});
 
 export const getJobAlertSchema = z.object({
   jobAlertId: z.string().min(1, "Job Alert ID is required"),

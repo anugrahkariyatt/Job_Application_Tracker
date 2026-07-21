@@ -1,10 +1,10 @@
 import Candidate from "../models/candidate.model.js";
 import Company from "../models/company.model.js";
 import JobAlert from "../models/jobAlert.model.js";
+import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { createNotification } from "./notification.service.js";
 import { sendJobAlertEmail } from "./mail.service.js";
-
 
 const MAX_JOB_ALERTS = 10;
 
@@ -60,10 +60,13 @@ export const getMyJobAlerts = async (userId: string) => {
 export const updateJobAlert = async (
   userId: string,
   jobAlertId: string,
-  keywords: string[],
-  location: string,
-  employmentType: "Full-time" | "Part-time" | "Contract" | "Internship",
-  remote: boolean,
+  data: {
+    keywords?: string[];
+    location?: string;
+    employmentType?: "Full-time" | "Part-time" | "Contract" | "Internship";
+    remote?: boolean;
+    isActive?: boolean;
+  },
 ) => {
   const candidate = await Candidate.findOne({ userId });
 
@@ -81,10 +84,11 @@ export const updateJobAlert = async (
     throw new AppError("You are not authorized to update this job alert", 403);
   }
 
-  jobAlert.keywords = keywords;
-  jobAlert.location = location;
-  jobAlert.employmentType = employmentType;
-  jobAlert.remote = remote;
+  if (data.keywords !== undefined) jobAlert.keywords = data.keywords;
+  if (data.location !== undefined) jobAlert.location = data.location;
+  if (data.employmentType !== undefined) jobAlert.employmentType = data.employmentType;
+  if (data.remote !== undefined) jobAlert.remote = data.remote;
+  if (data.isActive !== undefined) jobAlert.isActive = data.isActive;
 
   await jobAlert.save();
 
@@ -113,14 +117,27 @@ export const deleteJobAlert = async (userId: string, jobAlertId: string) => {
   return;
 };
 
-export const processJobAlertsForNewJob = async (job: any) => {
+export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> => {
+  const notifiedUserIds = new Set<string>();
   try {
+    console.log("[JOB ALERT SERVICE] Starting job alert matching for job:", job._id, job.title);
+
+    // Ensure User model is registered before population
+    if (!User) {
+      console.warn("[JOB ALERT SERVICE] User model undefined");
+    }
+
+
     const activeAlerts = await JobAlert.find({ isActive: true }).populate({
       path: "candidateId",
       populate: { path: "userId", select: "name email" },
     });
 
-    if (!activeAlerts || activeAlerts.length === 0) return;
+    console.log(`[JOB ALERT SERVICE] Found ${activeAlerts?.length || 0} active job alerts in DB`);
+
+    if (!activeAlerts || activeAlerts.length === 0) {
+      return notifiedUserIds;
+    }
 
     let companyName = "Company";
     if (job.companyId && typeof job.companyId === "object" && job.companyId.companyName) {
@@ -139,40 +156,66 @@ export const processJobAlertsForNewJob = async (job: any) => {
     const jobEmploymentType = job.employmentType;
     const isJobRemote = !!job.remote;
 
-    const notifiedUserIds = new Set<string>();
-
     for (const alert of activeAlerts) {
       const candidate = alert.candidateId as any;
-      if (!candidate || !candidate.userId) continue;
+      if (!candidate) {
+        console.log("[JOB ALERT SERVICE] Alert candidateId not found, skipping alert:", alert._id);
+        continue;
+      }
+      let user = candidate.userId as any;
+      if (!user || typeof user !== "object" || !user.email) {
+        if (candidate.userId) {
+          user = await User.findById(candidate.userId).select("name email");
+        }
+      }
 
-      const user = candidate.userId as any;
-      const userId = user._id.toString();
-
-      if (notifiedUserIds.has(userId)) continue;
-
-      // Match 1: Employment Type
-      if (alert.employmentType && alert.employmentType !== jobEmploymentType) {
+      if (!user || !user._id) {
+        console.log("[JOB ALERT SERVICE] Candidate user object or ID not found, candidateId:", candidate._id);
         continue;
       }
 
-      // Match 2: Remote Preference
+      const userId = user._id.toString();
+
+      if (notifiedUserIds.has(userId)) {
+        console.log(`[JOB ALERT SERVICE] User ${userId} already notified for this job, skipping redundant alert`);
+        continue;
+      }
+
+      // Match 1: Employment Type
+      if (alert.employmentType && alert.employmentType !== jobEmploymentType) {
+        console.log(`[JOB ALERT SERVICE] Employment type mismatch (Alert: ${alert.employmentType}, Job: ${jobEmploymentType}) for user ${userId}`);
+        continue;
+      }
+
+      // Match 2: Remote Preference (if alert demands remote but job is not remote)
       if (alert.remote && !isJobRemote) {
+        console.log(`[JOB ALERT SERVICE] Remote preference mismatch (Alert remote: true, Job remote: false) for user ${userId}`);
         continue;
       }
 
       // Match 3: Location (if specified in alert)
       if (alert.location && alert.location.trim() !== "") {
         const alertLoc = alert.location.trim().toLowerCase();
-        if (!jobLocation.includes(alertLoc) && !alertLoc.includes(jobLocation)) {
-          continue;
+        if (alertLoc === "remote") {
+          if (!isJobRemote && !jobLocation.includes("remote")) {
+            console.log(`[JOB ALERT SERVICE] Location mismatch (Alert loc: "remote", Job is not remote) for user ${userId}`);
+            continue;
+          }
+        } else if (alertLoc !== "any" && alertLoc !== "all") {
+          if (!jobLocation.includes(alertLoc) && !alertLoc.includes(jobLocation)) {
+            console.log(`[JOB ALERT SERVICE] Location mismatch (Alert loc: "${alertLoc}", Job loc: "${jobLocation}") for user ${userId}`);
+            continue;
+          }
         }
       }
 
       // Match 4: Keywords (if specified in alert)
-      if (alert.keywords && alert.keywords.length > 0) {
-        const hasKeywordMatch = alert.keywords.some((kw) => {
-          const lowerKw = kw.toLowerCase().trim();
-          if (!lowerKw) return false;
+      const validKeywords = Array.isArray(alert.keywords)
+        ? alert.keywords.map((k: string) => k.toLowerCase().trim()).filter(Boolean)
+        : [];
+
+      if (validKeywords.length > 0) {
+        const hasKeywordMatch = validKeywords.some((lowerKw: string) => {
           return (
             jobTitle.toLowerCase().includes(lowerKw) ||
             jobDescription.toLowerCase().includes(lowerKw) ||
@@ -180,18 +223,28 @@ export const processJobAlertsForNewJob = async (job: any) => {
           );
         });
 
-        if (!hasKeywordMatch) continue;
+        if (!hasKeywordMatch) {
+          console.log(`[JOB ALERT SERVICE] Keyword mismatch (Alert keywords: ${JSON.stringify(validKeywords)}, Job Title/Skills: "${jobTitle}") for user ${userId}`);
+          continue;
+        }
       }
 
+
+      console.log(`[JOB ALERT SERVICE] MATCH FOUND! Notifying user ${userId} (${user.email})`);
       notifiedUserIds.add(userId);
 
       // In-app notification
-      await createNotification(
-        userId,
-        `New Job Match: ${jobTitle}`,
-        `${companyName} posted a new job matching your alert: ${jobTitle}`,
-        "JOB_ALERT",
-      );
+      try {
+        await createNotification(
+          userId,
+          `New Job Match: ${jobTitle}`,
+          `${companyName} posted a new job matching your alert: ${jobTitle}`,
+          "JOB_ALERT",
+        );
+        console.log(`[JOB ALERT SERVICE] In-app notification created for user ${userId}`);
+      } catch (notifErr) {
+        console.error(`[JOB ALERT SERVICE ERROR] Failed to create in-app notification for user ${userId}:`, notifErr);
+      }
 
       // Email notification
       if (user.email) {
@@ -203,10 +256,14 @@ export const processJobAlertsForNewJob = async (job: any) => {
           location: job.location || "Remote",
           jobId: job._id.toString(),
         });
+      } else {
+        console.warn(`[JOB ALERT SERVICE WARNING] Candidate user ${userId} has no email address`);
       }
     }
   } catch (error) {
-    console.error("Error processing job alerts:", error);
+    console.error("[JOB ALERT SERVICE ERROR] Error processing job alerts:", error);
   }
+  return notifiedUserIds;
 };
+
 
