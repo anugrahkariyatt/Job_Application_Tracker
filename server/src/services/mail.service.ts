@@ -71,6 +71,28 @@ export const sendVerificationEmail = async ({
   }
 };
 
+interface JobAlertEmailPayload {
+  email: string;
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  location: string;
+  jobId: string;
+}
+
+export const sendJobAlertEmail = async (
+  payload: JobAlertEmailPayload,
+): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "job-alert",
+      ...payload,
+    });
+  } catch (error) {
+    console.error("Job Alert Email Service Error:", error);
+  }
+};
+
 export const sendPasswordResetEmail = async ({
   to,
   resetLink,
@@ -85,3 +107,4 @@ export const sendPasswordResetEmail = async ({
     throw new AppError("Unable to send verification email", 500);
   }
 };
+

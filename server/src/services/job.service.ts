@@ -1,6 +1,7 @@
 import Company from "../models/company.model.js";
 import Job from "../models/job.model.js";
 import { AppError } from "../utils/AppError.js";
+import { processJobAlertsForNewJob } from "./jobAlert.service.js";
 import {
   CreateJobInput,
   UpdateJobInput,
@@ -19,8 +20,14 @@ export const createJob = async (ownerId: string, data: CreateJobInput) => {
     ...data,
   });
 
+  // Asynchronously match job alerts and send email/in-app notifications
+  processJobAlertsForNewJob(job).catch((err) =>
+    console.error("Error triggering job alert notifications:", err),
+  );
+
   return job;
 };
+
 
 export const getMyJobs = async (
   ownerId: string,
