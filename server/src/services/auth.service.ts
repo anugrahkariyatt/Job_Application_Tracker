@@ -123,7 +123,7 @@ export const refreshUser = async (refreshToken: string) => {
     throw new AppError("Invalid refresh token", 401);
   }
 
-  const isValidRefreshToken = await hashValue(refreshToken, storedToken.token);
+  const isValidRefreshToken = await compareValue(refreshToken, storedToken.token);
 
   if (!isValidRefreshToken) {
     throw new AppError("Invalid refresh token", 401);
@@ -158,7 +158,7 @@ export const logoutUser = async (refreshToken: string) => {
   if (!storedToken) {
     throw new AppError("Invalid refresh token", 401);
   }
-  const isValidRefreshToken = await hashValue(refreshToken, storedToken.token);
+  const isValidRefreshToken = await compareValue(refreshToken, storedToken.token);
 
   if (!isValidRefreshToken) {
     throw new AppError("Invalid refresh token", 401);
@@ -167,6 +167,9 @@ export const logoutUser = async (refreshToken: string) => {
 };
 export const verifyUserPassword = async (password: string, userId: string) => {
   const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
   const hashedPassword = user.password;
   const isPasswordValid = await compareValue(password, hashedPassword);
   if (!isPasswordValid) {
@@ -180,7 +183,10 @@ export const verifyUserPassword = async (password: string, userId: string) => {
 };
 
 export const updateUserPassword = async (password: string, token: string) => {
-  const isValidpasswordtoken = await verifyPasswordVerificationToken(token);
+  const isValidpasswordtoken = verifyPasswordVerificationToken(token) as {
+    userId: string;
+    purpose: string;
+  };
 
   if (!isValidpasswordtoken) {
     throw new AppError("Invalid password verifcation token", 401);
@@ -193,6 +199,7 @@ export const updateUserPassword = async (password: string, token: string) => {
   if (!user) {
     throw new AppError("User not found", 404);
   }
+
   const hashedPassword = await hashValue(password);
   user.password = hashedPassword;
 

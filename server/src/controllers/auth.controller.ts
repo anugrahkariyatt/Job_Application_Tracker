@@ -176,10 +176,15 @@ export const verifyPassword = async (
     }
 
     const { password } = validation.data;
-
     const userId = req.user?.id;
 
+    if (!userId) {
+      throw new AppError("Unauthorized", 401);
+    }
+
     const verificationToken = await verifyUserPassword(password, userId);
+
+
 
     return res.status(200).json({
       success: true,
