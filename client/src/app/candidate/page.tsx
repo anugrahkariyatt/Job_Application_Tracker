@@ -17,6 +17,7 @@ import {
   Bell,
   TrendingUp,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 
 import {
@@ -245,25 +246,33 @@ export default function DashboardPage() {
           const events = appsResponse.data.data.map(mapTimelineEventToFrontend);
           setTimeline(events.slice(0, 5));
 
-          // Mock upcoming interviews based on applications marked as Interview status
-          const interviewApps = mappedApps.filter(
-            (a: Application) => a.status === "Interview",
-          );
-          const mockInterviews: Interview[] = interviewApps.map(
-            (a: Application, idx: number) => ({
-              id: `iv-${idx}`,
-              jobTitle: a.job.title,
-              company: a.job.company,
-              companyLogo: a.job.companyLogo,
-              date: new Date(
-                Date.now() + (idx + 1) * 2 * 24 * 60 * 60 * 1000,
-              ).toISOString(),
-              time: "10:00 AM",
-              format: "Video",
-              round: "Technical Interview",
-            }),
-          );
-          setUpcomingInterviews(mockInterviews);
+          // Fetch real upcoming interviews
+          try {
+            const interviewRes = await axiosInstance.get('/api/interviews');
+            if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
+              const mappedInterviews = interviewRes.data.data
+                .filter((iv: any) => iv.status === 'Scheduled')
+                .map((iv: any) => {
+                  const dateObj = new Date(iv.date);
+                  return {
+                    id: iv._id,
+                    jobTitle: iv.jobId?.title || 'Position',
+                    company: iv.companyId?.companyName || 'Company',
+                    companyLogo: iv.companyId?.logo || '',
+                    date: dateObj.toISOString(),
+                    time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    format: iv.type === 'Video Call' ? 'Video' : iv.type,
+                    round: iv.title,
+                    link: iv.link,
+                    notes: iv.notes,
+                    status: iv.status,
+                  };
+                });
+              setUpcomingInterviews(mappedInterviews);
+            }
+          } catch (ivErr) {
+            console.error("Error fetching candidate interviews:", ivErr);
+          }
         }
 
         // Fetch recommended open jobs
@@ -617,9 +626,26 @@ export default function DashboardPage() {
                         <Calendar className="h-3.5 w-3.5" />
                         {formatDate(iv.date)} at {iv.time}
                       </div>
-                      <Badge variant="secondary" className="mt-2 font-normal">
-                        {iv.format}
-                      </Badge>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" className="font-normal">
+                          {iv.format}
+                        </Badge>
+                        {iv.link && (
+                          <a
+                            href={iv.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Join Meet
+                          </a>
+                        )}
+                      </div>
+                      {iv.notes && (
+                        <p className="mt-2 text-xs text-muted-foreground bg-muted/40 p-2 rounded border border-border/50">
+                          {iv.notes}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))

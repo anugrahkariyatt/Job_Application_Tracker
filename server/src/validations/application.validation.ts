@@ -13,6 +13,7 @@ export const updateApplicationStatusSchema = z.object({
     "Applied",
     "Under Review",
     "Shortlisted",
+    "Interview",
     "Rejected",
     "Hired",
   ]),

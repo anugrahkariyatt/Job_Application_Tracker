@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Search, FileText, Eye, Ban, Loader2 } from 'lucide-react';
+import { Search, FileText, Eye, Ban, Loader2, Calendar } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,9 @@ export default function AppliedJobsPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>('all');
   const [withdrawTarget, setWithdrawTarget] = React.useState<string | null>(null);
   const [appList, setAppList] = React.useState<any[]>([]);
+  const [interviews, setInterviews] = React.useState<any[]>([]);
+  const [selectedInterview, setSelectedInterview] = React.useState<any>(null);
+  const [interviewDialogOpen, setInterviewDialogOpen] = React.useState(false);
 
   const fetchApplications = async () => {
     try {
@@ -54,6 +57,15 @@ export default function AppliedJobsPage() {
       if (response.data?.success && Array.isArray(response.data.data)) {
         const mapped = response.data.data.map(mapApplicationToFrontend);
         setAppList(mapped);
+      }
+      
+      try {
+        const interviewRes = await axiosInstance.get('/api/interviews');
+        if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
+          setInterviews(interviewRes.data.data);
+        }
+      } catch (ivErr) {
+        console.error('Fetch interviews error:', ivErr);
       }
     } catch (err: any) {
       console.error('Fetch applied jobs error:', err);
@@ -160,6 +172,25 @@ export default function AppliedJobsPage() {
                     <TableCell><StatusBadge status={app.status} /></TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        {app.status === 'Interview' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:text-primary hover:bg-primary/5"
+                            onClick={() => {
+                              const iv = interviews.find((i) => i.applicationId === app.id || i.applicationId?._id === app.id);
+                              if (iv) {
+                                setSelectedInterview(iv);
+                                setInterviewDialogOpen(true);
+                              } else {
+                                toast.error('Interview details not found.');
+                              }
+                            }}
+                            title="View Interview Details"
+                          >
+                            <Calendar className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" asChild>
                           <Link href={`/candidate/jobs/${app.jobId}`}>
                             <Eye className="h-4 w-4" />
@@ -190,6 +221,58 @@ export default function AppliedJobsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setWithdrawTarget(null)}>Cancel</Button>
             <Button variant="destructive" onClick={handleWithdraw}>Withdraw</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Interview Details Dialog */}
+      <Dialog open={interviewDialogOpen} onOpenChange={setInterviewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Interview Details</DialogTitle>
+            <DialogDescription>
+              Details of your scheduled interview round.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedInterview && (
+            <div className="space-y-4 py-2">
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="text-sm font-semibold text-foreground">Round</span>
+                <span className="text-sm font-medium">{selectedInterview.title}</span>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="text-sm font-semibold text-foreground">Date & Time</span>
+                <span className="text-sm font-medium">{new Date(selectedInterview.date).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between border-b pb-2">
+                <span className="text-sm font-semibold text-foreground">Format</span>
+                <span className="text-sm font-medium">{selectedInterview.type}</span>
+              </div>
+              {selectedInterview.link && (
+                <div className="space-y-1">
+                  <span className="text-sm font-semibold text-foreground block">Meeting Link / Location</span>
+                  <a
+                    href={selectedInterview.link.startsWith('http') ? selectedInterview.link : `https://${selectedInterview.link}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline font-medium break-all block"
+                  >
+                    {selectedInterview.link}
+                  </a>
+                </div>
+              )}
+              {selectedInterview.notes && (
+                <div className="space-y-1">
+                  <span className="text-sm font-semibold text-foreground block">Recruiter Instructions</span>
+                  <p className="text-sm text-muted-foreground bg-muted p-2.5 rounded border leading-relaxed whitespace-pre-line">
+                    {selectedInterview.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setInterviewDialogOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

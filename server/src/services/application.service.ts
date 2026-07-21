@@ -45,13 +45,17 @@ export const applyForJob = async (userId: string, jobId: string) => {
     companyId: job.companyId,
   });
 
-  await sendApplicationSubmittedEmail({
-    email: user.email,
-    candidateName: user.name,
-    jobTitle: job.title,
-    companyName: company.companyName,
-    applicationDate: new Date().toLocaleDateString(),
-  });
+  try {
+    await sendApplicationSubmittedEmail({
+      email: user.email,
+      candidateName: user.name,
+      jobTitle: job.title,
+      companyName: company.companyName,
+      applicationDate: new Date().toLocaleDateString(),
+    });
+  } catch (emailErr) {
+    console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
+  }
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
@@ -181,6 +185,11 @@ export const updateApplicationStatus = async (
       message = "Congratulations! You have been shortlisted.";
       break;
 
+    case "Interview":
+      title = "Interview Scheduled";
+      message = "An interview round has been scheduled for your application.";
+      break;
+
     case "Rejected":
       title = "Application Rejected";
       message = "Unfortunately, your application was not selected.";
@@ -198,13 +207,17 @@ export const updateApplicationStatus = async (
     "APPLICATION",
   );
 
-  await sendApplicationStatusEmail({
-    email: user.email,
-    candidateName: user.name,
-    jobTitle: job.title,
-    companyName: company.companyName,
-    status: application.status,
-  });
+  try {
+    await sendApplicationStatusEmail({
+      email: user.email,
+      candidateName: user.name,
+      jobTitle: job.title,
+      companyName: company.companyName,
+      status: application.status,
+    });
+  } catch (emailErr) {
+    console.error("[APPLICATION SERVICE ERROR] Failed to send status update email:", emailErr);
+  }
 
   return application;
 };
