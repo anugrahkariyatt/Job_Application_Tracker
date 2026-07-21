@@ -152,7 +152,7 @@ export const getRecruiterDashboardStats = async (
       .populate("jobId", "title");
 
     const totalApplications = applications.length;
-    
+
     // Calculate new applications (Applied in the last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -161,7 +161,7 @@ export const getRecruiterDashboardStats = async (
     ).length;
 
     const interviewsScheduled = applications.filter(
-      app => app.status === "Shortlisted"
+      app => app.status === "Interview"
     ).length;
 
     const hiredCandidates = applications.filter(
@@ -203,8 +203,8 @@ export const getRecruiterDashboardStats = async (
     const newApplicationsDelta = calculateDelta(newAppsThisPeriod, newAppsLastPeriod);
 
     // Calculate Interviews Delta (vs last month)
-    const interviewsThisMonth = applications.filter(app => app.status === "Shortlisted" && app.createdAt >= thirtyDaysAgo).length;
-    const interviewsLastMonth = applications.filter(app => app.status === "Shortlisted" && app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
+    const interviewsThisMonth = applications.filter(app => app.status === "Interview" && app.createdAt >= thirtyDaysAgo).length;
+    const interviewsLastMonth = applications.filter(app => app.status === "Interview" && app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
     const interviewsScheduledDelta = calculateDelta(interviewsThisMonth, interviewsLastMonth);
 
     // Calculate Hired Delta (vs last month)
@@ -250,30 +250,6 @@ export const getRecruiterDashboardStats = async (
         jobs: runningTotal,
       };
     });
-
-    // Calculate views vs applications dynamically per active job
-    const jobAppsCountMap = new Map<string, number>();
-    jobs.forEach(j => {
-      jobAppsCountMap.set(j._id.toString(), 0);
-    });
-    applications.forEach(app => {
-      const jobIdStr = (app.jobId as any)?._id?.toString() || app.jobId?.toString();
-      if (jobIdStr && jobAppsCountMap.has(jobIdStr)) {
-        jobAppsCountMap.set(jobIdStr, jobAppsCountMap.get(jobIdStr)! + 1);
-      }
-    });
-
-    const viewsVsApplications = jobs
-      .filter(j => j.status === "Open")
-      .map(j => {
-        const appsCount = jobAppsCountMap.get(j._id.toString()) || 0;
-        return {
-          name: j.title.split(" ")[0],
-          views: appsCount * 4 + 10, // Simulated views ratio based on actual applications
-          applications: appsCount,
-        };
-      });
-
     // Applications per job
     const appsPerJobMap = new Map<string, number>();
     jobs.forEach(j => {
@@ -295,6 +271,7 @@ export const getRecruiterDashboardStats = async (
       "Applied": { name: "Applied", value: 0, color: "hsl(var(--chart-1))" },
       "Under Review": { name: "Under Review", value: 0, color: "hsl(var(--chart-2))" },
       "Shortlisted": { name: "Shortlisted", value: 0, color: "hsl(var(--chart-3))" },
+      "Interview": { name: "Interview", value: 0, color: "hsl(var(--chart-6))" },
       "Rejected": { name: "Rejected", value: 0, color: "hsl(var(--chart-5))" },
       "Hired": { name: "Hired", value: 0, color: "hsl(var(--chart-4))" }
     };
@@ -305,10 +282,10 @@ export const getRecruiterDashboardStats = async (
     });
     const statusDistribution = Object.values(statusMap).filter(s => s.value > 0);
 
-    // Recent applications
+    // Recent applications (limit 4)
     const recentApplications = applications
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0, 5)
+      .slice(0, 4)
       .map(app => {
         const candidate = app.candidateId as any;
         const user = candidate?.userId as any;
@@ -328,10 +305,10 @@ export const getRecruiterDashboardStats = async (
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, 4);
 
-    // Recent notifications (limit 4)
+    // Recent notifications (limit 3)
     const recentNotifications = await Notification.find({ userId: req.user!.id })
       .sort({ createdAt: -1 })
-      .limit(4);
+      .limit(3);
 
     return res.status(200).json({
       success: true,
@@ -360,7 +337,6 @@ export const getRecruiterDashboardStats = async (
         recentNotifications,
         recentJobs,
         jobsOverTime,
-        viewsVsApplications,
       }
     });
   } catch (error) {
