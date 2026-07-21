@@ -7,6 +7,8 @@ import {
   deleteApplicationController,
   FetchApplicantByJobIdController,
   updateApplicationStatusController,
+  getRecruiterApplicationsController,
+  getApplicationByIdController,
 } from "../controllers/application.controller.js";
 import { updateApplicationStatus } from "../services/application.service.js";
 
@@ -31,11 +33,25 @@ router.delete(
 //recurter
 
 router.get(
+  "/recruiter/all",
+  authenticate,
+  authorize("recruiter"),
+  getRecruiterApplicationsController,
+);
+
+router.get(
   "/job/:jobId",
   authenticate,
   authorize("recruiter"),
   FetchApplicantByJobIdController,
 );
+router.get(
+  "/:applicationId",
+  authenticate,
+  authorize("recruiter"),
+  getApplicationByIdController,
+);
+
 router.patch(
   "/:applicationId/status",
   authenticate,

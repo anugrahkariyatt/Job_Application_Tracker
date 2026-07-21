@@ -14,6 +14,8 @@ import {
   updateJobStatus,
 } from "../services/job.service.js";
 import z from "zod";
+import Company from "../models/company.model.js";
+import Job from "../models/job.model.js";
 
 export const createJobController = async (
   req: Request,
@@ -46,11 +48,32 @@ export const getMyJobsController = async (
   next: NextFunction,
 ) => {
   try {
-    const result = await getMyJobs(req.user!.id);
+    const { search, status, page, limit } = req.query;
+
+    const result = await getMyJobs(req.user!.id, {
+      search: search as string,
+      status: status as string,
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    const stats = company
+      ? {
+          total: await Job.countDocuments({ companyId: company._id }),
+          open: await Job.countDocuments({ companyId: company._id, status: "Open" }),
+          closed: await Job.countDocuments({ companyId: company._id, status: "Closed" }),
+          draft: await Job.countDocuments({ companyId: company._id, status: "Draft" }),
+        }
+      : { total: 0, open: 0, closed: 0, draft: 0 };
 
     return res.status(200).json({
       success: true,
-      data: result,
+      data: {
+        jobs: result.jobs,
+        totalCount: result.totalCount,
+        stats,
+      },
     });
   } catch (error) {
     next(error);
@@ -175,6 +198,105 @@ export const updateJobStatusController = async (
       success: true,
       message: "Job status updated successfully",
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllJobsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const {
+      search,
+      employmentTypes,
+      experienceLevels,
+      location,
+      remote,
+      salaryMin,
+      sortBy,
+      companyId,
+    } = req.query;
+
+    const filterQuery: any = { status: "Open" };
+    if (companyId) {
+      filterQuery.companyId = companyId;
+    }
+
+    // 1. Search text filter (title, skills, description)
+    if (search) {
+      const searchRegex = new RegExp(search as string, "i");
+      filterQuery.$or = [
+        { title: searchRegex },
+        { skills: { $in: [searchRegex] } },
+        { description: searchRegex },
+      ];
+    }
+
+    // 2. Employment types filter
+    if (employmentTypes) {
+      const typesList = (employmentTypes as string)
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (typesList.length > 0) {
+        filterQuery.employmentType = { $in: typesList };
+      }
+    }
+
+    // 3. Experience level filter
+    if (experienceLevels) {
+      const levelsList = (experienceLevels as string)
+        .split(",")
+        .map((l) => {
+          const val = l.trim();
+          if (val === "Entry") return "Fresher";
+          if (val === "Mid") return "Mid-Level";
+          return val;
+        })
+        .filter(Boolean);
+      if (levelsList.length > 0) {
+        filterQuery.experienceLevel = { $in: levelsList };
+      }
+    }
+
+    // 4. Remote filter
+    if (remote === "true") {
+      filterQuery.remote = true;
+    }
+
+    // 5. Location filter
+    if (location) {
+      filterQuery.location = new RegExp(location as string, "i");
+    }
+
+    // 6. Minimum Salary filter
+    if (salaryMin) {
+      const minVal = Number(salaryMin) * 1000;
+      if (!isNaN(minVal)) {
+        filterQuery.salaryMin = { $gte: minVal };
+      }
+    }
+
+    // 7. Sorting setup
+    let sortObj: any = { createdAt: -1 };
+    if (sortBy === "salary_high") {
+      sortObj = { salaryMin: -1, salaryMax: -1 };
+    } else if (sortBy === "salary_low") {
+      sortObj = { salaryMin: 1, salaryMax: 1 };
+    }
+
+    const jobs = await Job.find(filterQuery)
+      .populate("companyId", "companyName logo location industry description")
+      .sort(sortObj);
+
+    return res.status(200).json({
+      success: true,
+      message: "Jobs fetched successfully",
+      data: jobs,
     });
   } catch (error) {
     next(error);

@@ -42,3 +42,22 @@ export const getCurrentUser = async (): Promise<CurrentUserResponse> => {
 export const refresh = async (): Promise<void> => {
   await axiosInstance.post<CurrentUserResponse>("/api/auth/refresh");
 };
+
+export const resendVerificationEmail = async (email: string) => {
+  const { data } = await axiosInstance.post(
+    "/api/auth/resend-verification-email",
+    {
+      email,
+    },
+  );
+
+  return data;
+};
+
+export const verifyEmail = async (token: string) => {
+  const { data } = await axiosInstance.get(
+    `/api/auth/verify-email?token=${token}`,
+  );
+
+  return data;
+};

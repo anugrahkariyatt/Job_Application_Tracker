@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from "react";
 import {
   Search,
   UserRound,
@@ -13,142 +16,130 @@ const candidateSteps = [
   {
     icon: Search,
     title: "Discover Jobs",
-    description: "Search jobs based on your skills, interests, and preferred location.",
+    description: "Search and filter through positions matching your skillset and interests.",
   },
   {
     icon: UserRound,
     title: "Complete Profile",
-    description: "Build your professional profile and upload your resume.",
+    description: "Upload your resume and input your work experience to construct a rich profile.",
   },
   {
     icon: FileCheck,
-    title: "Apply",
-    description: "Apply to verified companies with just a few clicks.",
+    title: "Instant Apply",
+    description: "Send your profile and cover notes to verified recruiters with one-click submissions.",
   },
   {
     icon: ClipboardCheck,
-    title: "Track Progress",
-    description: "Monitor every application with real-time status updates.",
+    title: "Track Application",
+    description: "Watch your live status move from under-review to interview and offer notifications.",
   },
 ];
 
 const recruiterSteps = [
   {
     icon: Building2,
-    title: "Create Company",
-    description: "Set up your company profile and verification details.",
+    title: "Establish Profile",
+    description: "Set up your corporate verification details to showcase your brand identity.",
   },
   {
     icon: BriefcaseBusiness,
-    title: "Post Jobs",
-    description: "Publish opportunities to attract qualified candidates.",
+    title: "Publish Roles",
+    description: "List full-time, part-time, or remote roles to target qualified professionals.",
   },
   {
     icon: Users,
-    title: "Review Applicants",
-    description: "View applications and evaluate candidate profiles.",
+    title: "Evaluate Talent",
+    description: "Read, score, and manage applicant profiles through your HR pipelines.",
   },
   {
     icon: BadgeCheck,
-    title: "Hire Talent",
-    description: "Update application status and hire the right candidate.",
+    title: "Finalize Hiring",
+    description: "Schedule loops and update statuses to seal negotiations and secure top talent.",
   },
 ];
 
 export default function HowItWorks() {
+  const [activeRole, setActiveRole] = useState<'candidates' | 'recruiters'>('candidates');
+
+  const steps = activeRole === 'candidates' ? candidateSteps : recruiterSteps;
+
   return (
-    <section className="bg-surface py-24">
+    <section className="bg-surface py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mx-auto mb-16 max-w-3xl text-center">
-          <h2 className="text-4xl font-bold text-text">
+        
+        {/* Section Heading */}
+        <div className="mx-auto mb-14 max-w-3xl text-center space-y-4">
+          <h2 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
             How It Works
           </h2>
-
-          <p className="mt-4 text-lg text-text-secondary">
-            Whether you're searching for your next opportunity or hiring top
-            talent, getting started is simple.
+          <p className="text-lg text-text-secondary">
+            Simplifying employment for candidates and streamline pipelines for recruiters.
           </p>
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-2">
-          {/* Candidate */}
-
-          <div>
-            <h3 className="mb-8 text-2xl font-bold text-primary">
+        {/* Stateful Tab Toggle */}
+        <div className="flex justify-center mb-16">
+          <div className="inline-flex rounded-xl bg-background p-1.5 border border-border shadow-sm">
+            <button
+              onClick={() => setActiveRole('candidates')}
+              className={`rounded-lg px-6 py-2.5 text-sm font-bold transition-all duration-200 ${
+                activeRole === 'candidates'
+                  ? 'bg-primary text-text-white shadow-md shadow-primary/10'
+                  : 'text-text-secondary hover:text-primary'
+              }`}
+            >
               For Candidates
-            </h3>
-
-            <div className="space-y-6">
-              {candidateSteps.map((step, index) => {
-                const Icon = step.icon;
-
-                return (
-                  <div
-                    key={step.title}
-                    className="flex gap-5 rounded-2xl border border-border bg-background p-6"
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-light">
-                      <Icon size={26} className="text-primary" />
-                    </div>
-
-                    <div>
-                      <span className="text-sm font-semibold text-primary">
-                        Step {index + 1}
-                      </span>
-
-                      <h4 className="mt-1 text-xl font-semibold text-text">
-                        {step.title}
-                      </h4>
-
-                      <p className="mt-2 text-text-secondary">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recruiter */}
-
-          <div>
-            <h3 className="mb-8 text-2xl font-bold text-primary">
+            </button>
+            
+            <button
+              onClick={() => setActiveRole('recruiters')}
+              className={`rounded-lg px-6 py-2.5 text-sm font-bold transition-all duration-200 ${
+                activeRole === 'recruiters'
+                  ? 'bg-primary text-text-white shadow-md shadow-primary/10'
+                  : 'text-text-secondary hover:text-primary'
+              }`}
+            >
               For Recruiters
-            </h3>
-
-            <div className="space-y-6">
-              {recruiterSteps.map((step, index) => {
-                const Icon = step.icon;
-
-                return (
-                  <div
-                    key={step.title}
-                    className="flex gap-5 rounded-2xl border border-border bg-background p-6"
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-light">
-                      <Icon size={26} className="text-primary" />
-                    </div>
-
-                    <div>
-                      <span className="text-sm font-semibold text-primary">
-                        Step {index + 1}
-                      </span>
-
-                      <h4 className="mt-1 text-xl font-semibold text-text">
-                        {step.title}
-                      </h4>
-
-                      <p className="mt-2 text-text-secondary">
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            </button>
           </div>
         </div>
+
+        {/* Steps Horizontal/Vertical Flow Grid */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 relative">
+          {/* Connector timeline graphics (only on larger displays) */}
+          <div className="hidden lg:block absolute top-[44px] left-[15%] right-[15%] h-0.5 border-t border-dashed border-border/80 -z-0"></div>
+
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+
+            return (
+              <div
+                key={step.title}
+                className="group relative flex flex-col items-center text-center rounded-2xl border border-border bg-background p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md z-10"
+              >
+                {/* Visual Step Counter Background Badge */}
+                <span className="absolute top-4 right-4 text-5xl font-light text-primary/5 select-none transition-colors duration-300 group-hover:text-primary/10">
+                  0{index + 1}
+                </span>
+
+                {/* Styled Step Icon */}
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-primary shadow-sm shadow-primary/5 mb-6 transition-transform duration-300 group-hover:scale-105">
+                  <Icon size={26} />
+                </div>
+
+                {/* Text Contexts */}
+                <h4 className="text-xl font-bold text-text group-hover:text-primary transition-colors">
+                  {step.title}
+                </h4>
+                
+                <p className="mt-3 text-sm text-text-secondary leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );

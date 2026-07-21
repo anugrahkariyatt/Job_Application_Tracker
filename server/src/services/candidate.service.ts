@@ -1,4 +1,5 @@
 import Candidate from "../models/candidate.model.js";
+import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import {
   CreateCandidateInput,
@@ -27,8 +28,10 @@ export const createCandidate = async (
 };
 
 export const getMyCandidate = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
-
+  const candidate = await Candidate.findOne({ userId }).populate(
+    "userId",
+    "name email",
+  );
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
@@ -46,13 +49,20 @@ export const updateCandidate = async (
     throw new AppError("Candidate profile not found", 404);
   }
 
+  if (data.fullName) {
+    await User.findByIdAndUpdate(userId, {
+      name: data.fullName,
+    });
+
+    delete data.fullName;
+  }
+
   Object.assign(candidate, data);
 
   await candidate.save();
 
   return candidate;
 };
-
 export const updateCandidateProfileImage = async (
   userId: string,
   file: Express.Multer.File,

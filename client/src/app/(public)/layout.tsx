@@ -1,8 +1,5 @@
 import PublicNavbar from "@/components/layout/PublicNavbar";
-import Statistics from "@/components/public/Statistics";
-// import Footer from "@/components/layout/Footer";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import RoleGuard from "@/components/auth/RoleGuard";
+import Footer from "@/components/layout/Footer";
 
 export default function PublicLayout({
   children,
@@ -10,13 +7,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
-      <ProtectedRoute>
-        <RoleGuard allowedRoles={["candidate"]}>
-          <PublicNavbar />
-          <main>{children}</main>
-        </RoleGuard>
-      </ProtectedRoute>
-    </>
+    <div className="min-h-screen flex flex-col">
+      <PublicNavbar />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
   );
 }

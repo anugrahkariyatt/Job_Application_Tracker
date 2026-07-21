@@ -11,6 +11,10 @@ import {
   resetUserPassword,
   verifyEmailService,
   getCurrentUser,
+  updateUserPreferencesService,
+  deactivateUserService,
+  deleteUserService,
+  resendVerificationEmailService,
 } from "../services/auth.service.js";
 import {
   loginSchema,
@@ -19,6 +23,7 @@ import {
   updatePasswordSchema,
   resetPasswordSchema,
   verifyPasswordSchema,
+  updatePreferencesSchema,
 } from "../validations/auth.validation.js";
 import { z } from "zod";
 import { AppError } from "../utils/AppError.js";
@@ -256,9 +261,24 @@ export const resetPassword = async (
 
     const result = await resetUserPassword(token, password);
 
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.status(200).json({
       success: true,
       message: result.message,
+      user: result.user,
     });
   } catch (error) {
     next(error);
@@ -274,6 +294,32 @@ export const sendVerificationEmail = async (
     const userId = req.user!.id;
 
     const result = await sendVerificationEmailService(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerificationEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const validation = forgotPasswordSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
+    const result = await resendVerificationEmailService(validation.data.email);
 
     return res.status(200).json({
       success: true,
@@ -324,7 +370,81 @@ export const getCurrentUserController = async (
         role: result.role,
         isVerified: result.isVerified,
         isActive: result.isActive,
+        preferences: result.preferences,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePreferences = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const validation = updatePreferencesSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
+    const userId = req.user!.id;
+    const { preferences } = validation.data;
+    const updatedPreferences = await updateUserPreferencesService(
+      userId,
+      preferences,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Preferences updated successfully",
+      preferences: updatedPreferences,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deactivateAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+    await deactivateUserService(userId);
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deactivated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAccount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = req.user!.id;
+    await deleteUserService(userId);
+
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted permanently",
     });
   } catch (error) {
     next(error);

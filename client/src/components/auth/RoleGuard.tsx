@@ -18,7 +18,7 @@ export default function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
 
   useEffect(() => {
     if (initialized && user && !allowedRoles.includes(user.role)) {
-      router.replace("/test");
+      router.replace("/");
     }
   }, [initialized, user, allowedRoles, router]);
 

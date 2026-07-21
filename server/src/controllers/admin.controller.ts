@@ -4,19 +4,28 @@ import { z } from "zod";
 import {
   getUserSchema,
   updateUserStatusSchema,
-} from "../validations/admin.validation.js";
-import { getAllUsers, updateUserStatus } from "../services/admin.service.js";
-
-import {
   getCompanySchema,
   updateCompanyStatusSchema,
   updateCompanyVerificationSchema,
+  getJobSchema,
+  getApplicationSchema,
+  updateApplicationStatusSchema,
 } from "../validations/admin.validation.js";
+import { getAllUsers, updateUserStatus } from "../services/admin.service.js";
 
 import {
   getAllCompanies,
   updateCompanyStatus,
   updateCompanyVerification,
+  deleteUserByAdmin,
+  deleteCompanyService,
+  getAllJobs,
+  deleteJobByAdmin,
+  getAllApplications,
+  getJobByIdForAdmin,
+  getApplicationByIdForAdmin,
+  updateApplicationStatusByAdmin,
+  getCompanyByIdForAdmin,
 } from "../services/admin.service.js";
 
 export const getDashboardController = async (
@@ -45,7 +54,7 @@ export const getAllUsersController = async (
   next: NextFunction,
 ) => {
   try {
-    const result = await getAllUsers();
+    const result = await getAllUsers(req.query as any);
 
     return res.status(200).json({
       success: true,
@@ -104,7 +113,7 @@ export const getAllCompaniesController = async (
   next: NextFunction,
 ) => {
   try {
-    const result = await getAllCompanies();
+    const result = await getAllCompanies(req.query as any);
 
     return res.status(200).json({
       success: true,
@@ -186,6 +195,229 @@ export const updateCompanyStatusController = async (
     return res.status(200).json({
       success: true,
       message: "Company status updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUserController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getUserSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    await deleteUserByAdmin(paramsValidation.data.userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteCompanyController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getCompanySchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    await deleteCompanyService(paramsValidation.data.companyId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Company deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllJobsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await getAllJobs(req.query as any);
+    return res.status(200).json({
+      success: true,
+      message: "Jobs fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const deleteJobController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getJobSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    await deleteJobByAdmin(paramsValidation.data.jobId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Job deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAllApplicationsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const result = await getAllApplications(req.query as any);
+    return res.status(200).json({
+      success: true,
+      message: "Applications fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const getJobByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getJobSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    const result = await getJobByIdForAdmin(paramsValidation.data.jobId);
+    return res.status(200).json({
+      success: true,
+      message: "Job fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getApplicationByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getApplicationSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    const result = await getApplicationByIdForAdmin(paramsValidation.data.applicationId);
+    return res.status(200).json({
+      success: true,
+      message: "Application fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateApplicationStatusController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getApplicationSchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    const bodyValidation = updateApplicationStatusSchema.safeParse(req.body);
+    if (!bodyValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(bodyValidation.error),
+      });
+    }
+
+    const result = await updateApplicationStatusByAdmin(
+      paramsValidation.data.applicationId,
+      bodyValidation.data.status,
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Application status updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCompanyByIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const paramsValidation = getCompanySchema.safeParse(req.params);
+    if (!paramsValidation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(paramsValidation.error),
+      });
+    }
+
+    const result = await getCompanyByIdForAdmin(paramsValidation.data.companyId);
+    return res.status(200).json({
+      success: true,
+      message: "Company details fetched successfully",
       data: result,
     });
   } catch (error) {

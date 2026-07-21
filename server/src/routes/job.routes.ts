@@ -8,6 +8,7 @@ import {
   getMyJobsController,
   updateJobController,
   updateJobStatusController,
+  getAllJobsController,
 } from "../controllers/job.controller.js";
 
 const router = Router();
@@ -20,6 +21,8 @@ router.get(
   authorize("recruiter"),
   getMyJobsController,
 );
+
+router.get("/", getAllJobsController);
 
 router.patch(
   "/:jobId",
