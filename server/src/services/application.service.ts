@@ -6,6 +6,7 @@ import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { IApplication } from "../models/application.model.js";
 import { createNotification } from "./notification.service.js";
+import { sendApplicationEmail, sendApplicationSubmittedEmail } from "./mail.service.js";
 
 export const applyForJob = async (userId: string, jobId: string) => {
   const user = await User.findById(userId);
@@ -31,12 +32,23 @@ export const applyForJob = async (userId: string, jobId: string) => {
   if (existingApplication) {
     throw new AppError("You have already applied for this job", 400);
   }
+  const company = await CompanyProfile.findById(job.companyId);
+  if (!company) {
+    throw new AppError("Company not found", 404);
+  }
   const application = await Application.create({
     candidateId: candidate._id,
     jobId: job._id,
     companyId: job.companyId,
   });
 
+  await sendApplicationSubmittedEmail({
+    email: user.email,
+    candidateName: user.name,
+    jobTitle: job.title,
+    companyName: company.companyName,
+    applicationDate: new Date().toLocaleDateString(),
+  });
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
@@ -136,7 +148,7 @@ export const updateApplicationStatus = async (
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
-  
+
   let title = "";
   let message = "";
 

@@ -12,6 +12,26 @@ interface PasswordResetEmailOptions {
   resetLink: string;
 }
 
+interface ApplicationSubmittedEmailPayload {
+  email: string;
+  candidateName: string;
+  jobTitle: string;
+  companyName: string;
+  applicationDate: string;
+}
+export const sendApplicationSubmittedEmail = async (
+  payload: ApplicationSubmittedEmailPayload,
+): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "application-submitted",
+      ...payload,
+    });
+  } catch (error) {
+    console.error("Email Service Error:", error);
+    throw new AppError("Unable to send application submitted email", 500);
+  }
+};
 export const sendVerificationEmail = async ({
   to,
   verificationLink,
@@ -38,13 +58,6 @@ export const sendPasswordResetEmail = async ({
       resetLink,
     });
   } catch (error) {
-    console.error("n8n Email Error:", error);
-
-    if (axios.isAxiosError(error)) {
-      console.log("Status:", error.response?.status);
-      console.log("Response:", error.response?.data);
-    }
-
     throw new AppError("Unable to send verification email", 500);
   }
 };
