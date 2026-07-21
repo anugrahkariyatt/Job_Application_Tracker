@@ -32,6 +32,7 @@ export interface Job {
   salary: string;
   postedDate: string;
   remote: boolean;
+  workMode?: 'Remote' | 'Hybrid' | 'Onsite';
   skills: string[];
   description: string;
   responsibilities: string[];
@@ -140,8 +141,11 @@ export interface Interview {
   companyLogo: string;
   date: string;
   time: string;
-  format: 'Video' | 'Onsite' | 'Phone';
+  format: 'Video' | 'Onsite' | 'Phone' | string;
   round: string;
+  link?: string;
+  notes?: string;
+  status?: string;
 }
 
 export interface TimelineEvent {

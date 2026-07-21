@@ -22,6 +22,7 @@ export const mapJobToFrontend = (dbJob: any): Job => {
     salary: salaryStr,
     postedDate: dbJob.createdAt || new Date().toISOString(),
     remote: dbJob.remote || false,
+    workMode: dbJob.workMode || (dbJob.remote ? 'Remote' : 'Onsite'),
     skills: dbJob.skills || [],
     description: dbJob.description || '',
     responsibilities: dbJob.responsibilities ? dbJob.responsibilities.split('\n').filter(Boolean) : [],

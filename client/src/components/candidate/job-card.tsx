@@ -78,7 +78,7 @@ export function JobCard({ job, saved, onToggleSave, onApply, view = 'grid' }: Jo
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" />
-              {job.remote ? 'Remote' : job.location}
+              {job.location} {job.workMode ? `(${job.workMode})` : (job.remote ? '(Remote)' : '(Onsite)')}
             </span>
             <span className="flex items-center gap-1">
               <Briefcase className="h-3.5 w-3.5" />

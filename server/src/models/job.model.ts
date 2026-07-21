@@ -85,6 +85,12 @@ const jobSchema = new Schema(
       default: false,
     },
 
+    workMode: {
+      type: String,
+      enum: ["Remote", "Hybrid", "Onsite"],
+      default: "Onsite",
+    },
+
     vacancies: {
       type: Number,
       required: true,

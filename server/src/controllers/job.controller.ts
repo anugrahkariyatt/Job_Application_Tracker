@@ -219,6 +219,7 @@ export const getAllJobsController = async (
       salaryMin,
       sortBy,
       companyId,
+      workModes,
     } = req.query;
 
     const filterQuery: any = { status: "Open" };
@@ -263,9 +264,32 @@ export const getAllJobsController = async (
       }
     }
 
-    // 4. Remote filter
-    if (remote === "true") {
-      filterQuery.remote = true;
+    // 4. Remote & Work Mode filter
+    if (workModes) {
+      const modesList = (workModes as string)
+        .split(",")
+        .map((w) => w.trim())
+        .filter(Boolean);
+      if (modesList.length > 0) {
+        const workModeQueries: any[] = [];
+        if (modesList.includes("Remote")) {
+          workModeQueries.push({ workMode: "Remote" });
+          workModeQueries.push({ remote: true });
+        }
+        if (modesList.includes("Onsite")) {
+          workModeQueries.push({ workMode: "Onsite" });
+          workModeQueries.push({ workMode: { $exists: false }, remote: false });
+        }
+        if (modesList.includes("Hybrid")) {
+          workModeQueries.push({ workMode: "Hybrid" });
+        }
+        if (workModeQueries.length > 0) {
+          filterQuery.$and = filterQuery.$and || [];
+          filterQuery.$and.push({ $or: workModeQueries });
+        }
+      }
+    } else if (remote === "true") {
+      filterQuery.$or = [{ workMode: "Remote" }, { remote: true }];
     }
 
     // 5. Location filter
