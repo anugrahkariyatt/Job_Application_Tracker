@@ -160,7 +160,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 : 'Re-open Job'}
             </Button>
             <Button size="sm" asChild>
-              <Link href={`/applicants?job=${job._id}`}>
+              <Link href={`/recruiter/applicants?job=${job._id}`}>
                 <Users className="mr-1.5 h-4 w-4" />
                 View Applicants
               </Link>
@@ -218,7 +218,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 <InfoRow
                   icon={DollarSign}
                   label="Salary Range"
-                  value={`${job.salaryMin?.toLocaleString()} – ${job.salaryMax?.toLocaleString()} USD`}
+                  value={`${job.salaryMin?.toLocaleString()} – ${job.salaryMax?.toLocaleString()} ${job.currency || 'USD'}`}
                 />
               </div>
               <div className="mt-4">
@@ -290,7 +290,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base font-semibold">Recent Applicants</CardTitle>
               <Link
-                href={`/applicants?job=${job._id}`}
+                href={`/recruiter/applicants?job=${job._id}`}
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 View all <ArrowRight className="h-3.5 w-3.5" />
@@ -306,7 +306,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                   return (
                     <Link
                       key={app._id}
-                      href={`/applicants/${app._id}`}
+                      href={`/recruiter/applicants/${app._id}`}
                       className="flex items-center gap-3 rounded-md p-2 hover:bg-accent transition-colors"
                     >
                       {candidate.profileImage ? (

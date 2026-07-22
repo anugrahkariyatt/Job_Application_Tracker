@@ -97,7 +97,7 @@ export default function SettingsPage() {
     setPreferences(updatedPrefs);
 
     try {
-      const res = await axiosInstance.put('/api/auth/preferences', updatedPrefs);
+      const res = await axiosInstance.put('/api/auth/preferences', { preferences: updatedPrefs });
       if (res.data?.success) {
         if (user) {
           dispatch(setUser({ ...user, preferences: updatedPrefs }));
@@ -122,8 +122,8 @@ export default function SettingsPage() {
         password: currentPassword,
       });
 
-      if (res.data?.success && res.data?.data?.verificationToken) {
-        setVerificationToken(res.data.data.verificationToken);
+      if (res.data?.success && res.data?.verificationToken) {
+        setVerificationToken(res.data.verificationToken);
         setPasswordStep(2);
         toast.success('Password verified. You may now enter a new password.');
       }
@@ -153,7 +153,7 @@ export default function SettingsPage() {
 
     try {
       setVerifyingPassword(true);
-      const res = await axiosInstance.post('/api/auth/reset-password', {
+      const res = await axiosInstance.post('/api/auth/update-password', {
         token: verificationToken,
         password: newPassword,
       });
@@ -273,7 +273,7 @@ export default function SettingsPage() {
 
         {/* Change Password Tab */}
         <TabsContent value="password">
-          <Card className="max-w-lg">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Change Password</CardTitle>
               <CardDescription>Protect your candidate profile details</CardDescription>
@@ -345,7 +345,7 @@ export default function SettingsPage() {
 
         {/* Notifications Preference Tab */}
         <TabsContent value="notifications">
-          <Card className="max-w-lg">
+          <Card>
             <CardHeader>
               <CardTitle className="text-base font-semibold">Notification Preferences</CardTitle>
               <CardDescription>Control your in-app and email updates</CardDescription>

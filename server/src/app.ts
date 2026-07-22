@@ -15,6 +15,8 @@ import subscriptionRoutes from "./routes/subscription.route.js";
 import jobAlertRoutes from "./routes/jobAlert.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import adminRoutes from "./routes/admin.route.js";
+import interviewRoutes from "./routes/interview.routes.js";
+import settingsRoutes from "./routes/settings.route.js";
 const app = express();
 
 app.use(
@@ -44,6 +46,10 @@ app.use("/api/job-alerts", jobAlertRoutes);
 app.use("/api/application", applicationRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/interviews", interviewRoutes);
+
+//settings
+app.use("/api/settings", settingsRoutes);
 
 //admin
 app.use("/api/admin", adminRoutes);

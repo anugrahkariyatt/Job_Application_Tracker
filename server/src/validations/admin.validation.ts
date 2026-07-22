@@ -44,7 +44,7 @@ export const getApplicationSchema = z.object({
 });
 
 export const updateApplicationStatusSchema = z.object({
-  status: z.enum(["Applied", "Under Review", "Shortlisted", "Rejected", "Hired"], {
+  status: z.enum(["Applied", "Under Review", "Shortlisted", "Interview", "Rejected", "Hired"], {
     message: "Invalid application status value",
   }),
 });

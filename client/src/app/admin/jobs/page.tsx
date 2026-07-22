@@ -105,12 +105,7 @@ export default function JobsPage() {
     {
       key: 'title',
       header: 'Job Title',
-      cell: (j) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">{j.title}</span>
-          <span className="text-xs text-muted-foreground">{j.id}</span>
-        </div>
-      ),
+      cell: (j) => <span className="text-sm font-medium">{j.title}</span>,
     },
     { key: 'company', header: 'Company', cell: (j) => <span className="text-sm">{j.company}</span> },
     { key: 'type', header: 'Type', cell: (j) => <span className="text-sm">{j.type}</span> },

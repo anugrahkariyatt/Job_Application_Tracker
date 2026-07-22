@@ -28,6 +28,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import type { JobStatus } from '@/lib/types';
 import {
   Select,
@@ -50,16 +51,24 @@ const statusFilters = ['All', 'Open', 'Draft', 'Closed'];
 const PER_PAGE = 6;
 
 export default function MyJobsPage() {
+  const searchParams = useSearchParams();
+  const searchParam = searchParams.get('search') || '';
+
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(searchParam);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const [totalCount, setTotalCount] = useState(0);
+
+  // Sync search state if URL search query changes
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   const fetchCompany = async () => {
     try {

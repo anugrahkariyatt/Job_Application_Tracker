@@ -14,6 +14,52 @@ export const createNotification = async (
     throw new AppError("User not found", 404);
   }
 
+  const preferences = user.preferences || {
+    applicationReceived: true,
+    candidateWithdrew: true,
+    jobExpiring: true,
+    companyUpdates: true,
+    systemAlerts: true,
+  };
+
+  let shouldNotify = true;
+
+  if (type === "SYSTEM") {
+    shouldNotify = preferences.systemAlerts !== false;
+  } else if (type === "JOB_ALERT") {
+    shouldNotify = preferences.jobExpiring !== false;
+  } else if (type === "SUBSCRIPTION") {
+    shouldNotify = preferences.companyUpdates !== false;
+  } else if (type === "APPLICATION") {
+    if (user.role === "recruiter") {
+      const lowerTitle = title.toLowerCase();
+      const lowerMessage = message.toLowerCase();
+      if (
+        lowerTitle.includes("applied") ||
+        lowerTitle.includes("received") ||
+        lowerMessage.includes("applied")
+      ) {
+        shouldNotify = preferences.applicationReceived !== false;
+      } else if (
+        lowerTitle.includes("withdraw") ||
+        lowerTitle.includes("withdrew") ||
+        lowerMessage.includes("withdrew")
+      ) {
+        shouldNotify = preferences.candidateWithdrew !== false;
+      }
+    } else {
+      // For candidates: applicationReceived corresponds to "Application Updates" (status changes)
+      shouldNotify = preferences.applicationReceived !== false;
+    }
+  }
+
+  if (!shouldNotify) {
+    console.log(
+      `[NOTIFICATION SERVICE] Notification suppressed for user ${userId} (${user.email}) due to preference configuration: type=${type}, title="${title}"`
+    );
+    return null;
+  }
+
   const notification = await Notification.create({
     userId: user._id,
     title,

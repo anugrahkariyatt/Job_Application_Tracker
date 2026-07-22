@@ -47,6 +47,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [applied, setApplied] = React.useState(false);
   const [applying, setApplying] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
+  const [interview, setInterview] = React.useState<any>(null);
 
   const fetchJobDetails = async () => {
     try {
@@ -79,6 +80,19 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
           (app: any) => (app.jobId?._id || app.jobId) === id
         );
         setApplied(hasApplied);
+      }
+
+      // Fetch interviews to check if one is scheduled for this job
+      try {
+        const interviewRes = await axiosInstance.get('/api/interviews');
+        if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
+          const matchingInterview = interviewRes.data.data.find(
+            (iv: any) => (iv.jobId?._id || iv.jobId) === id && iv.status === 'Scheduled'
+          );
+          setInterview(matchingInterview || null);
+        }
+      } catch (ivErr) {
+        console.error('Fetch job interviews error:', ivErr);
       }
     } catch (err: any) {
       console.error('Fetch job details error:', err);
@@ -203,7 +217,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                     <p className="mt-1 text-sm text-muted-foreground">{job.company} · {job.industry || 'Tech'}</p>
                   )}
                   <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{job.remote ? 'Remote' : job.location}</span>
+                    <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{job.location} {job.workMode ? `(${job.workMode})` : (job.remote ? '(Remote)' : '(Onsite)')}</span>
                     <span className="flex items-center gap-1"><Briefcase className="h-4 w-4" />{job.employmentType}</span>
                     <span className="flex items-center gap-1"><DollarSign className="h-4 w-4" />{job.salary}</span>
                     <span className="flex items-center gap-1"><Clock className="h-4 w-4" />Posted {relativeTime(job.postedDate)}</span>
@@ -298,6 +312,55 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Upcoming Interview Card */}
+          {interview && (
+            <Card className="border-primary/20 bg-primary/[0.02]">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-primary flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  Interview Scheduled
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3.5 text-sm">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Round</span>
+                  <span className="font-semibold text-foreground">{interview.title}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Date & Time</span>
+                    <span className="font-medium text-foreground">{new Date(interview.date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Format</span>
+                    <span className="font-medium text-foreground">{interview.type}</span>
+                  </div>
+                </div>
+                {interview.link && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Meeting Link</span>
+                    <a
+                      href={interview.link.startsWith('http') ? interview.link : `https://${interview.link}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline font-semibold break-all"
+                    >
+                      {interview.link}
+                    </a>
+                  </div>
+                )}
+                {interview.notes && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Instructions</span>
+                    <p className="text-xs text-muted-foreground bg-muted/65 p-2 rounded leading-relaxed whitespace-pre-line">
+                      {interview.notes}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Job Summary */}
           <Card>
             <CardHeader><CardTitle className="text-base font-semibold">Job Summary</CardTitle></CardHeader>
@@ -308,7 +371,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-muted-foreground"><MapPin className="h-4 w-4" />Location</span>
-                <span className="font-medium">{job.remote ? 'Remote' : job.location}</span>
+                <span className="font-medium">{job.location} {job.workMode ? `(${job.workMode})` : (job.remote ? '(Remote)' : '(Onsite)')}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-2 text-muted-foreground"><Briefcase className="h-4 w-4" />Type</span>

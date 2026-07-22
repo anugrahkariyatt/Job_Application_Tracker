@@ -51,6 +51,18 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
 
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [profileImage, setProfileImage] = React.useState('');
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [searchVal, setSearchVal] = React.useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchVal.trim()) return;
+    if (pathname.startsWith('/candidate/companies')) {
+      router.push(`/candidate/companies?search=${encodeURIComponent(searchVal)}`);
+    } else {
+      router.push(`/candidate/jobs?search=${encodeURIComponent(searchVal)}`);
+    }
+  };
 
   React.useEffect(() => {
     const fetchCandidateImg = async () => {
@@ -63,8 +75,20 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         // Silent catch
       }
     };
+    const fetchUnreadNotifications = async () => {
+      try {
+        const res = await axiosInstance.get('/api/notifications');
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const unread = res.data.data.filter((n: any) => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        // Silent catch
+      }
+    };
     if (user) {
       fetchCandidateImg();
+      fetchUnreadNotifications();
     }
   }, [user]);
 
@@ -136,20 +160,25 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
       </Sheet>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-md">
+      <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search jobs, companies..."
           className="pl-9"
+          value={searchVal}
+          onChange={(e) => setSearchVal(e.target.value)}
         />
-      </div>
+      </form>
 
       <div className="ml-auto flex items-center gap-1">
-        <ThemeToggle />
-        <Button variant="ghost" size="icon" aria-label="Notifications" asChild>
+        <Button variant="ghost" size="icon" aria-label="Notifications" asChild className="relative">
           <Link href="/candidate/notifications">
             <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+            {unreadCount > 0 && (
+              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground leading-none">
+                {unreadCount}
+              </span>
+            )}
           </Link>
         </Button>
         <DropdownMenu>

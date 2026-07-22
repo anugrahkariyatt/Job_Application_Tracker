@@ -1,12 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
+import { z } from 'zod';
+
+const scheduleInterviewFormSchema = z.object({
+  title: z.string().trim().min(1, 'Round title is required'),
+  date: z.string().min(1, 'Date is required').refine(val => !isNaN(Date.parse(val)), 'Invalid date'),
+  time: z.string().min(1, 'Time is required'),
+  link: z.string().trim().optional(),
+  notes: z.string().trim().optional(),
+});
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusChip } from '@/lib/status';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Mail,
   Phone,
@@ -25,21 +44,21 @@ import {
   Award,
   Loader2,
   XCircle,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 
-type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Rejected' | 'Hired';
+type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Interview' | 'Rejected' | 'Hired';
 
 const statusFlow: ApplicationStatus[] = [
   'Applied',
   'Under Review',
   'Shortlisted',
+  'Interview',
   'Hired',
 ];
-
-import { use } from 'react';
 
 export default function ApplicationDetailsPage({
   params,
@@ -55,6 +74,28 @@ export default function ApplicationDetailsPage({
   const [updating, setUpdating] = useState(false);
   const [notes, setNotes] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
+  const [interviews, setInterviews] = useState<any[]>([]);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [interviewForm, setInterviewForm] = useState({
+    title: 'Technical Interview',
+    date: '',
+    time: '10:00',
+    type: 'Video Call' as 'Video Call' | 'Onsite' | 'Phone',
+    link: '',
+    notes: '',
+  });
+  const [interviewErrors, setInterviewErrors] = useState<Record<string, string>>({});
+
+  const handleInterviewFieldChange = (field: string, value: string) => {
+    setInterviewForm((prev) => ({ ...prev, [field]: value }));
+    if (interviewErrors[field]) {
+      setInterviewErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      });
+    }
+  };
 
   const fetchApplicationDetails = async () => {
     try {
@@ -78,6 +119,16 @@ export default function ApplicationDetailsPage({
           }
         ]);
       }
+
+      try {
+        const interviewRes = await axiosInstance.get('/api/interviews');
+        if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
+          const appInterviews = interviewRes.data.data.filter((iv: any) => iv.applicationId === id);
+          setInterviews(appInterviews);
+        }
+      } catch (err) {
+        console.error('Error fetching interviews:', err);
+      }
     } catch (err) {
       console.error('Error fetching application details:', err);
       toast.error('Failed to load application details.');
@@ -92,6 +143,11 @@ export default function ApplicationDetailsPage({
 
   const handleUpdateStatus = async (status: ApplicationStatus) => {
     if (!app) return;
+    if (status === 'Interview') {
+      setInterviewErrors({});
+      setScheduleDialogOpen(true);
+      return;
+    }
     try {
       setUpdating(true);
       const response = await axiosInstance.patch(`/api/application/${app._id}/status`, {
@@ -112,11 +168,66 @@ export default function ApplicationDetailsPage({
           }
         ]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating status:', err);
-      toast.error('Failed to update status.');
+      toast.error(err.response?.data?.message || 'Failed to update status.');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleScheduleInterview = async () => {
+    setInterviewErrors({});
+    const validation = scheduleInterviewFormSchema.safeParse(interviewForm);
+    if (!validation.success) {
+      const errorsMap: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path.length > 0) {
+          errorsMap[err.path[0]] = err.message;
+        }
+      });
+      setInterviewErrors(errorsMap);
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      const datetime = new Date(`${interviewForm.date}T${interviewForm.time}`);
+      
+      const payload = {
+        applicationId: id,
+        title: interviewForm.title,
+        date: datetime.toISOString(),
+        type: interviewForm.type,
+        link: interviewForm.link,
+        notes: interviewForm.notes,
+      };
+
+      const response = await axiosInstance.post('/api/interviews', payload);
+      if (response.data?.success) {
+        toast.success('Interview scheduled successfully!');
+        setApp((prev: any) => ({ ...prev, status: 'Interview' }));
+        setScheduleDialogOpen(false);
+        fetchApplicationDetails();
+      }
+    } catch (err: any) {
+      console.error('Error scheduling interview:', err);
+      toast.error(err.response?.data?.message || 'Failed to schedule interview.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleUpdateInterviewStatus = async (interviewId: string, status: 'Scheduled' | 'Completed' | 'Cancelled') => {
+    try {
+      const response = await axiosInstance.patch(`/api/interviews/${interviewId}/status`, { status });
+      if (response.data?.success) {
+        toast.success(`Interview marked as ${status}.`);
+        fetchApplicationDetails();
+      }
+    } catch (err: any) {
+      console.error('Error updating interview status:', err);
+      toast.error(err.response?.data?.message || 'Failed to update interview status.');
     }
   };
 
@@ -182,19 +293,18 @@ export default function ApplicationDetailsPage({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Profile card + cover letter + notes */}
         <div className="space-y-4 lg:col-span-2">
-          {/* LinkedIn-style profile header card */}
+          {/* Profile header card */}
           <Card className="overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10" />
-            <CardContent className="-mt-10 pb-4">
-              <div className="flex items-end gap-4">
+            <CardContent className="pt-6 pb-4">
+              <div className="flex items-start gap-4">
                 {candidate.profileImage ? (
                   <img
                     src={candidate.profileImage}
                     alt={user.name}
-                    className="h-20 w-20 rounded-xl border-4 border-card object-cover shadow-sm"
+                    className="h-20 w-20 rounded-xl border border-border object-cover shadow-sm"
                   />
                 ) : (
-                  <div className="h-20 w-20 rounded-xl border-4 border-card bg-muted flex items-center justify-center text-muted-foreground font-semibold text-2xl shadow-sm">
+                  <div className="h-20 w-20 rounded-xl border border-border bg-muted flex items-center justify-center text-muted-foreground font-semibold text-2xl shadow-sm">
                     {(user.name || 'A').charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -420,7 +530,7 @@ export default function ApplicationDetailsPage({
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
               ) : (
-                (['Applied', 'Under Review', 'Shortlisted', 'Hired', 'Rejected'] as ApplicationStatus[]).map(
+                (['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Hired', 'Rejected'] as ApplicationStatus[]).map(
                   (status) => (
                     <button
                       key={status}
@@ -441,9 +551,149 @@ export default function ApplicationDetailsPage({
             </CardContent>
           </Card>
 
+          {interviews.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Scheduled Interviews</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {interviews.map((iv) => (
+                  <div key={iv._id} className="rounded-lg border border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm">{iv.title}</span>
+                      <Badge variant={iv.status === 'Completed' ? 'default' : iv.status === 'Cancelled' ? 'destructive' : 'outline'}>
+                        {iv.status}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> {new Date(iv.date).toLocaleString()}
+                      </p>
+                      <p className="flex items-center gap-1">
+                        <Video className="h-3 w-3" /> {iv.type} {iv.link && <a href={iv.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">(Join Meet)</a>}
+                      </p>
+                      {iv.notes && <p className="mt-1 bg-muted/50 p-1.5 rounded">{iv.notes}</p>}
+                    </div>
+                    {iv.status === 'Scheduled' && (
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                        <Button size="sm" variant="outline" className="text-success hover:text-success hover:bg-success/5 flex-1" onClick={() => handleUpdateInterviewStatus(iv._id, 'Completed')}>
+                          Complete
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/5 flex-1" onClick={() => handleUpdateInterviewStatus(iv._id, 'Cancelled')}>
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
         </div>
       </div>
+
+      {/* Schedule Interview Dialog */}
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Interview</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="roundTitle">Round Title</Label>
+              <Input
+                id="roundTitle"
+                value={interviewForm.title}
+                onChange={(e) => handleInterviewFieldChange('title', e.target.value)}
+                placeholder="e.g. Technical Interview, Manager Round"
+              />
+              {interviewErrors.title && (
+                <p className="mt-1 text-xs text-destructive font-medium">{interviewErrors.title}</p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={interviewForm.date}
+                  onChange={(e) => handleInterviewFieldChange('date', e.target.value)}
+                />
+                {interviewErrors.date && (
+                  <p className="mt-1 text-xs text-destructive font-medium">{interviewErrors.date}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={interviewForm.time}
+                  onChange={(e) => handleInterviewFieldChange('time', e.target.value)}
+                />
+                {interviewErrors.time && (
+                  <p className="mt-1 text-xs text-destructive font-medium">{interviewErrors.time}</p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="type">Interview Type</Label>
+              <Select
+                value={interviewForm.type}
+                onValueChange={(v) => setInterviewForm({ ...interviewForm, type: v as any })}
+              >
+                <SelectTrigger id="type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Video Call">Video Call</SelectItem>
+                  <SelectItem value="Onsite">Onsite</SelectItem>
+                  <SelectItem value="Phone">Phone Call</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="link">Meeting Link / Address</Label>
+              <Input
+                id="link"
+                value={interviewForm.link}
+                onChange={(e) => handleInterviewFieldChange('link', e.target.value)}
+                placeholder="e.g. Google Meet link or office address"
+              />
+              {interviewErrors.link && (
+                <p className="mt-1 text-xs text-destructive font-medium">{interviewErrors.link}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes & Instructions</Label>
+              <textarea
+                id="notes"
+                value={interviewForm.notes}
+                onChange={(e) => handleInterviewFieldChange('notes', e.target.value)}
+                placeholder="Instructions or agenda for the candidate..."
+                rows={3}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+              />
+              {interviewErrors.notes && (
+                <p className="mt-1 text-xs text-destructive font-medium">{interviewErrors.notes}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setScheduleDialogOpen(false);
+              setInterviewErrors({});
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleScheduleInterview} disabled={updating}>
+              {updating ? 'Scheduling...' : 'Schedule Round'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -163,7 +163,6 @@ export default function DashboardPage() {
     recentNotifications,
     recentJobs,
     jobsOverTime,
-    viewsVsApplications,
   } = data || {};
 
   return (
@@ -450,7 +449,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
         <Card>
           <CardHeader>
             <CardTitle className="text-base font-semibold">
@@ -518,72 +517,6 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Views vs Applications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart
-                data={viewsVsApplications}
-                margin={{ left: -16, right: 8 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{
-                    fontSize: 10,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{
-                    fontSize: 11,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Legend
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: "11px" }}
-                />
-                <Bar
-                  dataKey="views"
-                  fill="hsl(var(--chart-4))"
-                  radius={[4, 4, 0, 0]}
-                  barSize={24}
-                  name="Views"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="applications"
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  name="Applications"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
 
       <Card>
@@ -605,7 +538,7 @@ export default function DashboardPage() {
               {recentApplications.map((app: any) => (
                 <Link
                   key={app.id}
-                  href={`/applicants/${app.id}`}
+                  href={`/recruiter/applicants/${app.id}`}
                   className="job-card-hover rounded-lg border border-border bg-card p-4 block"
                 >
                   <div className="flex items-start gap-3">
