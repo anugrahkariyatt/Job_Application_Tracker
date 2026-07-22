@@ -168,9 +168,9 @@ export default function ApplicationDetailsPage({
           }
         ]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating status:', err);
-      toast.error('Failed to update status.');
+      toast.error(err.response?.data?.message || 'Failed to update status.');
     } finally {
       setUpdating(false);
     }

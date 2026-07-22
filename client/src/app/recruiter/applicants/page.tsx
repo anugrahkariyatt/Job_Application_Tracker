@@ -65,7 +65,9 @@ export default function ApplicantsPage() {
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState('');
+  const searchParam = searchParams.get('search') || '';
+
+  const [search, setSearch] = useState(searchParam);
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [jobFilter, setJobFilter] = useState<string>(jobParam || 'All');
   const [page, setPage] = useState(1);
@@ -75,6 +77,10 @@ export default function ApplicantsPage() {
       setJobFilter(jobParam);
     }
   }, [jobParam]);
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   const [totalCount, setTotalCount] = useState(0);
 
@@ -137,9 +143,9 @@ export default function ApplicantsPage() {
         toast.success(`Applicant status updated to ${newStatus}.`);
         fetchApplicants();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating status:', err);
-      toast.error('Failed to update status.');
+      toast.error(err.response?.data?.message || 'Failed to update status.');
     }
   };
 

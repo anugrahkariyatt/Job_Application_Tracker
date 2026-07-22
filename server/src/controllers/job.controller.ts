@@ -32,6 +32,28 @@ export const createJobController = async (
       });
     }
 
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company profile not found. Please create a company profile first.",
+      });
+    }
+
+    if (company.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company has been disabled by the administrator. Job creation is blocked.",
+      });
+    }
+
+    if (company.verified === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company is not verified yet. Job creation is blocked.",
+      });
+    }
+
     const result = await createJob(req.user!.id, validation.data);
     return res.status(201).json({
       success: true,
@@ -127,6 +149,28 @@ export const updateJobController = async (
       });
     }
 
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company profile not found.",
+      });
+    }
+
+    if (company.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company has been disabled by the administrator. Job editing is blocked.",
+      });
+    }
+
+    if (company.verified === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company is not verified yet. Job editing is blocked.",
+      });
+    }
+
     const result = await updateJob(
       req.user!.id,
       paramsValidation.data.jobId,
@@ -188,6 +232,28 @@ export const updateJobStatusController = async (
       });
     }
 
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company profile not found.",
+      });
+    }
+
+    if (company.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company has been disabled by the administrator. Job status modification is blocked.",
+      });
+    }
+
+    if (company.verified === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company is not verified yet. Job status modification is blocked.",
+      });
+    }
+
     const result = await updateJobStatus(
       req.user!.id,
       paramsValidation.data.jobId,
@@ -222,9 +288,18 @@ export const getAllJobsController = async (
       workModes,
     } = req.query;
 
+    const activeCompanies = await Company.find({ isActive: { $ne: false }, verified: true }).select("_id");
+    const activeCompanyIds = activeCompanies.map((c) => c._id.toString());
+
     const filterQuery: any = { status: "Open" };
     if (companyId) {
-      filterQuery.companyId = companyId;
+      if (activeCompanyIds.includes(companyId as string)) {
+        filterQuery.companyId = companyId;
+      } else {
+        filterQuery.companyId = null;
+      }
+    } else {
+      filterQuery.companyId = { $in: activeCompanyIds };
     }
 
     // 1. Search text filter (title, skills, description)

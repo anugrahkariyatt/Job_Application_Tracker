@@ -9,6 +9,7 @@ import {
   updateInterviewStatus,
   getMyInterviews,
 } from "../services/interview.service.js";
+import Company from "../models/company.model.js";
 
 export const createInterviewController = async (
   req: Request,
@@ -22,6 +23,28 @@ export const createInterviewController = async (
       return res.status(400).json({
         success: false,
         errors: z.flattenError(validation.error),
+      });
+    }
+
+    const company = await Company.findOne({ ownerId: req.user!.id });
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company profile not found.",
+      });
+    }
+
+    if (company.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company has been disabled by the administrator. Interview scheduling is blocked.",
+      });
+    }
+
+    if (company.verified === false) {
+      return res.status(403).json({
+        success: false,
+        message: "Your company is not verified yet. Interview scheduling is blocked.",
       });
     }
 

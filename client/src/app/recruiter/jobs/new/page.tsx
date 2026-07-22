@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
@@ -58,12 +58,44 @@ export default function CreateJobPage() {
   const [employmentType, setEmploymentType] = useState<EmploymentType>('Full-time');
   const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>('Mid-Level');
   const [workMode, setWorkMode] = useState<WorkMode>('Remote');
+  const [currency, setCurrency] = useState('USD');
   const [location, setLocation] = useState('');
   const [salaryMin, setSalaryMin] = useState('');
   const [salaryMax, setSalaryMax] = useState('');
   const [vacancies, setVacancies] = useState('1');
   const [applicationDeadline, setApplicationDeadline] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const savedPrefs = localStorage.getItem('recruiter_company_prefs');
+    if (savedPrefs) {
+      try {
+        const prefs = JSON.parse(savedPrefs);
+        if (prefs.defaultEmploymentType) {
+          setEmploymentType(prefs.defaultEmploymentType as EmploymentType);
+        }
+        if (prefs.defaultWorkMode) {
+          setWorkMode(prefs.defaultWorkMode as WorkMode);
+        }
+        if (prefs.defaultCurrency) {
+          setCurrency(prefs.defaultCurrency);
+        }
+        if (prefs.defaultDeadlineDays) {
+          const days = parseInt(prefs.defaultDeadlineDays, 10);
+          if (!isNaN(days) && days > 0) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            setApplicationDeadline(`${yyyy}-${mm}-${dd}`);
+          }
+        }
+      } catch (err) {
+        console.error('Error parsing recruiter_company_prefs:', err);
+      }
+    }
+  }, []);
 
   const handleFieldChange = (field: string, value: string, setter: (v: string) => void) => {
     setter(value);
@@ -129,6 +161,7 @@ export default function CreateJobPage() {
       workMode,
       salaryMin: Number(salaryMin),
       salaryMax: Number(salaryMax),
+      currency,
       vacancies: Number(vacancies),
       applicationDeadline: new Date(applicationDeadline).toISOString(),
       status: jobStatus,
@@ -298,7 +331,26 @@ export default function CreateJobPage() {
           <CardTitle className="text-base font-semibold">Compensation & Openings</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <div>
+              <Label className="mb-1.5 block">Currency *</Label>
+              <Select
+                value={currency}
+                onValueChange={setCurrency}
+                disabled={saving}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {['USD', 'EUR', 'GBP', 'INR'].map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label className="mb-1.5 block">Minimum Salary *</Label>
               <Input

@@ -74,6 +74,11 @@ const jobSchema = new Schema(
       min: 0,
     },
 
+    currency: {
+      type: String,
+      default: "USD",
+    },
+
     location: {
       type: String,
       required: true,

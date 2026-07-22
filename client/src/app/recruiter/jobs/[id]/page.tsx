@@ -218,7 +218,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 <InfoRow
                   icon={DollarSign}
                   label="Salary Range"
-                  value={`${job.salaryMin?.toLocaleString()} – ${job.salaryMax?.toLocaleString()} USD`}
+                  value={`${job.salaryMin?.toLocaleString()} – ${job.salaryMax?.toLocaleString()} ${job.currency || 'USD'}`}
                 />
               </div>
               <div className="mt-4">

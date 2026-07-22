@@ -360,3 +360,41 @@ export const getCompanyByIdController = async (
     next(error);
   }
 };
+
+export const getAllCompaniesPublicController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { search, industry, location } = req.query;
+    const filter: any = { isActive: { $ne: false }, verified: true };
+
+    if (search) {
+      const regex = new RegExp(search as string, "i");
+      filter.$or = [
+        { companyName: regex },
+        { description: regex },
+        { industry: regex },
+      ];
+    }
+
+    if (industry && industry !== "all") {
+      filter.industry = industry;
+    }
+
+    if (location && location !== "all") {
+      const regex = new RegExp(location as string, "i");
+      filter.headquarters = regex;
+    }
+
+    const companies = await Company.find(filter).sort({ companyName: 1 });
+
+    return res.status(200).json({
+      success: true,
+      data: companies,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -45,6 +45,8 @@ export const createJobSchema = z
 
     salaryMax: z.number().nonnegative("Maximum salary cannot be negative"),
 
+    currency: z.string().optional(),
+
     location: z.string().trim().min(2, "Location is required"),
 
     remote: z.boolean(),
@@ -110,6 +112,8 @@ export const updateJobSchema = z
     salaryMin: z.number().nonnegative(),
 
     salaryMax: z.number().nonnegative(),
+
+    currency: z.string().optional(),
 
     location: z.string().trim(),
 

@@ -10,12 +10,19 @@ import {
   updateCoverImage,
   getRecruiterDashboardStats,
   getCompanyByIdController,
+  getAllCompaniesPublicController,
 } from "../controllers/company.controllers.js";
 const router = Router();
 
 router.get("/dashboard-stats", authenticate, authorize("recruiter"), getRecruiterDashboardStats);
 router.post("/", authenticate, authorize("recruiter"), createCompany);
 router.get("/", authenticate, authorize("recruiter"), getMyCompany);
+router.get(
+  "/list/all",
+  authenticate,
+  authorize("candidate", "recruiter", "admin"),
+  getAllCompaniesPublicController
+);
 router.get(
   "/:id",
   authenticate,

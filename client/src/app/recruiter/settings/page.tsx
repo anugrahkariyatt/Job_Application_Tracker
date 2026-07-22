@@ -9,6 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -471,26 +478,59 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="mb-1.5 block">Default Employment Type</Label>
-                  <Input
+                  <Select
                     value={companyPrefs.defaultEmploymentType}
-                    onChange={(e) =>
-                      handleCompanyPrefChange('defaultEmploymentType', e.target.value)
+                    onValueChange={(value) =>
+                      handleCompanyPrefChange('defaultEmploymentType', value)
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['Full-time', 'Part-time', 'Internship', 'Contract', 'Freelance'].map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label className="mb-1.5 block">Default Work Mode</Label>
-                  <Input
+                  <Select
                     value={companyPrefs.defaultWorkMode}
-                    onChange={(e) => handleCompanyPrefChange('defaultWorkMode', e.target.value)}
-                  />
+                    onValueChange={(value) => handleCompanyPrefChange('defaultWorkMode', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['Remote', 'Hybrid', 'Onsite'].map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label className="mb-1.5 block">Default Currency</Label>
-                  <Input
+                  <Select
                     value={companyPrefs.defaultCurrency}
-                    onChange={(e) => handleCompanyPrefChange('defaultCurrency', e.target.value)}
-                  />
+                    onValueChange={(value) => handleCompanyPrefChange('defaultCurrency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {['USD', 'EUR', 'GBP', 'INR'].map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label className="mb-1.5 block">Default Application Deadline (days)</Label>
