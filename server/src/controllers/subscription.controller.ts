@@ -21,7 +21,7 @@ export const subscribeCompanyController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -68,7 +68,7 @@ export const unsubscribeCompanyController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

@@ -28,7 +28,7 @@ export const createJobController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -113,7 +113,7 @@ export const getJobByIdController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -139,13 +139,13 @@ export const updateJobController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     if (paramsValidation.error) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -197,7 +197,7 @@ export const deleteJobController = async (
     if (paramsValidation.error) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
     await deleteJob(req.user!.id, paramsValidation.data.jobId);
@@ -222,13 +222,13 @@ export const updateJobStatusController = async (
     if (paramsValidation.error) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

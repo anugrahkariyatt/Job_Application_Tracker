@@ -36,7 +36,7 @@ export const markNotificationAsReadController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -66,7 +66,7 @@ export const deleteNotificationController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

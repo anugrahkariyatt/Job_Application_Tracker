@@ -22,7 +22,7 @@ export const createInterviewController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -72,7 +72,7 @@ export const updateInterviewStatusController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

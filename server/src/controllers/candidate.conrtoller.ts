@@ -24,7 +24,7 @@ export const createCandidateController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -68,7 +68,7 @@ export const updateCandidateController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

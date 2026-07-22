@@ -23,7 +23,7 @@ export const addExperienceController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -67,7 +67,7 @@ export const updateExperienceController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -76,7 +76,7 @@ export const updateExperienceController = async (
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
@@ -107,7 +107,7 @@ export const deleteExperienceController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 

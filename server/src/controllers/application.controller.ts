@@ -30,7 +30,7 @@ export const applyForJobController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     const result = await applyForJob(req.user!.id, validation.data.jobId);
@@ -73,7 +73,7 @@ export const deleteApplicationController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     const result = await deleteApplication(
@@ -101,7 +101,7 @@ export const FetchApplicantByJobIdController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     const result = await getApplicationsByJob(
@@ -132,13 +132,13 @@ export const updateApplicationStatusController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
