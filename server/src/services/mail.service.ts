@@ -162,3 +162,51 @@ export const sendInterviewEmail = async (
   }
 };
 
+interface AIScreeningPayload {
+  applicationId: string;
+  candidateName: string;
+  candidateEmail: string;
+  candidateSkills: string[];
+  candidateExperienceSummary?: string;
+  jobTitle: string;
+  jobDescription: string;
+  jobRequiredSkills: string[];
+}
+
+export const triggerCandidateAIScreening = async (
+  payload: AIScreeningPayload,
+): Promise<{ aiMatchScore?: number; aiStrengths?: string[]; aiSummary?: string } | null> => {
+  try {
+    console.log("[N8N SERVICE] Triggering AI Candidate Screening for application:", payload.applicationId);
+    const response = await n8nClient.post("/ai-screen-candidate", payload);
+    console.log("[N8N SERVICE] AI Screening n8n response success:", response.status);
+    return response.data;
+  } catch (error: any) {
+    console.error("[N8N SERVICE ERROR] AI Screening n8n webhook failed:", error?.response?.data || error?.message || error);
+    return null;
+  }
+};
+
+interface PaymentSuccessEmailPayload {
+  email: string;
+  userName: string;
+  planName: string;
+  amount: string;
+  expiresAt: string;
+}
+
+export const sendPaymentSuccessEmail = async (
+  payload: PaymentSuccessEmailPayload,
+): Promise<void> => {
+  try {
+    console.log("[MAIL SERVICE] Sending Payment Receipt email to:", payload.email, "for plan:", payload.planName);
+    const response = await n8nClient.post("/send-email", {
+      type: "payment-success",
+      ...payload,
+    });
+    console.log("[MAIL SERVICE] n8n Payment Receipt email response success:", response.status);
+  } catch (error: any) {
+    console.error("[MAIL SERVICE ERROR] Failed to send Payment Receipt email via n8n:", error?.response?.data || error?.message || error);
+  }
+};
+

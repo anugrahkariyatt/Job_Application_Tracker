@@ -97,6 +97,8 @@ export const loginUser = async (data: LoginInput) => {
       role: user.role,
       isVerified: user.isVerified,
       isActive: user.isActive,
+      subscriptionPlan: user.subscriptionPlan || "free",
+      subscriptionExpiresAt: user.subscriptionExpiresAt || null,
       preferences: user.preferences,
     },
     accessToken,
@@ -355,7 +357,7 @@ export const verifyEmailService = async (token: string) => {
 
 export const getCurrentUser = async (userId: string) => {
   const user = await User.findById(userId).select(
-    "name email role isVerified isActive preferences",
+    "name email role isVerified isActive preferences subscriptionPlan subscriptionExpiresAt",
   );
   if (!user) {
     throw new AppError("User not found", 404);

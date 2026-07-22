@@ -18,6 +18,7 @@ interface AuthInitializerProps {
 
 const PUBLIC_PATHS = [
   "/",
+  "/pricing",
   "/login",
   "/register",
   "/register/candidate",

@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from "express";
-import { getDashboard } from "../services/admin.service.js";
 import { z } from "zod";
 import {
   getUserSchema,
@@ -11,9 +10,10 @@ import {
   getApplicationSchema,
   updateApplicationStatusSchema,
 } from "../validations/admin.validation.js";
-import { getAllUsers, updateUserStatus } from "../services/admin.service.js";
-
 import {
+  getDashboard,
+  getAllUsers,
+  updateUserStatus,
   getAllCompanies,
   updateCompanyStatus,
   updateCompanyVerification,

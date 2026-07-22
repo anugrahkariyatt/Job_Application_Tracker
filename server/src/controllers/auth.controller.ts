@@ -380,6 +380,8 @@ export const getCurrentUserController = async (
         role: result.role,
         isVerified: result.isVerified,
         isActive: result.isActive,
+        subscriptionPlan: result.subscriptionPlan || "free",
+        subscriptionExpiresAt: result.subscriptionExpiresAt || null,
         preferences: result.preferences,
       },
     });

@@ -41,7 +41,7 @@ axiosInstance.interceptors.response.use(
         if (originalRequest.url?.includes("/api/auth/refresh")) {
           store.dispatch(clearUser());
           if (typeof window !== "undefined") {
-            const publicPaths = ["/login", "/register", "/register/candidate", "/register/recruiter", "/", "/test", "/forgot-password", "/reset-password"];
+            const publicPaths = ["/login", "/register", "/register/candidate", "/register/recruiter", "/", "/pricing", "/test", "/forgot-password", "/reset-password"];
             const currentPath = window.location.pathname;
             if (!publicPaths.includes(currentPath)) {
               window.location.href = "/login";
