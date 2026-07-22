@@ -186,7 +186,6 @@ export const verifyPassword = async (
 
     const verificationToken = await verifyUserPassword(password, userId);
 
-
     return res.status(200).json({
       success: true,
       verificationToken,
