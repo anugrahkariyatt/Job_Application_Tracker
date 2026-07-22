@@ -26,6 +26,7 @@ import {
   getApplicationByIdForAdmin,
   updateApplicationStatusByAdmin,
   getCompanyByIdForAdmin,
+  globalSearch,
 } from "../services/admin.service.js";
 
 export const getDashboardController = async (
@@ -418,6 +419,23 @@ export const getCompanyByIdController = async (
     return res.status(200).json({
       success: true,
       message: "Company details fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const globalSearchController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const q = (req.query.q as string) || "";
+    const result = await globalSearch(q);
+    return res.status(200).json({
+      success: true,
       data: result,
     });
   } catch (error) {

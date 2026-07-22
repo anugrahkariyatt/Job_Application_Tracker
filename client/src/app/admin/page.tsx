@@ -17,6 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import axiosInstance from '@/lib/axios';
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -43,6 +55,7 @@ export default function AdminDashboard() {
   const [recentJobs, setRecentJobs] = React.useState<any[]>([]);
   const [recentCompanies, setRecentCompanies] = React.useState<any[]>([]);
   const [recentUsers, setRecentUsers] = React.useState<any[]>([]);
+  const [chartData, setChartData] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -56,26 +69,27 @@ export default function AdminDashboard() {
 
         if (statsRes.data?.success) {
           setStats(statsRes.data.data);
+          setChartData(statsRes.data.data.chartData || []);
         }
 
         if (usersRes.data?.success) {
           const sortedUsers = [...usersRes.data.data]
             .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 5);
+            .slice(0, 3);
           setRecentUsers(sortedUsers);
         }
 
         if (companiesRes.data?.success) {
           const sortedCompanies = [...companiesRes.data.data]
             .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 5);
+            .slice(0, 3);
           setRecentCompanies(sortedCompanies);
         }
 
         if (jobsRes.data?.success) {
           const sortedJobs = [...jobsRes.data.data]
             .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 5);
+            .slice(0, 3);
           setRecentJobs(sortedJobs);
         }
       } catch (err) {
@@ -100,15 +114,98 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Platform overview — users, companies, jobs and applications."
+        description="Platform overview — users, companies, and jobs."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Dashboard' }]}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Total Users" value={fmt(stats.totalUsers)} icon={Users} tone="blue" />
         <StatCard label="Total Companies" value={fmt(stats.totalCompanies)} icon={Building2} tone="emerald" />
         <StatCard label="Total Jobs" value={fmt(stats.totalJobs)} icon={Briefcase} tone="amber" />
-        <StatCard label="Total Applications" value={fmt(stats.totalApplications)} icon={FileText} tone="violet" />
+      </div>
+
+      {/* Performance Analytics Graphs */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-border/50 bg-background/60 backdrop-blur-md">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">User & Company Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={chartData} margin={{ left: -16, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />
+                <Bar name="Users" dataKey="Users" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                <Bar name="Companies" dataKey="Companies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-background/60 backdrop-blur-md">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Jobs Posted Over Time</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={chartData} margin={{ left: -16, right: 8 }}>
+                <defs>
+                  <linearGradient id="colorJobsAdmin" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: "hsl(var(--popover))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                  }}
+                />
+                <Area
+                  name="Jobs Posted"
+                  type="monotone"
+                  dataKey="Jobs"
+                  stroke="hsl(var(--chart-3))"
+                  fillOpacity={1}
+                  fill="url(#colorJobsAdmin)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -139,11 +236,8 @@ export default function AdminDashboard() {
                   const statusLabel = j.status === 'Open' ? 'Active' : 'Closed';
                   return (
                     <TableRow key={j._id}>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{j.title}</span>
-                          <span className="text-xs text-muted-foreground">{j._id}</span>
-                        </div>
+                      <TableCell className="text-sm font-medium">
+                        {j.title}
                       </TableCell>
                       <TableCell className="text-sm">
                         {j.companyId?.companyName || 'Deleted Company'}

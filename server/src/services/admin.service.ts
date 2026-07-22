@@ -22,6 +22,40 @@ export const getDashboard = async () => {
 
   const totalApplications = await Application.countDocuments();
 
+  // Generate 6 months data for charts
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const chartData: any[] = [];
+  
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const monthName = monthNames[month];
+    
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    
+    const usersCount = await User.countDocuments({
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+    
+    const companiesCount = await CompanyProfile.countDocuments({
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+    
+    const jobsCount = await Job.countDocuments({
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+    
+    chartData.push({
+      name: `${monthName} ${year.toString().slice(-2)}`,
+      Users: usersCount,
+      Companies: companiesCount,
+      Jobs: jobsCount
+    });
+  }
+
   return {
     totalUsers,
     totalCandidates,
@@ -29,6 +63,7 @@ export const getDashboard = async () => {
     totalCompanies,
     totalJobs,
     totalApplications,
+    chartData,
   };
 };
 
@@ -224,6 +259,23 @@ export const deleteCompanyService = async (companyId: string) => {
     throw new AppError("Company not found", 404);
   }
 
+  // Notify the recruiter (company owner) before deletion
+  try {
+    if (company.ownerId) {
+      await createNotification(
+        company.ownerId.toString(),
+        "Company Deleted by Admin",
+        `Your company profile "${company.companyName}" has been permanently deleted by an administrator. All associated job postings and applications have also been removed. Please contact support if you believe this was a mistake.`,
+        "SYSTEM",
+      );
+    }
+  } catch (notifErr) {
+    console.error(
+      "[ADMIN SERVICE] Failed to send deletion notification to recruiter:",
+      notifErr,
+    );
+  }
+
   // Delete jobs & applications associated with this company
   await Job.deleteMany({ companyId });
   await Application.deleteMany({ companyId });
@@ -284,6 +336,21 @@ export const deleteJobByAdmin = async (jobId: string) => {
   const job = await Job.findById(jobId);
   if (!job) {
     throw new AppError("Job not found", 404);
+  }
+
+  // Notify company owner before deleting
+  const company = await CompanyProfile.findById(job.companyId);
+  if (company) {
+    try {
+      await createNotification(
+        company.ownerId.toString(),
+        "Job Post Deleted by Admin",
+        `Your job posting "${job.title}" has been deleted by the administrator.`,
+        "SYSTEM",
+      );
+    } catch (notifErr) {
+      console.error("[ADMIN SERVICE ERROR] Failed to send job deletion notification:", notifErr);
+    }
   }
 
   // Delete applications for this job
@@ -421,4 +488,39 @@ export const getCompanyByIdForAdmin = async (companyId: string) => {
     ...company.toObject(),
     jobsPosted: jobsCount,
   };
+};
+
+export const globalSearch = async (query: string) => {
+  if (!query || query.trim().length < 2) {
+    return { users: [], companies: [], jobs: [] };
+  }
+
+  const q = query.trim();
+  const regex = new RegExp(q, "i");
+
+  const [users, companies, jobs] = await Promise.all([
+    User.find({
+      $or: [{ name: regex }, { email: regex }],
+    })
+      .select("name email role isActive")
+      .limit(5)
+      .lean(),
+
+    CompanyProfile.find({
+      $or: [{ companyName: regex }, { industry: regex }, { location: regex }],
+    })
+      .select("companyName industry location verified isActive logo")
+      .limit(5)
+      .lean(),
+
+    Job.find({
+      $or: [{ title: regex }, { location: regex }],
+    })
+      .populate({ path: "companyId", select: "companyName" })
+      .select("title location status companyId createdAt")
+      .limit(5)
+      .lean(),
+  ]);
+
+  return { users, companies, jobs };
 };
