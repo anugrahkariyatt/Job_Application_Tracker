@@ -45,10 +45,13 @@ import {
   Loader2,
   XCircle,
   Video,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
+import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
+import { calculateRealSkillMatch } from '@/lib/skillMatcher';
 
 type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Interview' | 'Rejected' | 'Hired';
 
@@ -75,6 +78,7 @@ export default function ApplicationDetailsPage({
   const [notes, setNotes] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
   const [interviews, setInterviews] = useState<any[]>([]);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [interviewForm, setInterviewForm] = useState({
     title: 'Technical Interview',
@@ -317,6 +321,15 @@ export default function ApplicationDetailsPage({
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                  onClick={() => setIsAIModalOpen(true)}
+                >
+                  <Award className="h-4 w-4 text-white" />
+                  Skill Assessment ({app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)
+                </Button>
                 {candidate.resumeUrl && (
                   <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" size="sm">
@@ -694,6 +707,14 @@ export default function ApplicationDetailsPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AIAssessmentModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        applicant={app}
+        onStatusChange={(appId, newStatus) => handleUpdateStatus(newStatus as ApplicationStatus)}
+        onScheduleInterview={() => setScheduleDialogOpen(true)}
+      />
     </div>
   );
 }
