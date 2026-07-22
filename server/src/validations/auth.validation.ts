@@ -49,3 +49,8 @@ export const updatePreferencesSchema = z.object({
 });
 
 export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(3, "Full name must be at least 3 characters").max(50),
+  email: z.string().email("Invalid email address"),
+});
