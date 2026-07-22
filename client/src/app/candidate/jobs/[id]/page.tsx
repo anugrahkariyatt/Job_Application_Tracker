@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -161,9 +162,36 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading job details...</p>
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-9 w-28" />
+        <Card className="p-6 space-y-4">
+          <div className="flex items-start gap-4">
+            <Skeleton className="h-14 w-14 rounded-xl shrink-0" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-7 w-1/3" />
+              <Skeleton className="h-4 w-1/4" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+        </Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2 p-6 space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-6 w-1/4" />
+            <Skeleton className="h-20 w-full" />
+          </Card>
+          <Card className="p-6 space-y-4">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </Card>
+        </div>
       </div>
     );
   }

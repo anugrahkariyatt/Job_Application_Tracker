@@ -7,6 +7,8 @@ import { StatusChip } from '@/lib/status';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Pagination } from '@/components/shared/Pagination';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
+import { calculateRealSkillMatch } from '@/lib/skillMatcher';
 import {
   Users,
   Search,
@@ -24,6 +26,7 @@ import {
   Briefcase,
   Mail,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -64,6 +67,8 @@ export default function ApplicantsPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedApplicantForAI, setSelectedApplicantForAI] = useState<any>(null);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const searchParam = searchParams.get('search') || '';
 
@@ -152,26 +157,6 @@ export default function ApplicantsPage() {
   const totalPages = Math.ceil(totalCount / PER_PAGE);
   const paged = applicants;
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="p-4 space-y-4">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -183,7 +168,7 @@ export default function ApplicantsPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1-2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
             placeholder="Search by name or headline…"
@@ -234,7 +219,17 @@ export default function ApplicantsPage() {
         </Select>
       </div>
 
-      {paged.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(PER_PAGE)].map((_, i) => (
+            <Card key={i} className="p-4 space-y-4">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </Card>
+          ))}
+        </div>
+      ) : paged.length === 0 ? (
         <Card>
           <EmptyState
             icon={Users}
@@ -289,6 +284,16 @@ export default function ApplicantsPage() {
                           <MapPin className="h-3 w-3" /> {candidate.location || 'Not specified'}
                         </span>
                       </div>
+                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedApplicantForAI(app);
+                          setIsAIModalOpen(true);
+                        }}
+                      >
+                        <Sparkles className="h-3 w-3 text-amber-500 fill-amber-500" />
+                        <span>Skill Match: {app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%</span>
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -297,6 +302,14 @@ export default function ApplicantsPage() {
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedApplicantForAI(app);
+                            setIsAIModalOpen(true);
+                          }}
+                        >
+                          <Sparkles className="mr-2 h-4 w-4 text-amber-500" /> View AI Assessment
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href={`/recruiter/applicants/${app._id}`}>
                             <Eye className="mr-2 h-4 w-4" /> View Profile
@@ -393,6 +406,13 @@ export default function ApplicantsPage() {
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+      <AIAssessmentModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        applicant={selectedApplicantForAI}
+        onStatusChange={(appId, newStatus) => handleUpdateStatus(appId, newStatus as ApplicationStatus)}
+      />
     </div>
   );
 }

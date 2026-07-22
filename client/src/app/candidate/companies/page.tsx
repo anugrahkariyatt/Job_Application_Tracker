@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/candidate/page-header';
 import { EmptyState } from '@/components/candidate/empty-state';
 import axiosInstance from '@/lib/axios';
@@ -174,9 +175,20 @@ export default function FindCompaniesPage() {
           </div>
 
           {loading ? (
-            <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
-              <Loader2 className="h-9 w-9 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Searching companies...</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="p-5 space-y-4">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="h-3.5 w-1/3" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-8 w-full rounded-md" />
+                </Card>
+              ))}
             </div>
           ) : companies.length === 0 ? (
             <EmptyState

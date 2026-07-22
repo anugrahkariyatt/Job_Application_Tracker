@@ -118,28 +118,6 @@ export default function NotificationsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <Card className="p-4 space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex gap-3 py-2">
-              <Skeleton className="h-10 w-10 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-3 w-3/4" />
-              </div>
-            </div>
-          ))}
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -182,7 +160,19 @@ export default function NotificationsPage() {
         }
       />
 
-      {notifs.length === 0 ? (
+      {loading ? (
+        <Card className="p-4 space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex gap-3 py-2 border-b last:border-0">
+              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </Card>
+      ) : notifs.length === 0 ? (
         <Card className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <Bell className="h-6 w-6" />
