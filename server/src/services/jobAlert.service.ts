@@ -130,7 +130,7 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
 
     const activeAlerts = await JobAlert.find({ isActive: true }).populate({
       path: "candidateId",
-      populate: { path: "userId", select: "name email" },
+      populate: { path: "userId", select: "name email preferences" },
     });
 
     console.log(`[JOB ALERT SERVICE] Found ${activeAlerts?.length || 0} active job alerts in DB`);
@@ -165,7 +165,7 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
       let user = candidate.userId as any;
       if (!user || typeof user !== "object" || !user.email) {
         if (candidate.userId) {
-          user = await User.findById(candidate.userId).select("name email");
+          user = await User.findById(candidate.userId).select("name email preferences");
         }
       }
 
@@ -247,15 +247,20 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
       }
 
       // Email notification
+      const userPrefs = user.preferences || { jobExpiring: true };
       if (user.email) {
-        await sendJobAlertEmail({
-          email: user.email,
-          candidateName: user.name || "Candidate",
-          jobTitle: jobTitle,
-          companyName: companyName,
-          location: job.location || "Remote",
-          jobId: job._id.toString(),
-        });
+        if (userPrefs.jobExpiring !== false) {
+          await sendJobAlertEmail({
+            email: user.email,
+            candidateName: user.name || "Candidate",
+            jobTitle: jobTitle,
+            companyName: companyName,
+            location: job.location || "Remote",
+            jobId: job._id.toString(),
+          });
+        } else {
+          console.log(`[JOB ALERT SERVICE] Email suppressed for user ${userId} (${user.email}) due to jobExpiring preference Config`);
+        }
       } else {
         console.warn(`[JOB ALERT SERVICE WARNING] Candidate user ${userId} has no email address`);
       }
