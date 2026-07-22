@@ -23,7 +23,7 @@ export const createJobAlertController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 
@@ -74,7 +74,7 @@ export const updateJobAlertController = async (
     if (!validationParams.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validationParams.error),
+        errors: validationParams.error.flatten(),
       });
     }
 
@@ -83,7 +83,7 @@ export const updateJobAlertController = async (
     if (!validationBody.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validationBody.error),
+        errors: validationBody.error.flatten(),
       });
     }
 
@@ -114,7 +114,7 @@ export const deleteJobAlertController = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
 

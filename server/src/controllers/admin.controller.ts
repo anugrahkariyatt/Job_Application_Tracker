@@ -78,7 +78,7 @@ export const updateUserStatusController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -87,7 +87,7 @@ export const updateUserStatusController = async (
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
@@ -136,7 +136,7 @@ export const updateCompanyVerificationController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -145,7 +145,7 @@ export const updateCompanyVerificationController = async (
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
@@ -175,7 +175,7 @@ export const updateCompanyStatusController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -184,7 +184,7 @@ export const updateCompanyStatusController = async (
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
@@ -213,7 +213,7 @@ export const deleteUserController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -238,7 +238,7 @@ export const deleteCompanyController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -281,7 +281,7 @@ export const deleteJobController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -324,7 +324,7 @@ export const getJobByIdController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -349,7 +349,7 @@ export const getApplicationByIdController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -374,7 +374,7 @@ export const updateApplicationStatusController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 
@@ -382,7 +382,7 @@ export const updateApplicationStatusController = async (
     if (!bodyValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(bodyValidation.error),
+        errors: bodyValidation.error.flatten(),
       });
     }
 
@@ -411,7 +411,7 @@ export const getCompanyByIdController = async (
     if (!paramsValidation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(paramsValidation.error),
+        errors: paramsValidation.error.flatten(),
       });
     }
 

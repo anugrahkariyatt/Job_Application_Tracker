@@ -28,7 +28,7 @@ export const createCompany = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     const result = await createCompanyService(validation.data, req.user!.id);
@@ -67,7 +67,7 @@ export const updateCompany = async (
     if (!validation.success) {
       return res.status(400).json({
         success: false,
-        errors: z.flattenError(validation.error),
+        errors: validation.error.flatten(),
       });
     }
     const result = await updateCompanyDetails(req.user!.id, validation.data);
