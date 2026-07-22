@@ -21,12 +21,14 @@ export default function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-6">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-text-white shadow-md shadow-primary/20">
-                <BriefcaseBusiness size={20} />
-              </div>
+            <Link href="/" className="flex items-center gap-3">
+              <img
+                src="/Nuvora-logo.png"
+                alt="Nuvora Logo"
+                className="h-10 w-auto object-contain"
+              />
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
-                Techno Careers
+                Nuvora
               </span>
             </Link>
             <p className="max-w-xs text-sm text-text-secondary leading-relaxed">
@@ -67,6 +69,11 @@ export default function Footer() {
               <li>
                 <Link href="/login" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Application Tracker
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Pricing & Plans
                 </Link>
               </li>
               <li>
@@ -139,7 +146,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-14 border-t border-border/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-text-muted">
-            &copy; {new Date().getFullYear()} Techno Careers. All rights reserved.
+            &copy; {new Date().getFullYear()} Nuvora. All rights reserved.
           </p>
           <div className="flex gap-6 text-xs text-text-muted">
             <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>

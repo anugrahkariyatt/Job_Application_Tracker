@@ -13,6 +13,7 @@ import {
   Bell,
   Settings,
   X,
+  Sparkles,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
@@ -65,6 +66,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     { label: "Create Job", href: "/recruiter/jobs/new", icon: PlusCircle },
     { label: "My Jobs", href: "/recruiter/jobs", icon: Briefcase },
     { label: "Applicants", href: "/recruiter/applicants", icon: Users },
+    { label: "Upgrade to Pro", href: "/recruiter/pricing", icon: Sparkles },
     {
       label: "Notifications",
       href: "/recruiter/notifications",
@@ -77,11 +79,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col bg-background border-r border-border">
       <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Briefcase className="h-5 w-5" />
-        </div>
+        <img
+          src="/Nuvora-logo.png"
+          alt="Nuvora Logo"
+          className="h-8 w-auto object-contain"
+        />
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-bold text-foreground">Hireflow</span>
+          <span className="text-sm font-bold text-foreground">Nuvora</span>
           <span className="text-xs text-muted-foreground">Recruiter</span>
         </div>
       </div>
