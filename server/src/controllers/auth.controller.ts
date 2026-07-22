@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import User from "../models/user.model.js";
 import {
   loginUser,
   registerUser,
@@ -24,6 +25,7 @@ import {
   resetPasswordSchema,
   verifyPasswordSchema,
   updatePreferencesSchema,
+  updateProfileSchema,
 } from "../validations/auth.validation.js";
 import { z } from "zod";
 import { AppError } from "../utils/AppError.js";
@@ -67,17 +69,19 @@ export const login = async (
 
     const result = await loginUser(validation.data);
 
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -104,17 +108,19 @@ export const refresh = async (
     }
 
     const result = await refreshUser(refreshToken);
+    const isProd = process.env.NODE_ENV === "production";
+
     res.cookie("accessToken", result.accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie("refreshToken", result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -139,17 +145,18 @@ export const logout = async (
     }
 
     await logoutUser(refreshToken);
+    const isProd = process.env.NODE_ENV === "production";
 
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
     });
 
     return res.status(200).json({
@@ -183,8 +190,6 @@ export const verifyPassword = async (
     }
 
     const verificationToken = await verifyUserPassword(password, userId);
-
-
 
     return res.status(200).json({
       success: true,
@@ -450,6 +455,57 @@ export const deleteAccount = async (
     return res.status(200).json({
       success: true,
       message: "Account deleted permanently",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateProfileController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const validation = updateProfileSchema.safeParse(req.body);
+
+    if (!validation.success) {
+      return res.status(400).json({
+        success: false,
+        errors: z.flattenError(validation.error),
+      });
+    }
+
+    const userId = req.user!.id;
+    const { name, email } = validation.data;
+
+    // Check if email is already taken by another user
+    const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+    if (existingUser) {
+      throw new AppError("Email is already taken by another user", 409);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    user.name = name;
+    user.email = email;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        preferences: user.preferences,
+      },
     });
   } catch (error) {
     next(error);

@@ -45,13 +45,29 @@ export const applyForJob = async (userId: string, jobId: string) => {
     companyId: job.companyId,
   });
 
-  await sendApplicationSubmittedEmail({
-    email: user.email,
-    candidateName: user.name,
-    jobTitle: job.title,
-    companyName: company.companyName,
-    applicationDate: new Date().toLocaleDateString(),
-  });
+  try {
+    await sendApplicationSubmittedEmail({
+      email: user.email,
+      candidateName: user.name,
+      jobTitle: job.title,
+      companyName: company.companyName,
+      applicationDate: new Date().toLocaleDateString(),
+    });
+  } catch (emailErr) {
+    console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
+  }
+
+  try {
+    await createNotification(
+      company.ownerId.toString(),
+      "Application Received",
+      `${user.name} applied for your job: ${job.title}`,
+      "APPLICATION",
+    );
+  } catch (notifErr) {
+    console.error("[APPLICATION SERVICE ERROR] Failed to create recruiter application notification:", notifErr);
+  }
+
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
@@ -66,10 +82,19 @@ export const FetchAllAppliedApplications = async (userId: string) => {
     path: "jobId",
     populate: {
       path: "companyId",
+      populate: {
+        path: "ownerId",
+        select: "preferences",
+      },
     },
   });
 
-  return applications;
+  return applications.map((app: any) => {
+    const appObj = app.toObject();
+    const recruiterPrefs = appObj.jobId?.companyId?.ownerId?.preferences;
+    appObj.allowWithdraw = recruiterPrefs?.candidateWithdrew !== false;
+    return appObj;
+  });
 };
 
 export const deleteApplication = async (
@@ -90,6 +115,38 @@ export const deleteApplication = async (
       403,
     );
   }
+
+  // Check if recruiter has disabled candidate withdrawals
+  const company = await CompanyProfile.findById(application.companyId);
+  if (company) {
+    const recruiter = await User.findById(company.ownerId);
+    if (recruiter && recruiter.preferences?.candidateWithdrew === false) {
+      throw new AppError(
+        "Withdrawals are currently disabled by the recruiter.",
+        400,
+      );
+    }
+  }
+
+  // Trigger in-app notification to recruiter before deleting application
+  try {
+    const job = await Job.findById(application.jobId);
+    const candidateUser = await User.findById(userId);
+    if (job && company && candidateUser) {
+      await createNotification(
+        company.ownerId.toString(),
+        "Candidate Withdrew",
+        `${candidateUser.name} withdrew their application for your job: ${job.title}`,
+        "APPLICATION",
+      );
+    }
+  } catch (notifErr) {
+    console.error(
+      "[APPLICATION SERVICE ERROR] Failed to notify recruiter about withdrawal:",
+      notifErr,
+    );
+  }
+
   await application.deleteOne();
   return;
 };
@@ -181,6 +238,11 @@ export const updateApplicationStatus = async (
       message = "Congratulations! You have been shortlisted.";
       break;
 
+    case "Interview":
+      title = "Interview Scheduled";
+      message = "An interview round has been scheduled for your application.";
+      break;
+
     case "Rejected":
       title = "Application Rejected";
       message = "Unfortunately, your application was not selected.";
@@ -198,13 +260,22 @@ export const updateApplicationStatus = async (
     "APPLICATION",
   );
 
-  await sendApplicationStatusEmail({
-    email: user.email,
-    candidateName: user.name,
-    jobTitle: job.title,
-    companyName: company.companyName,
-    status: application.status,
-  });
+  try {
+    const preferences = user.preferences || { applicationReceived: true };
+    if (preferences.applicationReceived !== false) {
+      await sendApplicationStatusEmail({
+        email: user.email,
+        candidateName: user.name,
+        jobTitle: job.title,
+        companyName: company.companyName,
+        status: application.status,
+      });
+    } else {
+      console.log(`[APPLICATION SERVICE] Status email suppressed for candidate ${user._id} (${user.email}) due to applicationReceived preference Config`);
+    }
+  } catch (emailErr) {
+    console.error("[APPLICATION SERVICE ERROR] Failed to send status update email:", emailErr);
+  }
 
   return application;
 };

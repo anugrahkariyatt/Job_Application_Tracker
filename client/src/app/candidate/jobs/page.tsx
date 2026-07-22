@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Search, SlidersHorizontal, LayoutGrid, List, X, Loader2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,18 +43,25 @@ const sortOptions = [
 ];
 
 export default function FindJobsPage() {
+  const searchParams = useSearchParams();
+  const searchParam = searchParams.get('search') || '';
+
   const [loading, setLoading] = React.useState(true);
   const [allJobs, setAllJobs] = React.useState<any[]>([]);
 
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState(searchParam);
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = React.useState<string[]>([]);
-  const [remoteOnly, setRemoteOnly] = React.useState(false);
+  const [selectedWorkModes, setSelectedWorkModes] = React.useState<string[]>([]);
   const [location, setLocation] = React.useState('');
   const [salaryMin, setSalaryMin] = React.useState(0);
   const [sortBy, setSortBy] = React.useState('recent');
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   React.useEffect(() => {
     const saved = localStorage.getItem('savedJobs');
@@ -99,7 +107,7 @@ export default function FindJobsPage() {
       if (search.trim()) params.search = search.trim();
       if (selectedTypes.length > 0) params.employmentTypes = selectedTypes.join(',');
       if (selectedLevels.length > 0) params.experienceLevels = selectedLevels.join(',');
-      if (remoteOnly) params.remote = 'true';
+      if (selectedWorkModes.length > 0) params.workModes = selectedWorkModes.join(',');
       if (location.trim()) params.location = location.trim();
       if (salaryMin > 0) params.salaryMin = salaryMin;
       if (sortBy) params.sortBy = sortBy;
@@ -124,13 +132,16 @@ export default function FindJobsPage() {
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [search, selectedTypes, selectedLevels, remoteOnly, location, salaryMin, sortBy]);
+  }, [search, selectedTypes, selectedLevels, selectedWorkModes, location, salaryMin, sortBy]);
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
   };
   const toggleLevel = (level: string) => {
     setSelectedLevels((prev) => prev.includes(level) ? prev.filter((l) => l !== level) : [...prev, level]);
+  };
+  const toggleWorkMode = (mode: string) => {
+    setSelectedWorkModes((prev) => prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]);
   };
 
   const handleApply = async (jobId: string) => {
@@ -145,7 +156,7 @@ export default function FindJobsPage() {
     }
   };
 
-  const activeFilters = selectedTypes.length + selectedLevels.length + (remoteOnly ? 1 : 0) + (location ? 1 : 0) + (salaryMin > 0 ? 1 : 0);
+  const activeFilters = selectedTypes.length + selectedLevels.length + selectedWorkModes.length + (location ? 1 : 0) + (salaryMin > 0 ? 1 : 0);
 
   const FiltersContent = () => (
     <div className="space-y-6">
@@ -192,16 +203,23 @@ export default function FindJobsPage() {
           className="mt-2 w-full accent-primary"
         />
       </div>
-      <div className="flex items-center space-x-2">
-        <Checkbox checked={remoteOnly} onCheckedChange={() => setRemoteOnly(!remoteOnly)} id="remote" />
-        <Label htmlFor="remote" className="text-sm font-normal cursor-pointer">Remote only</Label>
+      <div>
+        <Label className="text-sm font-semibold">Work Mode</Label>
+        <div className="mt-2 space-y-2">
+          {['Remote', 'Hybrid', 'Onsite'].map((mode) => (
+            <div key={mode} className="flex items-center space-x-2">
+              <Checkbox checked={selectedWorkModes.includes(mode)} onCheckedChange={() => toggleWorkMode(mode)} />
+              <Label className="text-sm font-normal cursor-pointer">{mode}</Label>
+            </div>
+          ))}
+        </div>
       </div>
       {activeFilters > 0 && (
         <Button
           variant="outline"
           size="sm"
           className="w-full"
-          onClick={() => { setSelectedTypes([]); setSelectedLevels([]); setRemoteOnly(false); setLocation(''); setSalaryMin(0); }}
+          onClick={() => { setSelectedTypes([]); setSelectedLevels([]); setSelectedWorkModes([]); setLocation(''); setSalaryMin(0); }}
         >
           <X className="mr-1 h-4 w-4" /> Clear All Filters
         </Button>
@@ -289,7 +307,7 @@ export default function FindJobsPage() {
               icon={Briefcase}
               title="No jobs found"
               description="Try adjusting your filters or search keywords to find matching positions."
-              action={<Button onClick={() => { setSearch(''); setSelectedTypes([]); setSelectedLevels([]); setRemoteOnly(false); setLocation(''); setSalaryMin(0); }}>Reset Search</Button>}
+              action={<Button onClick={() => { setSearch(''); setSelectedTypes([]); setSelectedLevels([]); setSelectedWorkModes([]); setLocation(''); setSalaryMin(0); }}>Reset Search</Button>}
             />
           ) : (
             <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2' : 'flex flex-col gap-4'}>

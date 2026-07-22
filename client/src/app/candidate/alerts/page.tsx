@@ -2,6 +2,12 @@
 
 import * as React from 'react';
 import { Bell, Plus, Pencil, Trash2, MapPin, Search, Loader2 } from 'lucide-react';
+import { z } from 'zod';
+
+const alertFormSchema = z.object({
+  keyword: z.string().trim().min(1, 'Keyword is required'),
+  location: z.string().trim().optional(),
+});
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +53,8 @@ interface UIJobAlert {
   frequency: 'Daily' | 'Weekly' | 'Monthly';
   active: boolean;
   createdAt: string;
+  employmentType: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
+  remote: boolean;
 }
 
 export default function JobAlertsPage() {
@@ -54,7 +62,25 @@ export default function JobAlertsPage() {
   const [alerts, setAlerts] = React.useState<UIJobAlert[]>([]);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editTarget, setEditTarget] = React.useState<UIJobAlert | null>(null);
-  const [form, setForm] = React.useState({ keyword: '', location: '', frequency: 'Daily' as 'Daily' | 'Weekly' | 'Monthly' });
+  const [form, setForm] = React.useState({
+    keyword: '',
+    location: '',
+    employmentType: 'Full-time' as 'Full-time' | 'Part-time' | 'Contract' | 'Internship',
+    remote: false,
+    frequency: 'Daily' as 'Daily' | 'Weekly' | 'Monthly'
+  });
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const handleFieldChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prevErr) => {
+        const copy = { ...prevErr };
+        delete copy[field];
+        return copy;
+      });
+    }
+  };
 
   const mapAlertToUI = (dbAlert: any): UIJobAlert => {
     return {
@@ -64,6 +90,8 @@ export default function JobAlertsPage() {
       frequency: 'Daily', // Mock default frequency
       active: dbAlert.isActive ?? true,
       createdAt: dbAlert.createdAt || new Date().toISOString(),
+      employmentType: dbAlert.employmentType || 'Full-time',
+      remote: dbAlert.remote || false,
     };
   };
 
@@ -87,19 +115,35 @@ export default function JobAlertsPage() {
 
   const openCreate = () => {
     setEditTarget(null);
-    setForm({ keyword: '', location: '', frequency: 'Daily' });
+    setForm({ keyword: '', location: '', employmentType: 'Full-time', remote: false, frequency: 'Daily' });
+    setErrors({});
     setDialogOpen(true);
   };
 
   const openEdit = (alert: UIJobAlert) => {
     setEditTarget(alert);
-    setForm({ keyword: alert.keyword, location: alert.location, frequency: alert.frequency });
+    setForm({
+      keyword: alert.keyword,
+      location: alert.location,
+      employmentType: alert.employmentType,
+      remote: alert.remote,
+      frequency: alert.frequency
+    });
+    setErrors({});
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.keyword.trim()) {
-      toast.error('Keyword is required.');
+    setErrors({});
+    const validation = alertFormSchema.safeParse(form);
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path.length > 0) {
+          fieldErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
       return;
     }
 
@@ -107,8 +151,8 @@ export default function JobAlertsPage() {
       const payload = {
         keywords: form.keyword.split(',').map((k) => k.trim()),
         location: form.location,
-        employmentType: 'Full-time', // required by schema enum
-        remote: form.location.toLowerCase().includes('remote'),
+        employmentType: form.employmentType,
+        remote: form.remote,
       };
 
       if (editTarget) {
@@ -206,8 +250,10 @@ export default function JobAlertsPage() {
                   <Switch checked={alert.active} onCheckedChange={() => toggleActive(alert.id, alert.active)} />
                 </div>
                 <div className="mt-4 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="secondary" className="font-normal">{alert.frequency}</Badge>
+                    <Badge variant="outline" className="font-normal">{alert.employmentType}</Badge>
+                    {alert.remote && <Badge variant="secondary" className="bg-sky-50 text-sky-700 font-normal">Remote</Badge>}
                     <Badge variant={alert.active ? 'default' : 'outline'} className="font-normal">
                       {alert.active ? 'Active' : 'Paused'}
                     </Badge>
@@ -249,16 +295,49 @@ export default function JobAlertsPage() {
             <DialogTitle>{editTarget ? 'Edit Alert' : 'Create Job Alert'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
+             <div className="space-y-2">
               <Label htmlFor="keyword">Keyword</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="keyword" placeholder="e.g. Frontend, React" value={form.keyword} onChange={(e) => setForm({ ...form, keyword: e.target.value })} className="pl-9" />
+                <Input
+                  id="keyword"
+                  placeholder="e.g. Frontend, React"
+                  value={form.keyword}
+                  onChange={(e) => handleFieldChange('keyword', e.target.value)}
+                  className="pl-9"
+                />
               </div>
+              {errors.keyword && (
+                <p className="mt-1 text-xs text-destructive font-medium">{errors.keyword}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="alertLocation">Location</Label>
-              <Input id="alertLocation" placeholder="e.g. Remote or San Francisco, CA" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+              <Input
+                id="alertLocation"
+                placeholder="e.g. Remote or San Francisco, CA"
+                value={form.location}
+                onChange={(e) => handleFieldChange('location', e.target.value)}
+              />
+              {errors.location && (
+                <p className="mt-1 text-xs text-destructive font-medium">{errors.location}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="employmentType">Employment Type</Label>
+              <Select value={form.employmentType} onValueChange={(v) => setForm({ ...form, employmentType: v as any })}>
+                <SelectTrigger id="employmentType"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between py-1">
+              <Label htmlFor="remoteAlert" className="cursor-pointer">Remote Only</Label>
+              <Switch id="remoteAlert" checked={form.remote} onCheckedChange={(v) => setForm({ ...form, remote: v })} />
             </div>
             <div className="space-y-2">
               <Label>Frequency</Label>

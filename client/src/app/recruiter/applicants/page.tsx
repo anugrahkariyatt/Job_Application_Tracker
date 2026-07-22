@@ -26,6 +26,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { ApplicationStatus } from '@/lib/types';
 import {
   Select,
@@ -55,15 +56,31 @@ const statusFilters = [
 const PER_PAGE = 9;
 
 export default function ApplicantsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const jobParam = searchParams.get('job');
+
   const [applicants, setApplicants] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState('');
+  const searchParam = searchParams.get('search') || '';
+
+  const [search, setSearch] = useState(searchParam);
   const [statusFilter, setStatusFilter] = useState<string>('All');
-  const [jobFilter, setJobFilter] = useState<string>('All');
+  const [jobFilter, setJobFilter] = useState<string>(jobParam || 'All');
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    if (jobParam) {
+      setJobFilter(jobParam);
+    }
+  }, [jobParam]);
+
+  useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   const [totalCount, setTotalCount] = useState(0);
 
@@ -126,9 +143,9 @@ export default function ApplicantsPage() {
         toast.success(`Applicant status updated to ${newStatus}.`);
         fetchApplicants();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating status:', err);
-      toast.error('Failed to update status.');
+      toast.error(err.response?.data?.message || 'Failed to update status.');
     }
   };
 
@@ -234,8 +251,16 @@ export default function ApplicantsPage() {
             const companyName = company?.companyName || 'Company';
 
             return (
-              <Card key={app._id} className="job-card-hover overflow-hidden">
-                <div className="h-2 bg-primary" />
+              <Card
+                key={app._id}
+                className="job-card-hover overflow-hidden cursor-pointer"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button, a, select, [role="menuitem"]')) {
+                    return;
+                  }
+                  router.push(`/recruiter/applicants/${app._id}`);
+                }}
+              >
                 <div className="p-4">
                   <div className="flex items-start gap-3">
                     {candidate.profileImage ? (

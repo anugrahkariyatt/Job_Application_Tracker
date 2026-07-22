@@ -12,11 +12,9 @@ import {
   deleteCompanyController,
   getAllJobsController,
   deleteJobController,
-  getAllApplicationsController,
   getJobByIdController,
-  getApplicationByIdController,
-  updateApplicationStatusController,
   getCompanyByIdController,
+  globalSearchController,
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -86,13 +84,6 @@ router.delete(
 );
 
 router.get(
-  "/applications",
-  authenticate,
-  authorize("admin"),
-  getAllApplicationsController,
-);
-
-router.get(
   "/jobs/:jobId",
   authenticate,
   authorize("admin"),
@@ -100,24 +91,17 @@ router.get(
 );
 
 router.get(
-  "/applications/:applicationId",
-  authenticate,
-  authorize("admin"),
-  getApplicationByIdController,
-);
-
-router.patch(
-  "/applications/:applicationId/status",
-  authenticate,
-  authorize("admin"),
-  updateApplicationStatusController,
-);
-
-router.get(
   "/companies/:companyId",
   authenticate,
   authorize("admin"),
   getCompanyByIdController,
+);
+
+router.get(
+  "/search",
+  authenticate,
+  authorize("admin"),
+  globalSearchController,
 );
 
 export default router;

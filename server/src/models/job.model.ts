@@ -74,6 +74,11 @@ const jobSchema = new Schema(
       min: 0,
     },
 
+    currency: {
+      type: String,
+      default: "USD",
+    },
+
     location: {
       type: String,
       required: true,
@@ -83,6 +88,12 @@ const jobSchema = new Schema(
     remote: {
       type: Boolean,
       default: false,
+    },
+
+    workMode: {
+      type: String,
+      enum: ["Remote", "Hybrid", "Onsite"],
+      default: "Onsite",
     },
 
     vacancies: {

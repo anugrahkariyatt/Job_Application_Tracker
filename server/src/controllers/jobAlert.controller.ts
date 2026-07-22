@@ -90,10 +90,7 @@ export const updateJobAlertController = async (
     const result = await updateJobAlert(
       req.user!.id,
       validationParams.data.jobAlertId,
-      validationBody.data.keywords,
-      validationBody.data.location,
-      validationBody.data.employmentType,
-      validationBody.data.remote,
+      validationBody.data,
     );
 
     return res.status(200).json({

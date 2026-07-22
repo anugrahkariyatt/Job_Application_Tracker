@@ -34,6 +34,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/candidate', icon: LayoutDashboard },
   { label: 'My Profile', href: '/candidate/profile', icon: User },
   { label: 'Find Jobs', href: '/candidate/jobs', icon: Search },
+  { label: 'Companies', href: '/candidate/companies', icon: Building2 },
   { label: 'Applied Jobs', href: '/candidate/applied', icon: FileText },
   { label: 'Saved Jobs', href: '/candidate/saved', icon: Bookmark },
   { label: 'Job Alerts', href: '/candidate/alerts', icon: Bell },

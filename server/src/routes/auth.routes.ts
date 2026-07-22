@@ -16,6 +16,7 @@ import {
   deactivateAccount,
   deleteAccount,
   resendVerificationEmail,
+  updateProfileController,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 
@@ -33,6 +34,7 @@ router.post("/send-verification-email", authenticate, sendVerificationEmail);
 router.post("/resend-verification-email", resendVerificationEmail);
 router.get("/verify-email", verifyEmail);
 router.get("/profile", authenticate, getCurrentUserController);
+router.put("/profile", authenticate, updateProfileController);
 router.put("/preferences", authenticate, updatePreferences);
 router.post("/deactivate", authenticate, deactivateAccount);
 router.delete("/delete-account", authenticate, deleteAccount);
