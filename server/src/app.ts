@@ -19,11 +19,39 @@ import interviewRoutes from "./routes/interview.routes.js";
 import settingsRoutes from "./routes/settings.route.js";
 const app = express();
 
+app.set("trust proxy", 1);
+
+const allowedOrigins = [
+  "https://job-application-tracker-azure-eight.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      const envOrigins = (process.env.CLIENT_URL || "")
+        .split(",")
+        .map((url) => url.trim());
+
+      const allAllowed = [...allowedOrigins, ...envOrigins];
+
+      if (
+        allAllowed.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        process.env.NODE_ENV !== "production"
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(null, true);
+    },
     credentials: true,
-  }),
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Cookie"],
+  })
 );
 
 app.use(express.json());
