@@ -20,7 +20,7 @@ import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
 import { logout } from '@/features/auth/api/auth.api';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -28,12 +28,25 @@ import { Button } from '@/components/ui/button';
 
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [company, setCompany] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchVal, setSearchVal] = useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchVal.trim()) return;
+
+    if (pathname.startsWith('/recruiter/applicants')) {
+      router.push(`/recruiter/applicants?search=${encodeURIComponent(searchVal)}`);
+    } else {
+      router.push(`/recruiter/jobs?search=${encodeURIComponent(searchVal)}`);
+    }
+  };
 
   const fetchHeaderData = async () => {
     try {
@@ -91,14 +104,16 @@ export function Header() {
         </SheetContent>
       </Sheet>
 
-      <div className="relative hidden flex-1 max-w-md sm:block">
+      <form onSubmit={handleSearchSubmit} className="relative hidden flex-1 max-w-md sm:block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="search"
           placeholder="Search jobs, applicants, settings…"
+          value={searchVal}
+          onChange={(e) => setSearchVal(e.target.value)}
           className="h-9 w-full rounded-md border border-input bg-muted/50 pl-9 pr-3 text-sm text-foreground outline-none ring-offset-background transition-colors placeholder:text-muted-foreground focus:bg-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
         />
-      </div>
+      </form>
 
       <div className="ml-auto flex items-center gap-1.5">
         <Link

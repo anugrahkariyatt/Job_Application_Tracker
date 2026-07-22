@@ -52,6 +52,17 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [profileImage, setProfileImage] = React.useState('');
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const [searchVal, setSearchVal] = React.useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchVal.trim()) return;
+    if (pathname.startsWith('/candidate/companies')) {
+      router.push(`/candidate/companies?search=${encodeURIComponent(searchVal)}`);
+    } else {
+      router.push(`/candidate/jobs?search=${encodeURIComponent(searchVal)}`);
+    }
+  };
 
   React.useEffect(() => {
     const fetchCandidateImg = async () => {
@@ -149,13 +160,15 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
       </Sheet>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-md">
+      <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search jobs, companies..."
           className="pl-9"
+          value={searchVal}
+          onChange={(e) => setSearchVal(e.target.value)}
         />
-      </div>
+      </form>
 
       <div className="ml-auto flex items-center gap-1">
         <Button variant="ghost" size="icon" aria-label="Notifications" asChild className="relative">

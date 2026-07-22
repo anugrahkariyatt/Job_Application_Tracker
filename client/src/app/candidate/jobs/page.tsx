@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Search, SlidersHorizontal, LayoutGrid, List, X, Loader2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,10 +43,13 @@ const sortOptions = [
 ];
 
 export default function FindJobsPage() {
+  const searchParams = useSearchParams();
+  const searchParam = searchParams.get('search') || '';
+
   const [loading, setLoading] = React.useState(true);
   const [allJobs, setAllJobs] = React.useState<any[]>([]);
 
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState(searchParam);
   const [selectedTypes, setSelectedTypes] = React.useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = React.useState<string[]>([]);
   const [selectedWorkModes, setSelectedWorkModes] = React.useState<string[]>([]);
@@ -54,6 +58,10 @@ export default function FindJobsPage() {
   const [sortBy, setSortBy] = React.useState('recent');
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    setSearch(searchParams.get('search') || '');
+  }, [searchParams]);
 
   React.useEffect(() => {
     const saved = localStorage.getItem('savedJobs');

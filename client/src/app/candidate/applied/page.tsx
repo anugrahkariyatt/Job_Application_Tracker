@@ -171,12 +171,12 @@ export default function AppliedJobsPage() {
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{formatDate(app.appliedDate)}</TableCell>
                     <TableCell><StatusBadge status={app.status} /></TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1.5">
                         {app.status === 'Interview' && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="text-primary hover:text-primary hover:bg-primary/5"
+                            className="text-primary hover:bg-primary/5 border-primary/20"
                             onClick={() => {
                               const iv = interviews.find((i) => i.applicationId === app.id || i.applicationId?._id === app.id);
                               if (iv) {
@@ -188,17 +188,39 @@ export default function AppliedJobsPage() {
                             }}
                             title="View Interview Details"
                           >
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="mr-1.5 h-3.5 w-3.5" />
+                            Interview
                           </Button>
                         )}
-                        <Button variant="ghost" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild>
                           <Link href={`/candidate/jobs/${app.jobId}`}>
-                            <Eye className="h-4 w-4" />
+                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                            View
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive animate-pulse-hover" onClick={() => setWithdrawTarget(app.id)}>
-                          <Ban className="h-4 w-4" />
-                        </Button>
+                        {app.allowWithdraw !== false ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/5 border-destructive/20"
+                            onClick={() => setWithdrawTarget(app.id)}
+                            title="Withdraw Application"
+                          >
+                            <Ban className="mr-1.5 h-3.5 w-3.5" />
+                            Withdraw
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-muted-foreground/40 bg-muted/20 border-muted-foreground/10 cursor-not-allowed"
+                            disabled
+                            title="Withdrawals disabled by employer"
+                          >
+                            <Ban className="mr-1.5 h-3.5 w-3.5" />
+                            Withdraw
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

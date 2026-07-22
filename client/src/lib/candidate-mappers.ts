@@ -7,7 +7,8 @@ export const mapJobToFrontend = (dbJob: any): Job => {
   // Format salary
   let salaryStr = 'Not specified';
   if (dbJob.salaryMin !== undefined && dbJob.salaryMax !== undefined) {
-    salaryStr = `$${(dbJob.salaryMin / 1000).toFixed(0)}k - $${(dbJob.salaryMax / 1000).toFixed(0)}k`;
+    const currencySym = dbJob.currency === 'EUR' ? '€' : dbJob.currency === 'GBP' ? '£' : dbJob.currency === 'INR' ? '₹' : '$';
+    salaryStr = `${currencySym}${(dbJob.salaryMin / 1000).toFixed(0)}k - ${currencySym}${(dbJob.salaryMax / 1000).toFixed(0)}k`;
   }
 
   return {
@@ -42,6 +43,7 @@ export const mapApplicationToFrontend = (dbApp: any): Application => {
     job: mapJobToFrontend(dbJob),
     appliedDate: dbApp.createdAt || new Date().toISOString(),
     status: dbApp.status || 'Applied',
+    allowWithdraw: dbApp.allowWithdraw !== false,
   };
 };
 

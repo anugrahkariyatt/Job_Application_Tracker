@@ -49,6 +49,7 @@ export interface Application {
   job: Job;
   appliedDate: string;
   status: ApplicationStatus;
+  allowWithdraw?: boolean;
 }
 
 export interface Experience {

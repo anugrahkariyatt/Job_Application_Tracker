@@ -84,15 +84,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <span className="text-sm font-bold text-foreground">Hireflow</span>
           <span className="text-xs text-muted-foreground">Recruiter</span>
         </div>
-        {onNavigate && (
-          <button
-            onClick={onNavigate}
-            className="ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-accent lg:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        )}
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3 [scrollbar-width:thin]">
