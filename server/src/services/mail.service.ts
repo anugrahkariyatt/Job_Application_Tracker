@@ -34,10 +34,11 @@ export const sendApplicationStatusEmail = async (
   try {
     console.log("[MAIL SERVICE] Sending application status update email via n8n:", payload.email, "Status:", payload.status);
 
-    await n8nClient.post("/send-email", {
+    const response = await n8nClient.post("/send-email", {
       type: "application-status-updated",
       ...payload,
     });
+    console.log("[MAIL SERVICE SUCCESS] n8n responded with status:", response.status, "data:", JSON.stringify(response.data || {}));
   } catch (error: any) {
     console.error("========== N8N EMAIL ERROR DEBUG ==========");
     console.error("Response Status:", error?.response?.status);
