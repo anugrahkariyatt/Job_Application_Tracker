@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, LayoutGrid, List, X, Loader2, Briefcase } fr
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -298,9 +299,23 @@ export default function FindJobsPage() {
         {/* Jobs list grid */}
         <div className="lg:col-span-3">
           {loading ? (
-            <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground animate-pulse">Filtering jobs...</p>
+            <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2' : 'flex flex-col gap-4'}>
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="p-5 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <Skeleton className="h-5 w-2/3" />
+                      <Skeleton className="h-3.5 w-1/3" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-6 w-24 rounded-full" />
+                    <Skeleton className="h-8 w-20 rounded-md" />
+                  </div>
+                </Card>
+              ))}
             </div>
           ) : allJobs.length === 0 ? (
             <EmptyState

@@ -195,6 +195,8 @@ export default function CreateJobPage() {
 
   return (
     <div className="space-y-6">
+
+
       <PageHeader
         title="Post a Job"
         description="Create a new job opening for your company."

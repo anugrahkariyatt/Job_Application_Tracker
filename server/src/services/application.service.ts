@@ -9,6 +9,7 @@ import { createNotification } from "./notification.service.js";
 import {
   sendApplicationStatusEmail,
   sendApplicationSubmittedEmail,
+  triggerCandidateAIScreening,
 } from "./mail.service.js";
 
 export const applyForJob = async (userId: string, jobId: string) => {
@@ -56,6 +57,33 @@ export const applyForJob = async (userId: string, jobId: string) => {
   } catch (emailErr) {
     console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
   }
+
+  // Trigger n8n AI Candidate Screening Asynchronously
+  (async () => {
+    try {
+      const aiResult = await triggerCandidateAIScreening({
+        applicationId: application._id.toString(),
+        candidateName: user.name,
+        candidateEmail: user.email,
+        candidateSkills: candidate.headline ? [candidate.headline] : [],
+        candidateExperienceSummary: candidate.bio || "",
+        jobTitle: job.title,
+        jobDescription: job.description || "",
+        jobRequiredSkills: (job as any).skills || [],
+      });
+
+      if (aiResult && (aiResult.aiMatchScore !== undefined || aiResult.aiSummary)) {
+        await Application.findByIdAndUpdate(application._id, {
+          aiMatchScore: aiResult.aiMatchScore,
+          aiStrengths: aiResult.aiStrengths || [],
+          aiSummary: aiResult.aiSummary,
+        });
+        console.log("[APPLICATION SERVICE] Updated application with n8n AI Screening result");
+      }
+    } catch (aiErr) {
+      console.error("[APPLICATION SERVICE ERROR] Failed n8n AI screening processing:", aiErr);
+    }
+  })();
 
   try {
     await createNotification(

@@ -8,6 +8,8 @@ export interface IUser extends Document {
   role: "candidate" | "recruiter" | "admin";
   isVerified: boolean;
   isActive: boolean;
+  subscriptionPlan: "free" | "pro";
+  subscriptionExpiresAt?: Date;
   preferences: {
     applicationReceived: boolean;
     candidateWithdrew: boolean;
@@ -44,6 +46,14 @@ const userSchema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    subscriptionPlan: {
+      type: String,
+      enum: ["free", "pro"],
+      default: "free",
+    },
+    subscriptionExpiresAt: {
+      type: Date,
     },
     preferences: {
       applicationReceived: { type: Boolean, default: true },

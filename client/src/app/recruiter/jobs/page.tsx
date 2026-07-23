@@ -162,29 +162,6 @@ export default function MyJobsPage() {
   const totalPages = Math.ceil(totalCount / PER_PAGE);
   const paged = jobs;
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="p-4 space-y-4">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <div className="space-y-2 pt-2">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -205,7 +182,7 @@ export default function MyJobsPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1-2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
             placeholder="Search jobs by title or location…"
@@ -253,7 +230,20 @@ export default function MyJobsPage() {
         </div>
       </div>
 
-      {paged.length === 0 ? (
+      {loading ? (
+        <div className={view === 'grid' ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
+          {[...Array(PER_PAGE)].map((_, i) => (
+            <Card key={i} className="p-4 space-y-4">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="space-y-2 pt-2">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : paged.length === 0 ? (
         <Card>
           <EmptyState
             icon={Briefcase}

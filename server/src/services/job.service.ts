@@ -1,5 +1,6 @@
 import Company from "../models/company.model.js";
 import Job from "../models/job.model.js";
+import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { processJobAlertsForNewJob } from "./jobAlert.service.js";
 import { notifyCompanySubscribers } from "./subscription.service.js";
@@ -9,11 +10,32 @@ import {
   UpdateJobStatusInput,
 } from "../validations/jobs.validation.js";
 
+const FREE_RECRUITER_MAX_JOBS = 3;
+
 export const createJob = async (ownerId: string, data: CreateJobInput) => {
+  const user = await User.findById(ownerId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
   const company = await Company.findOne({ ownerId });
 
   if (!company) {
     throw new AppError("Company not found", 404);
+  }
+
+  if (user.subscriptionPlan === "free") {
+    const activeJobsCount = await Job.countDocuments({
+      companyId: company._id,
+      status: "Open",
+    });
+
+    if (activeJobsCount >= FREE_RECRUITER_MAX_JOBS) {
+      throw new AppError(
+        `Free accounts can have a maximum of ${FREE_RECRUITER_MAX_JOBS} active job posts. Upgrade to Recruiter Pro for unlimited job listings!`,
+        400,
+      );
+    }
   }
 
   const job = await Job.create({

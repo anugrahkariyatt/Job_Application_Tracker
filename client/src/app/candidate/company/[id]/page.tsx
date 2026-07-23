@@ -14,6 +14,7 @@ import {
   Bell,
   BellOff,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -164,9 +165,36 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading company profile...</p>
+      <div className="space-y-6">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-9 w-28" />
+        <Card className="overflow-hidden">
+          <Skeleton className="h-40 w-full" />
+          <div className="p-6 space-y-4">
+            <div className="flex gap-4 items-center">
+              <Skeleton className="h-20 w-20 rounded-xl shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-6 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Skeleton className="h-36 w-full rounded-xl" />
+              <Skeleton className="h-36 w-full rounded-xl" />
+            </div>
+          </div>
+          <Card className="p-6 space-y-4">
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </Card>
+        </div>
       </div>
     );
   }

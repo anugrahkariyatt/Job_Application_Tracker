@@ -15,14 +15,16 @@ const PublicNavbar = () => {
         {/* Styled Brand Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+          className="flex items-center gap-3 transition-opacity hover:opacity-90"
           onClick={closeMenu}
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-text-white shadow-md shadow-primary/20">
-            <BriefcaseBusiness size={20} />
-          </div>
+          <img
+            src="/Nuvora-logo.png"
+            alt="Nuvora Logo"
+            className="h-10 w-auto object-contain"
+          />
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
-            Techno Careers
+            Nuvora
           </span>
         </Link>
 

@@ -9,6 +9,7 @@ const alertFormSchema = z.object({
   location: z.string().trim().optional(),
 });
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -203,15 +204,6 @@ export default function JobAlertsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading job alerts...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader title="Job Alerts" description="Get notified when new jobs match your criteria">
@@ -221,7 +213,25 @@ export default function JobAlertsPage() {
         </Button>
       </PageHeader>
 
-      {alerts.length === 0 ? (
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-3.5 w-1/3" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2">
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-8 w-16 rounded-md" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : alerts.length === 0 ? (
         <EmptyState
           icon={Bell}
           title="No job alerts"

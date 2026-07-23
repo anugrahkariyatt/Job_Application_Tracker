@@ -10,19 +10,26 @@ import { sendCompanyNewJobEmail } from "./mail.service.js";
 const MAX_SUBSCRIPTIONS = 10;
 
 export const subscribeCompany = async (userId: string, companyId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
   const candidate = await Candidate.findOne({ userId });
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
 
+  const maxAllowed = user.subscriptionPlan === "pro" ? Infinity : MAX_SUBSCRIPTIONS;
+
   const totalSubscriptions = await Subscription.countDocuments({
     candidateId: candidate._id,
   });
 
-  if (totalSubscriptions >= MAX_SUBSCRIPTIONS) {
+  if (totalSubscriptions >= maxAllowed) {
     throw new AppError(
-      `You can subscribe to a maximum of ${MAX_SUBSCRIPTIONS} companies`,
+      `Free plan allows subscribing to a maximum of ${MAX_SUBSCRIPTIONS} companies. Upgrade to Pro for unlimited subscriptions!`,
       400,
     );
   }

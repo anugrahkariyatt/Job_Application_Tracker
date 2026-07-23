@@ -34,11 +34,13 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
+        <img
+          src="/Nuvora-logo.png"
+          alt="Nuvora Logo"
+          className="h-8 w-auto object-contain"
+        />
         <div className="flex flex-col leading-none">
-          <span className="text-base font-semibold tracking-tight">Techno Careers</span>
+          <span className="text-base font-semibold tracking-tight">Nuvora</span>
           <span className="text-xs text-muted-foreground">Admin Console</span>
         </div>
       </div>

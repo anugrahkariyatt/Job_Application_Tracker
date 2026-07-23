@@ -20,6 +20,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -329,11 +330,29 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">
-          Loading dashboard metrics...
-        </p>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="p-4 space-y-3">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-8 w-1/3" />
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2 p-6 space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
+            ))}
+          </Card>
+          <Card className="p-6 space-y-4">
+            <Skeleton className="h-6 w-1/2" />
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full rounded-lg" />
+            ))}
+          </Card>
+        </div>
       </div>
     );
   }
@@ -351,7 +370,7 @@ export default function DashboardPage() {
                 Create Candidate Profile
               </h1>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Welcome to Techno Careers,{" "}
+                Welcome to Nuvora,{" "}
                 <span className="font-semibold text-foreground">
                   {user?.name}
                 </span>

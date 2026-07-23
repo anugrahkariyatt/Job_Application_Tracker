@@ -39,7 +39,7 @@ export default function SettingsPage() {
   const dispatch = useAppDispatch();
   const [name, setName] = useState('Admin User');
   const [email, setEmail] = useState('admin@technocareers.com');
-  const [platformName, setPlatformName] = useState('Techno Careers');
+  const [platformName, setPlatformName] = useState('Nuvora');
   const [supportEmail, setSupportEmail] = useState('support@technocareers.com');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');

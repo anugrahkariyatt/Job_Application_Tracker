@@ -123,10 +123,12 @@ export function Navbar({ collapsed, onToggleSidebar }: NavbarProps) {
         </SheetTrigger>
         <SheetContent side="left" className="w-72 p-0">
           <div className="flex h-16 items-center gap-2 border-b px-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <span className="text-sm font-bold">T</span>
-            </div>
-            <span className="text-lg font-bold tracking-tight">Techno Careers</span>
+            <img
+              src="/Nuvora-logo.png"
+              alt="Nuvora Logo"
+              className="h-8 w-auto object-contain"
+            />
+            <span className="text-lg font-bold tracking-tight">Nuvora</span>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {candidateNavItems.map((item) => {

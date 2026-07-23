@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Search, FileText, Eye, Ban, Loader2, Calendar } from 'lucide-react';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,15 +104,6 @@ export default function AppliedJobsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading applied jobs...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader title="Applied Jobs" description={`You've applied to ${appList.length} jobs`} />
@@ -136,7 +128,24 @@ export default function AppliedJobsPage() {
       </div>
 
       {/* Table */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-36" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-3 border-b last:border-0">
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-3.5 w-1/4" />
+                </div>
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={FileText}
           title="No applications found"

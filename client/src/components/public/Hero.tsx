@@ -1,26 +1,21 @@
 'use client';
 
-import { Search, MapPin, BriefcaseBusiness, Sparkles, ArrowRight, CheckCircle2, Calendar, FileText } from 'lucide-react';
+import { Search, MapPin, BriefcaseBusiness, ArrowRight, CheckCircle2, Calendar, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-background px-6 py-20 lg:py-32">
-      {/* Decorative background grid and blur blobs */}
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       <div className="absolute top-0 left-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-primary/10 opacity-70 blur-[100px]"></div>
       <div className="absolute bottom-10 right-1/4 -z-10 h-[300px] w-[300px] rounded-full bg-blue-400/15 opacity-60 blur-[80px]"></div>
 
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-12 lg:grid-cols-12 lg:items-center">
-          
-          {/* Left Column: Text Content and Search */}
+
           <div className="flex flex-col space-y-8 lg:col-span-7">
             {/* Promo Tag */}
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary-light px-4 py-1.5 text-sm font-semibold text-primary">
-              <Sparkles size={16} />
-              <span>The Next Generation Job Tracker</span>
-            </div>
+
 
             {/* Main Headline */}
             <h1 className="max-w-2xl text-4xl font-extrabold tracking-tight text-text sm:text-5xl lg:text-6xl leading-[1.15]">
@@ -116,10 +111,10 @@ export default function Hero() {
             <div className="relative mx-auto max-w-md">
               {/* Decorative radial lighting behind widget */}
               <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-tr from-primary/10 to-blue-500/20 opacity-80 blur-xl"></div>
-              
+
               {/* Main Tracker Container */}
               <div className="rounded-3xl border border-border/80 bg-surface/90 p-6 shadow-2xl backdrop-blur-md">
-                
+
                 {/* Header widget */}
                 <div className="mb-6 flex items-center justify-between border-b border-border/60 pb-4">
                   <div>

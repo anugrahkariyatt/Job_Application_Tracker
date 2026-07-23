@@ -7,6 +7,8 @@ export interface User {
   role: UserRole;
   isVerified: boolean;
   isActive: boolean;
+  subscriptionPlan?: "free" | "pro";
+  subscriptionExpiresAt?: string;
   preferences?: {
     applicationReceived: boolean;
     candidateWithdrew: boolean;

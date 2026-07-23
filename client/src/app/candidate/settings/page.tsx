@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { User, Lock, Mail, Bell, Trash2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { User, Lock, Mail, Bell, Trash2, Eye, EyeOff, Loader2, CreditCard, Zap, Check, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -190,9 +191,19 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse">Loading settings...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Card className="p-6 space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-20 w-full" />
+        </Card>
       </div>
     );
   }
@@ -206,6 +217,7 @@ export default function SettingsPage() {
           <TabsTrigger value="account" className="gap-1.5"><User className="h-4 w-4" />Account</TabsTrigger>
           <TabsTrigger value="password" className="gap-1.5"><Lock className="h-4 w-4" />Password</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1.5"><Bell className="h-4 w-4" />Notifications</TabsTrigger>
+          <TabsTrigger value="billing" className="gap-1.5"><CreditCard className="h-4 w-4" />Subscription & Billing</TabsTrigger>
         </TabsList>
 
         {/* Account Settings */}
@@ -256,7 +268,7 @@ export default function SettingsPage() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action is permanent and cannot be undone. All your applications, resume, and profile data will be permanently purged from Techno Careers.
+                      This action is permanent and cannot be undone. All your applications, resume, and profile data will be permanently purged from Nuvora.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -370,6 +382,88 @@ export default function SettingsPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-4">
+          <Card>
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold">Subscription & Plan Billing</CardTitle>
+                  <CardDescription>View your candidate subscription plan and features</CardDescription>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  user?.subscriptionPlan === "pro"
+                    ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+                    : "bg-muted text-muted-foreground border border-border"
+                }`}>
+                  {user?.subscriptionPlan === "pro" ? "Pro Plan Active" : "Free Plan Tier"}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+              {/* Plan Summary */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-border bg-card">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <Zap className="h-6 w-6 text-amber-500 fill-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {user?.subscriptionPlan === "pro" ? "Candidate Pro Plan" : "Free Candidate Plan"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {user?.subscriptionPlan === "pro"
+                        ? "Unlimited company subscriptions & instant n8n alerts enabled"
+                        : "Limited to 10 company subscriptions"}
+                    </p>
+                  </div>
+                </div>
+                <Button asChild size="sm" className="gap-1.5 shrink-0">
+                  <Link href="/candidate/pricing">
+                    <ShieldCheck className="h-4 w-4" />
+                    {user?.subscriptionPlan === "pro" ? "Manage Plan" : "Upgrade to Candidate Pro"}
+                  </Link>
+                </Button>              </div>
+
+              {/* Plan Limits & Features */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Candidate Plan Inclusions
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Company Subscriptions: </span>
+                      <strong className="text-foreground">{user?.subscriptionPlan === "pro" ? "Unlimited" : "Max 10 Companies"}</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Instant Job Alerts: </span>
+                      <strong className="text-foreground">{user?.subscriptionPlan === "pro" ? "Instant via n8n" : "Standard Email"}</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Priority Status Updates: </span>
+                      <strong className="text-foreground">Enabled</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Verified Candidate Badge: </span>
+                      <strong className="text-foreground">{user?.subscriptionPlan === "pro" ? "Pro Badge Active" : "Standard Profile"}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

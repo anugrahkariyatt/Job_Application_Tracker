@@ -5,6 +5,9 @@ export interface IApplication extends Document {
   jobId: Types.ObjectId;
   companyId: Types.ObjectId;
   status: "Applied" | "Under Review" | "Shortlisted" | "Interview" | "Rejected" | "Hired";
+  aiMatchScore?: number;
+  aiStrengths?: string[];
+  aiSummary?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +37,21 @@ const applicationSchema = new Schema<IApplication>(
       enum: ["Applied", "Under Review", "Shortlisted", "Interview", "Rejected", "Hired"],
       default: "Applied",
       required: true,
+    },
+
+    aiMatchScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+    },
+
+    aiStrengths: {
+      type: [String],
+      default: [],
+    },
+
+    aiSummary: {
+      type: String,
     },
   },
   {

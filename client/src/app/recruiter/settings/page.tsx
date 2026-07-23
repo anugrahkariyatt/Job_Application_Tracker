@@ -36,7 +36,13 @@ import {
   AlertTriangle,
   Save,
   Loader2,
+  CreditCard,
+  Zap,
+  Sparkles,
+  ShieldCheck,
+  Check,
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setUser, clearUser } from '@/store/slices/authSlice';
@@ -264,6 +270,10 @@ export default function SettingsPage() {
           <TabsTrigger value="company" className="gap-1.5">
             <Building2 className="h-4 w-4" />
             <span className="hidden sm:inline">Company Defaults</span>
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="gap-1.5">
+            <CreditCard className="h-4 w-4" />
+            <span className="hidden sm:inline">Subscription & Billing</span>
           </TabsTrigger>
           <TabsTrigger value="danger" className="gap-1.5">
             <AlertTriangle className="h-4 w-4" />
@@ -651,6 +661,90 @@ export default function SettingsPage() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="billing" className="mt-4">
+          <Card>
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold">Subscription & Plan Billing</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    View your current active plan features and active job post limits.
+                  </p>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  user?.subscriptionPlan === "pro"
+                    ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+                    : "bg-muted text-muted-foreground border border-border"
+                }`}>
+                  {user?.subscriptionPlan === "pro" ? "Pro Plan Active" : "Free Plan Tier"}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6">
+              {/* Active Plan Summary */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-border bg-card">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <Zap className="h-6 w-6 text-amber-500 fill-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">
+                      {user?.subscriptionPlan === "pro" ? "Recruiter Pro Plan" : "Starter Free Plan"}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {user?.subscriptionPlan === "pro"
+                        ? "Unlimited job postings & skill assessment enabled"
+                        : "Limited to 3 active job postings"}
+                    </p>
+                  </div>
+                </div>
+                <Button asChild size="sm" className="gap-1.5 shrink-0">
+                  <Link href="/recruiter/pricing">
+                    <ShieldCheck className="h-4 w-4" />
+                    {user?.subscriptionPlan === "pro" ? "Manage Plan" : "Upgrade to Recruiter Pro"}
+                  </Link>
+                </Button>              </div>
+
+              {/* Plan Limits & Features */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Recruiter Plan Inclusions
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Active Job Posts: </span>
+                      <strong className="text-foreground">{user?.subscriptionPlan === "pro" ? "Unlimited" : "Max 3 Jobs"}</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Candidate Skill Assessment: </span>
+                      <strong className="text-foreground">Enabled</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Automated Interview Invites: </span>
+                      <strong className="text-foreground">Enabled via n8n</strong>
+                    </div>
+                  </div>
+                  <div className="p-3.5 rounded-lg border border-border bg-muted/20 flex items-center gap-3">
+                    <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                    <div className="text-xs font-medium">
+                      <span>Instant Applicant Alerts: </span>
+                      <strong className="text-foreground">Active</strong>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

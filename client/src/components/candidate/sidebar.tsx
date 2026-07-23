@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
+  Sparkles,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -39,7 +40,7 @@ const navItems: NavItem[] = [
   { label: 'Saved Jobs', href: '/candidate/saved', icon: Bookmark },
   { label: 'Job Alerts', href: '/candidate/alerts', icon: Bell },
   { label: 'Company Subscriptions', href: '/candidate/subscriptions', icon: Building2 },
-  { label: 'Notifications', href: '/candidate/notifications', icon: Bell },
+  { label: 'Upgrade to Pro', href: '/candidate/pricing', icon: Sparkles },  { label: 'Notifications', href: '/candidate/notifications', icon: Bell },
   { label: 'Settings', href: '/candidate/settings', icon: Settings },
 ];
 
@@ -76,10 +77,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       <div className="flex h-16 items-center gap-2 border-b px-4">
         <Link href="/candidate" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-sm font-bold">T</span>
-          </div>
-          {!collapsed && <span className="text-lg font-bold tracking-tight">Techno Careers</span>}
+          <img
+            src="/Nuvora-logo.png"
+            alt="Nuvora Logo"
+            className="h-8 w-auto object-contain"
+          />
+          {!collapsed && <span className="text-lg font-bold tracking-tight">Nuvora</span>}
         </Link>
       </div>
 
