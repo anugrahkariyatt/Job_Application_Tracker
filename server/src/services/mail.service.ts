@@ -39,7 +39,12 @@ export const sendApplicationStatusEmail = async (
       ...payload,
     });
   } catch (error: any) {
-    console.error("[MAIL SERVICE ERROR] Failed to send application status email via n8n:", error?.response?.data || error?.message || error);
+    console.error("========== N8N EMAIL ERROR DEBUG ==========");
+    console.error("Response Status:", error?.response?.status);
+    console.error("Response Data:", JSON.stringify(error?.response?.data || {}, null, 2));
+    console.error("Error Message:", error?.message);
+    console.error("Target URL:", `${error?.config?.baseURL || ""}${error?.config?.url || ""}`);
+    console.error("==========================================");
   }
 };
 
