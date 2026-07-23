@@ -195,18 +195,7 @@ export default function CreateJobPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-500/20 p-4 text-sm text-indigo-700 dark:text-indigo-300">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold text-xs">PRO</span>
-          <span>Free plan includes <strong>3 active job posts</strong>. Upgrade to Recruiter Pro for unlimited postings & n8n AI Candidate Screening!</span>
-        </div>
-        <Link
-          href="/pricing"
-          className="rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 transition-all flex-shrink-0"
-        >
-          View Plans
-        </Link>
-      </div>
+
 
       <PageHeader
         title="Post a Job"

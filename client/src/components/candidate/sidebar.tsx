@@ -40,8 +40,7 @@ const navItems: NavItem[] = [
   { label: 'Saved Jobs', href: '/candidate/saved', icon: Bookmark },
   { label: 'Job Alerts', href: '/candidate/alerts', icon: Bell },
   { label: 'Company Subscriptions', href: '/candidate/subscriptions', icon: Building2 },
-  { label: 'Upgrade to Pro', href: '/candidate/pricing', icon: Sparkles },
-  { label: 'Notifications', href: '/candidate/notifications', icon: Bell },
+  { label: 'Upgrade to Pro', href: '/candidate/pricing', icon: Sparkles },  { label: 'Notifications', href: '/candidate/notifications', icon: Bell },
   { label: 'Settings', href: '/candidate/settings', icon: Settings },
 ];
 

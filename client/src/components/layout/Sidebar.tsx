@@ -66,8 +66,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     { label: "Create Job", href: "/recruiter/jobs/new", icon: PlusCircle },
     { label: "My Jobs", href: "/recruiter/jobs", icon: Briefcase },
     { label: "Applicants", href: "/recruiter/applicants", icon: Users },
-    { label: "Upgrade to Pro", href: "/recruiter/pricing", icon: Sparkles },
-    {
+    { label: "Upgrade to Pro", href: "/recruiter/pricing", icon: Sparkles },    {
       label: "Notifications",
       href: "/recruiter/notifications",
       icon: Bell,

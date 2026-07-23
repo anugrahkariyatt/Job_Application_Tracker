@@ -71,11 +71,7 @@ export default function Footer() {
                   Application Tracker
                 </Link>
               </li>
-              <li>
-                <Link href="/pricing" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Pricing & Plans
-                </Link>
-              </li>
+
               <li>
                 <Link href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Career Advice

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Zap, Building2, UserCheck, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import axiosInstance from "@/lib/axios";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -18,6 +18,7 @@ interface PricingContentProps {
 
 export function PricingContent({ defaultRole = "candidate", showToggle = true }: PricingContentProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const currentUser = useAppSelector((state) => state.auth.user);
 
@@ -27,6 +28,27 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
 
   const [userRole, setUserRole] = useState<"candidate" | "recruiter">(initialRole);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
+
+    if (success === "true" && currentUser && currentUser.subscriptionPlan !== "pro") {
+      const handleStripeReturn = async () => {
+        try {
+          const endpoint = sessionId ? "/api/payments/verify-session" : "/api/payments/success";
+          const res = await axiosInstance.post(endpoint, { sessionId, plan: "pro" });
+          if (res.data?.success) {
+            dispatch(setUser({ ...currentUser, subscriptionPlan: "pro" }));
+            toast.success("Successfully upgraded to PRO via Stripe!");
+          }
+        } catch (err: any) {
+          console.error("[STRIPE VERIFY ERROR]", err);
+        }
+      };
+      handleStripeReturn();
+    }
+  }, [searchParams, currentUser, dispatch]);
 
   const handleSubscribe = async (planName: string) => {
     if (!currentUser) {
@@ -40,8 +62,8 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
       // Create Stripe checkout session
       const response = await axiosInstance.post("/api/payments/checkout", { plan: planName });
       if (response.data?.checkoutUrl) {
-        if (response.data.checkoutUrl.includes("success=true")) {
-          // Fallback simulation / instant success
+        if (response.data.checkoutUrl.includes("success=true") && !response.data.checkoutUrl.includes("stripe.com")) {
+          // Fallback simulation mode when live Stripe secret key is not set
           const successRes = await axiosInstance.post("/api/payments/success", { plan: "pro" });
           if (successRes.data?.success) {
             if (currentUser) {
@@ -51,7 +73,7 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
             router.push(userRole === "candidate" ? "/candidate/jobs" : "/recruiter/dashboard");
           }
         } else {
-          // Redirect to Stripe checkout page
+          // Redirect to live Stripe checkout page
           window.location.href = response.data.checkoutUrl;
         }
       }

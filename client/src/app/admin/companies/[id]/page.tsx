@@ -188,7 +188,6 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
         <div className="space-y-6 lg:col-span-2">
           {/* Company Profile Header Card */}
           <Card className="overflow-hidden">
-          {/* Minimal themed banner */}
           <div className="h-24 w-full bg-muted border-b relative overflow-hidden">
             {company.coverImage && (
               <img src={company.coverImage} className="w-full h-full object-cover opacity-20" alt="Cover" />

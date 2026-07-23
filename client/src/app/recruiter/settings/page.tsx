@@ -708,8 +708,7 @@ export default function SettingsPage() {
                     <ShieldCheck className="h-4 w-4" />
                     {user?.subscriptionPlan === "pro" ? "Manage Plan" : "Upgrade to Recruiter Pro"}
                   </Link>
-                </Button>
-              </div>
+                </Button>              </div>
 
               {/* Plan Limits & Features */}
               <div className="space-y-3">

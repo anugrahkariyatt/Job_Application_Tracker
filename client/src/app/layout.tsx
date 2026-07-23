@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Streamlined job search, AI-powered candidate assessments, and applicant tracking with Nuvora.",
   icons: {
     icon: "/Nuvora-logo.png",
+    shortcut: "/Nuvora-logo.png",
+    apple: "/Nuvora-logo.png",
   },
 };
 
