@@ -32,28 +32,29 @@ export const sendApplicationStatusEmail = async (
   payload: ApplicationStatusEmailPayload,
 ): Promise<void> => {
   try {
-    console.log("payload",payload);
+    console.log("[MAIL SERVICE] Sending application status update email via n8n:", payload.email, "Status:", payload.status);
 
     await n8nClient.post("/send-email", {
       type: "application-status-updated",
       ...payload,
     });
-  } catch (error) {
-    console.error("Email Service Error:", error);
-    throw new AppError("Unable to send application status email", 500);
+  } catch (error: any) {
+    console.error("[MAIL SERVICE ERROR] Failed to send application status email via n8n:", error?.response?.data || error?.message || error);
   }
 };
+
 export const sendApplicationSubmittedEmail = async (
   payload: ApplicationSubmittedEmailPayload,
 ): Promise<void> => {
   try {
+    console.log("[MAIL SERVICE] Sending application submitted email via n8n:", payload.email);
+
     await n8nClient.post("/send-email", {
       type: "application-submitted",
       ...payload,
     });
-  } catch (error) {
-    console.error("Email Service Error:", error);
-    throw new AppError("Unable to send application submitted email", 500);
+  } catch (error: any) {
+    console.error("[MAIL SERVICE ERROR] Failed to send application submitted email via n8n:", error?.response?.data || error?.message || error);
   }
 };
 export const sendVerificationEmail = async ({
