@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { sendPaymentSuccessEmail } from "../services/mail.service.js";
+import { getClientUrl } from "../utils/clientUrl.util.js";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "sk_test_placeholder";
 const stripe = new Stripe(stripeSecretKey, {
@@ -58,7 +59,8 @@ export const createCheckoutSessionController = async (
 
     const unitAmount = isRecruiterPlan ? 2999 : 999; // $29.99 or $9.99 in cents
     const planTitle = isRecruiterPlan ? "Recruiter Pro Plan" : "Candidate Pro Plan";
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientUrl = getClientUrl(req);
+    const rolePath = user.role === "recruiter" || isRecruiterPlan ? "recruiter" : "candidate";
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -85,8 +87,8 @@ export const createCheckoutSessionController = async (
             quantity: 1,
           },
         ],
-        success_url: `${clientUrl}/pricing?session_id={CHECKOUT_SESSION_ID}&success=true`,
-        cancel_url: `${clientUrl}/pricing?canceled=true`,
+        success_url: `${clientUrl}/${rolePath}/pricing?session_id={CHECKOUT_SESSION_ID}&success=true`,
+        cancel_url: `${clientUrl}/${rolePath}/pricing?canceled=true`,
       });
 
       return res.status(200).json({
@@ -95,9 +97,23 @@ export const createCheckoutSessionController = async (
         sessionId: session.id,
       });
     } catch (stripeError: any) {
-      // Fallback simulation for test environment when active live Stripe secret key is not set
-      console.warn("[STRIPE] Live session creation fallback:", stripeError.message);
-      const fallbackUrl = `${clientUrl}/pricing?success=true`;
+      console.error("[STRIPE ERROR] Checkout session creation failed:", stripeError.message);
+
+      // In production, if STRIPE_SECRET_KEY is provided and not placeholder, return proper error
+      const isStripeConfigured =
+        process.env.STRIPE_SECRET_KEY &&
+        process.env.STRIPE_SECRET_KEY !== "sk_test_placeholder";
+
+      if (process.env.NODE_ENV === "production" && isStripeConfigured) {
+        throw new AppError(
+          `Stripe payment initialization failed: ${stripeError.message}`,
+          500
+        );
+      }
+
+      // Fallback simulation mode for local testing when Stripe secret key is not set
+      console.warn("[STRIPE] Falling back to test simulation mode");
+      const fallbackUrl = `${clientUrl}/${rolePath}/pricing?success=true`;
       return res.status(200).json({
         success: true,
         checkoutUrl: fallbackUrl,
