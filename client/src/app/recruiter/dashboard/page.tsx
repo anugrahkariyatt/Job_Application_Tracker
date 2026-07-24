@@ -18,7 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/StatCard";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { StatusChip } from "@/lib/status";
 import { JobCard } from "@/components/shared/JobCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -150,21 +149,45 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <PageHeader
-        title="Recruiter Dashboard"
-        description={`Welcome back, ${user?.name || "Recruiter"}. Managing hiring pipeline for ${company?.name || "your company"}.`}
-        breadcrumbs={[{ label: "Dashboard" }]}
-        icon={TrendingUp}
-        actions={
-          <Button asChild className="font-bold gap-2 shadow-md">
-            <Link href="/recruiter/jobs/new">
-              <PlusCircle className="h-4 w-4" />
-              Post New Job
-            </Link>
-          </Button>
-        }
-      />
+      {/* Welcome Greeting Banner */}
+      <Card className="border-border/60 shadow-sm bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden">
+        <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm shrink-0">
+              {company?.logo ? (
+                <AvatarImage src={company.logo} alt={company?.name} />
+              ) : (
+                <AvatarFallback className="font-bold text-base bg-primary/10 text-primary">
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "RC"}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                Welcome, {user?.name || "Recruiter"}! 👋
+              </h2>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground font-medium">
+                Managing recruitment & applications for <span className="font-semibold text-foreground">{company?.name || "your company"}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <Button variant="outline" size="sm" asChild className="font-medium">
+              <Link href="/recruiter/company">
+                <Building2 className="h-4 w-4 mr-1.5 text-primary" />
+                Company Profile
+              </Link>
+            </Button>
+            <Button size="sm" asChild className="font-semibold gap-1.5 shadow-sm">
+              <Link href="/recruiter/jobs/new">
+                <PlusCircle className="h-4 w-4" />
+                Post New Job
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Streamlined Stat Metric Summary Bar (4 High-Value Cards) */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -196,17 +219,17 @@ export default function DashboardPage() {
 
       {/* Main Split Layout: Left (2/3) & Right (1/3) */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column (2/3 width) */}
-        <div className="space-y-6 lg:col-span-2">
+        {/* Left Column (2/3 width on desktop, 2nd on mobile) */}
+        <div className="space-y-6 lg:col-span-2 order-2 lg:order-1">
           {/* 1. Recent Applicants Table */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Users className="h-4.5 w-4.5 text-primary" />
                   Recent Applicants
                 </CardTitle>
-                <CardDescription className="text-xs">
+                <CardDescription className="text-xs text-muted-foreground">
                   Latest candidate submissions for your open positions
                 </CardDescription>
               </div>
@@ -224,7 +247,7 @@ export default function DashboardPage() {
                     <Link
                       key={app.id}
                       href={`/recruiter/applicants/${app.id}`}
-                      className="rounded-xl border border-border/60 bg-card p-4 block hover:border-primary/40 transition-all shadow-xs"
+                      className="rounded-xl border border-border/60 bg-card p-3.5 block hover:border-primary/40 transition-all shadow-xs"
                     >
                       <div className="flex items-start gap-3">
                         <Avatar className="h-10 w-10 shrink-0 border border-border/50">
@@ -234,19 +257,19 @@ export default function DashboardPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <h4 className="truncate text-xs font-bold text-foreground">
+                          <h4 className="truncate text-xs sm:text-sm font-semibold text-foreground">
                             {app.name}
                           </h4>
-                          <p className="truncate text-[11px] text-muted-foreground">
+                          <p className="truncate text-xs text-muted-foreground">
                             {app.headline || "Candidate Profile"}
                           </p>
-                          <p className="mt-1 truncate text-[11px] text-muted-foreground">
-                            Applied: <span className="font-semibold text-foreground">{app.jobTitle}</span>
+                          <p className="mt-1 truncate text-xs text-muted-foreground">
+                            Applied: <span className="font-medium text-foreground">{app.jobTitle}</span>
                           </p>
                         </div>
                       </div>
                       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {app.appliedDate}
                         </span>
                         <StatusChip status={app.status} />
@@ -255,7 +278,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-8 text-center text-xs text-muted-foreground">
+                <div className="py-8 text-center text-xs sm:text-sm text-muted-foreground">
                   No job applications have been submitted to your company yet.
                 </div>
               )}
@@ -266,12 +289,12 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Briefcase className="h-4.5 w-4.5 text-primary" />
                   Active Job Postings
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Your open job listings & applicant pipelines
+                <CardDescription className="text-xs text-muted-foreground">
+                  Your open job listings & active applicants
                 </CardDescription>
               </div>
               <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
@@ -292,7 +315,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-xs space-y-2">
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-xs sm:text-sm space-y-2">
                   <p>No active job postings found.</p>
                   <Button size="sm" asChild>
                     <Link href="/recruiter/jobs/new">Post First Job</Link>
@@ -305,7 +328,7 @@ export default function DashboardPage() {
           {/* 3. Applications per Job Chart */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-bold">Applications Distribution per Job</CardTitle>
+              <CardTitle className="text-base font-semibold">Applications Distribution per Job</CardTitle>
             </CardHeader>
             <CardContent>
               {applicationsPerJob && applicationsPerJob.length > 0 ? (
@@ -314,7 +337,7 @@ export default function DashboardPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis
                       dataKey="name"
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                       tickLine={false}
                       axisLine={false}
                     />
@@ -335,7 +358,7 @@ export default function DashboardPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex h-[180px] items-center justify-center text-xs text-muted-foreground">
+                <div className="flex h-[180px] items-center justify-center text-xs sm:text-sm text-muted-foreground">
                   No job applicant distribution statistics available yet.
                 </div>
               )}
@@ -343,17 +366,17 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Right Column (1/3 width) */}
-        <div className="space-y-6 lg:col-span-1">
+        {/* Right Column (1/3 width on desktop, 1st on mobile so Upcoming Interviews appears at top) */}
+        <div className="space-y-6 lg:col-span-1 order-1 lg:order-2">
           {/* 1. Upcoming Scheduled Interviews (Top Priority) */}
           <Card className="border-primary/20 bg-gradient-to-b from-primary/5 via-card to-card">
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <CalendarCheck className="h-4.5 w-4.5 text-primary" />
                   Upcoming Interviews
                 </CardTitle>
-                <CardDescription className="text-xs">
+                <CardDescription className="text-xs text-muted-foreground">
                   Scheduled candidate video rounds & meetings
                 </CardDescription>
               </div>
@@ -378,25 +401,25 @@ export default function DashboardPage() {
                     >
                       <Avatar className="h-9 w-9 shrink-0 border border-border/50 rounded-lg">
                         <AvatarImage src={iv.candidatePhoto} alt={iv.candidateName} className="rounded-lg object-cover" />
-                        <AvatarFallback className="rounded-lg text-xs font-bold bg-primary/10 text-primary">
+                        <AvatarFallback className="rounded-lg text-xs font-semibold bg-primary/10 text-primary">
                           {iv.candidateName ? iv.candidateName.slice(0, 2).toUpperCase() : "C"}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold text-foreground truncate">
+                          <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
                             {iv.candidateName}
                           </p>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
                             {iv.type || "Video"}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
                           {iv.title} • <span className="font-medium text-foreground">{iv.jobTitle}</span>
                         </p>
                         <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-border/40">
-                          <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-primary" />
+                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-primary" />
                             {formattedDate}, {formattedTime}
                           </span>
                           {iv.link && (
@@ -404,9 +427,9 @@ export default function DashboardPage() {
                               href={iv.link.startsWith("http") ? iv.link : `https://${iv.link}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                             >
-                              <Video className="h-3 w-3" /> Join Call <ExternalLink className="h-2.5 w-2.5" />
+                              <Video className="h-3.5 w-3.5" /> Join Call <ExternalLink className="h-3 w-3" />
                             </a>
                           )}
                         </div>
@@ -415,7 +438,7 @@ export default function DashboardPage() {
                   );
                 })
               ) : (
-                <div className="py-6 text-center text-xs text-muted-foreground">
+                <div className="py-6 text-center text-xs sm:text-sm text-muted-foreground">
                   No upcoming interviews scheduled yet.
                 </div>
               )}
@@ -425,7 +448,7 @@ export default function DashboardPage() {
           {/* 2. Candidate Pipeline Status */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-bold">Candidate Pipeline Status</CardTitle>
+              <CardTitle className="text-base font-semibold">Candidate Status Overview</CardTitle>
             </CardHeader>
             <CardContent>
               {statusDistribution && statusDistribution.length > 0 ? (
@@ -457,8 +480,8 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex h-[180px] items-center justify-center text-xs text-muted-foreground">
-                  No applicant status pipeline data yet.
+                <div className="flex h-[180px] items-center justify-center text-xs sm:text-sm text-muted-foreground">
+                  No candidate status data yet.
                 </div>
               )}
             </CardContent>
@@ -467,7 +490,7 @@ export default function DashboardPage() {
           {/* 3. Notifications & Alerts */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-base font-bold flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Bell className="h-4.5 w-4.5 text-primary" />
                 Notifications
               </CardTitle>
@@ -483,22 +506,21 @@ export default function DashboardPage() {
                     className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-muted/40 transition-colors"
                   >
                     <span
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                        n.isRead ? "bg-muted-foreground/30" : "bg-primary"
-                      }`}
+                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.isRead ? "bg-muted-foreground/30" : "bg-primary"
+                        }`}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-foreground leading-snug">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug">
                         {n.title}
                       </p>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
                         {n.message}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-xs text-muted-foreground">
+                <div className="py-6 text-center text-xs sm:text-sm text-muted-foreground">
                   No notifications yet.
                 </div>
               )}

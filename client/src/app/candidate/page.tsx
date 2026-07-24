@@ -183,7 +183,7 @@ export default function DashboardPage() {
       try {
         const parsed = JSON.parse(saved);
         setSavedJobIds(parsed.map((j: any) => j.id));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, []);
 
@@ -193,7 +193,7 @@ export default function DashboardPage() {
     if (saved) {
       try {
         currentSaved = JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const isSaved = currentSaved.some((j) => j.id === jobId);
@@ -439,10 +439,10 @@ export default function DashboardPage() {
             </Avatar>
             <div>
               <h1 className="text-2xl font-black tracking-tight text-foreground">
-                Welcome back,{" "}
+                Welcome,{" "}
                 {(profile?.fullName || user?.name || "Candidate").split(" ")[0]}!
               </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground font-medium">
+              <p className="mt-0.5 text-sm text-muted-foreground font-medium">
                 {profile?.headline || "Full Stack Developer · Job Seeker"}
               </p>
             </div>
@@ -450,7 +450,7 @@ export default function DashboardPage() {
 
           {/* Inline Compact Profile Completion */}
           <div className="w-full sm:w-auto min-w-[220px] p-3.5 rounded-xl border border-border/50 bg-background/80 backdrop-blur-sm space-y-2">
-            <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-sm">
               <span className="font-semibold text-foreground">Profile Strength</span>
               <span className="font-extrabold text-primary">
                 {calculateProfileCompletion(profile)}%
@@ -462,10 +462,10 @@ export default function DashboardPage() {
             />
             <Link
               href="/candidate/profile"
-              className="inline-flex items-center justify-between w-full pt-1 text-[11px] font-bold text-primary hover:underline"
+              className="inline-flex items-center justify-between w-full pt-1 text-xs font-bold text-primary hover:underline"
             >
               <span>{calculateProfileCompletion(profile) === 100 ? "View Profile" : "Update Profile Info"}</span>
-              <ArrowRight className="h-3 w-3" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </CardContent>
@@ -485,14 +485,14 @@ export default function DashboardPage() {
 
       {/* Main Grid: Left (2/3) & Right (1/3) */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left Column (2/3) */}
-        <div className="space-y-6 lg:col-span-2">
+        {/* Left Column (2/3 width on desktop, 2nd on mobile) */}
+        <div className="space-y-6 lg:col-span-2 order-2 lg:order-1">
           {/* 1. Recent Applications Table */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <div>
-                <CardTitle className="text-base font-bold">Recent Applications</CardTitle>
-                <CardDescription className="text-xs">Your latest job applications</CardDescription>
+                <CardTitle className="text-base font-semibold">Recent Applications</CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">Your latest job applications</CardDescription>
               </div>
               <Button variant="ghost" size="sm" className="text-xs gap-1 font-semibold text-primary hover:text-primary/80" asChild>
                 <Link href="/candidate/applied">
@@ -503,21 +503,21 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {applications.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
+                <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">
                   You haven't submitted any job applications yet.
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-xs">Job</TableHead>
-                      <TableHead className="hidden md:table-cell text-xs">
+                      <TableHead className="text-xs font-semibold">Job</TableHead>
+                      <TableHead className="hidden md:table-cell text-xs font-semibold">
                         Company
                       </TableHead>
-                      <TableHead className="hidden sm:table-cell text-xs">
+                      <TableHead className="hidden sm:table-cell text-xs font-semibold">
                         Applied Date
                       </TableHead>
-                      <TableHead className="text-xs">Status</TableHead>
+                      <TableHead className="text-xs font-semibold">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -526,7 +526,7 @@ export default function DashboardPage() {
                         <TableCell>
                           <Link
                             href={`/candidate/jobs/${app.jobId}`}
-                            className="font-semibold text-xs text-foreground hover:text-primary transition-colors"
+                            className="font-semibold text-xs sm:text-sm text-foreground hover:text-primary transition-colors"
                           >
                             {app.job.title}
                           </Link>
@@ -552,7 +552,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-foreground">
+                <h2 className="text-base font-semibold text-foreground">
                   Latest Job Recommendations
                 </h2>
                 <p className="text-xs text-muted-foreground">Tailored opportunities for your skills</p>
@@ -562,7 +562,7 @@ export default function DashboardPage() {
               </Button>
             </div>
             {recommendations.length === 0 ? (
-              <div className="text-center py-8 border rounded-xl bg-card text-muted-foreground text-xs">
+              <div className="text-center py-8 border rounded-xl bg-card text-muted-foreground text-xs sm:text-sm">
                 No recommended jobs available at this time.
               </div>
             ) : (
@@ -579,18 +579,76 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* 3. Application Activity Timeline */}
+        {/* Right Column (1/3 width on desktop, 1st on mobile so Upcoming Interviews appears at top) */}
+        <div className="space-y-6 lg:col-span-1 order-1 lg:order-2">
+          {/* 1. Upcoming Interviews */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold">Application Activity</CardTitle>
-              <CardDescription className="text-xs">
+              <CardTitle className="text-base font-semibold">Upcoming Interviews</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {upcomingInterviews.length === 0 ? (
+                <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">
+                  No upcoming interviews scheduled yet.
+                </div>
+              ) : (
+                upcomingInterviews.map((iv) => (
+                  <div key={iv.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+                    <Avatar className="h-9 w-9 rounded-lg shrink-0">
+                      <AvatarImage src={iv.companyLogo} alt={iv.company} />
+                      <AvatarFallback className="rounded-lg text-xs font-semibold">
+                        {iv.company.slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{iv.jobTitle}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {iv.company} · {iv.round}
+                      </p>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5 text-primary" />
+                        {formatDate(iv.date)} at {iv.time}
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" className="font-medium text-[11px]">
+                          {iv.format}
+                        </Badge>
+                        {iv.link && (
+                          <a
+                            href={iv.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-semibold"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" /> Join Meet
+                          </a>
+                        )}
+                      </div>
+                      {iv.notes && (
+                        <p className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border/40">
+                          {iv.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 2. Application Activity Timeline */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold">Application Activity</CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
                 Recent activity on your applications
               </CardDescription>
             </CardHeader>
             <CardContent>
               {timeline.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
+                <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">
                   No recent application activity.
                 </div>
               ) : (
@@ -603,7 +661,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col items-center">
                           <div
                             className={cn(
-                              "flex h-8 w-8 items-center justify-center rounded-full shrink-0",
+                              "flex h-7 w-7 items-center justify-center rounded-full shrink-0",
                               config.className,
                             )}
                           >
@@ -614,11 +672,11 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <div className="pb-5">
-                          <p className="text-xs font-bold text-foreground">{event.title}</p>
+                          <p className="text-xs sm:text-sm font-semibold text-foreground">{event.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {event.description}
                           </p>
-                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {relativeTime(event.time)}
                           </p>
                         </div>
@@ -626,113 +684,6 @@ export default function DashboardPage() {
                     );
                   })}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column (1/3) */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* 1. Upcoming Interviews */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-bold">Upcoming Interviews</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {upcomingInterviews.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
-                  No upcoming interviews scheduled yet.
-                </div>
-              ) : (
-                upcomingInterviews.map((iv) => (
-                  <div key={iv.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-                    <Avatar className="h-9 w-9 rounded-lg shrink-0">
-                      <AvatarImage src={iv.companyLogo} alt={iv.company} />
-                      <AvatarFallback className="rounded-lg text-xs font-bold">
-                        {iv.company.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-foreground truncate">{iv.jobTitle}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {iv.company} · {iv.round}
-                      </p>
-                      <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Calendar className="h-3 w-3 text-primary" />
-                        {formatDate(iv.date)} at {iv.time}
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="font-normal text-[10px]">
-                          {iv.format}
-                        </Badge>
-                        {iv.link && (
-                          <a
-                            href={iv.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold"
-                          >
-                            <ExternalLink className="h-3 w-3" /> Join Meet
-                          </a>
-                        )}
-                      </div>
-                      {iv.notes && (
-                        <p className="mt-2 text-[11px] text-muted-foreground bg-muted/50 p-2 rounded border border-border/40">
-                          {iv.notes}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 2. Notifications Widget */}
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-base font-bold">Notifications</CardTitle>
-              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
-                <Link href="/candidate/notifications">All</Link>
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {notifications.length === 0 ? (
-                <div className="text-center py-6 text-xs text-muted-foreground">
-                  No new notifications.
-                </div>
-              ) : (
-                notifications.slice(0, 4).map((n) => {
-                  const config =
-                    notificationIconMap[n.type] ||
-                    notificationIconMap.application;
-                  return (
-                    <div key={n.id} className="flex items-start gap-3">
-                      <div
-                        className={cn(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg mt-0.5",
-                          config.className,
-                        )}
-                      >
-                        <config.icon className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold leading-tight text-foreground truncate">
-                          {n.title}
-                        </p>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground line-clamp-2">
-                          {n.message}
-                        </p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          {relativeTime(n.time)}
-                        </p>
-                      </div>
-                      {!n.read && (
-                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                      )}
-                    </div>
-                  );
-                })
               )}
             </CardContent>
           </Card>
