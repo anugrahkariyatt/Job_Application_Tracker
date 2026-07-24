@@ -96,8 +96,22 @@ export const createCheckoutSessionController = async (
         sessionId: session.id,
       });
     } catch (stripeError: any) {
-      // Fallback simulation for test environment when active live Stripe secret key is not set
-      console.warn("[STRIPE] Live session creation fallback:", stripeError.message);
+      console.error("[STRIPE ERROR] Checkout session creation failed:", stripeError.message);
+
+      // In production, if STRIPE_SECRET_KEY is provided and not placeholder, return proper error
+      const isStripeConfigured =
+        process.env.STRIPE_SECRET_KEY &&
+        process.env.STRIPE_SECRET_KEY !== "sk_test_placeholder";
+
+      if (process.env.NODE_ENV === "production" && isStripeConfigured) {
+        throw new AppError(
+          `Stripe payment initialization failed: ${stripeError.message}`,
+          500
+        );
+      }
+
+      // Fallback simulation mode for local testing when Stripe secret key is not set
+      console.warn("[STRIPE] Falling back to test simulation mode");
       const fallbackUrl = `${clientUrl}/pricing?success=true`;
       return res.status(200).json({
         success: true,
