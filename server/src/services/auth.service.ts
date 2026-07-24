@@ -25,8 +25,10 @@ import {
 import { verifyPasswordResetToken } from "../utils/verifyPasswordResetToken.js";
 import { verifyEmailVerificationToken } from "../utils/verifyEmailVerificationToken.js";
 import { generateEmailVerificationToken } from "../utils/generateEmailVerificationToken.js";
+import { Request } from "express";
+import { getClientUrl } from "../utils/clientUrl.util.js";
 
-export const registerUser = async (data: RegisterInput) => {
+export const registerUser = async (data: RegisterInput, req?: Request | string) => {
   const existingUser = await User.findOne({
     email: data.email,
   });
@@ -42,7 +44,7 @@ export const registerUser = async (data: RegisterInput) => {
     role: data.role,
   });
 
-  await sendVerificationEmailService(user._id.toString());
+  await sendVerificationEmailService(user._id.toString(), req);
 
   return {
     id: user._id.toString(),
@@ -211,14 +213,14 @@ export const updateUserPassword = async (password: string, token: string) => {
   };
 };
 
-export const sendPasswordResetLink = async (email: string) => {
+export const sendPasswordResetLink = async (email: string, req?: Request | string) => {
   const user = await User.findOne({ email: email });
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
   const resetToken = await generatePasswordResetToken(user._id.toString());
-  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const clientUrl = getClientUrl(req);
   const resetLink = `${clientUrl}/reset-password?token=${resetToken}`;
   await sendPasswordResetEmail({
     to: user.email,
@@ -281,7 +283,7 @@ export const resetUserPassword = async (token: string, newPassword: string) => {
   };
 };
 
-export const sendVerificationEmailService = async (userId: string) => {
+export const sendVerificationEmailService = async (userId: string, req?: Request | string) => {
   const user = await User.findById(userId);
 
   if (!user) {
@@ -294,7 +296,7 @@ export const sendVerificationEmailService = async (userId: string) => {
 
   const verificationToken = generateEmailVerificationToken(user._id.toString());
 
-  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const clientUrl = getClientUrl(req);
   const verificationLink = `${clientUrl}/verify-email?token=${verificationToken}`;
 
   await sendVerificationEmail({
@@ -306,7 +308,7 @@ export const sendVerificationEmailService = async (userId: string) => {
   };
 };
 
-export const resendVerificationEmailService = async (email: string) => {
+export const resendVerificationEmailService = async (email: string, req?: Request | string) => {
   const user = await User.findOne({ email });
 
   if (!user) {
@@ -319,7 +321,7 @@ export const resendVerificationEmailService = async (email: string) => {
 
   const verificationToken = generateEmailVerificationToken(user._id.toString());
 
-  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const clientUrl = getClientUrl(req);
   const verificationLink = `${clientUrl}/verify-email?token=${verificationToken}`;
 
   await sendVerificationEmail({

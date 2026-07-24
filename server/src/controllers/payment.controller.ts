@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { sendPaymentSuccessEmail } from "../services/mail.service.js";
+import { getClientUrl } from "../utils/clientUrl.util.js";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "sk_test_placeholder";
 const stripe = new Stripe(stripeSecretKey, {
@@ -58,7 +59,7 @@ export const createCheckoutSessionController = async (
 
     const unitAmount = isRecruiterPlan ? 2999 : 999; // $29.99 or $9.99 in cents
     const planTitle = isRecruiterPlan ? "Recruiter Pro Plan" : "Candidate Pro Plan";
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientUrl = getClientUrl(req);
 
     try {
       const session = await stripe.checkout.sessions.create({

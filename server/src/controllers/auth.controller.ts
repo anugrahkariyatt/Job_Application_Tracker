@@ -43,7 +43,7 @@ export const register = async (
         errors: validation.error.flatten(),
       });
     }
-    const result = await registerUser(validation.data);
+    const result = await registerUser(validation.data, req);
     return res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -242,7 +242,7 @@ export const forgotPassword = async (
       });
     }
     const { email } = validation.data;
-    const result = await sendPasswordResetLink(email);
+    const result = await sendPasswordResetLink(email, req);
 
     return res.status(200).json({
       success: true,
@@ -303,7 +303,7 @@ export const sendVerificationEmail = async (
   try {
     const userId = req.user!.id;
 
-    const result = await sendVerificationEmailService(userId);
+    const result = await sendVerificationEmailService(userId, req);
 
     return res.status(200).json({
       success: true,
@@ -329,7 +329,7 @@ export const resendVerificationEmail = async (
       });
     }
 
-    const result = await resendVerificationEmailService(validation.data.email);
+    const result = await resendVerificationEmailService(validation.data.email, req);
 
     return res.status(200).json({
       success: true,
