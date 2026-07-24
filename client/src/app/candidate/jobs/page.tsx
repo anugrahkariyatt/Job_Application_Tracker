@@ -29,6 +29,7 @@ import {
 import { PageHeader } from '@/components/candidate/page-header';
 import { JobCard } from '@/components/candidate/job-card';
 import { EmptyState } from '@/components/candidate/empty-state';
+import { Pagination } from '@/components/shared/Pagination';
 import { type EmploymentType, type ExperienceLevel } from '@/lib/candidate-data';
 import { cn } from '@/lib/utils';
 import axiosInstance from '@/lib/axios';
@@ -57,6 +58,10 @@ export default function FindJobsPage() {
   const [location, setLocation] = React.useState('');
   const [salaryMin, setSalaryMin] = React.useState(0);
   const [sortBy, setSortBy] = React.useState('recent');
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalCount, setTotalCount] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
 
@@ -101,10 +106,13 @@ export default function FindJobsPage() {
     localStorage.setItem('savedJobs', JSON.stringify(currentSaved));
   };
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (pageToFetch = currentPage) => {
     try {
       setLoading(true);
-      const params: any = {};
+      const params: any = {
+        page: pageToFetch,
+        limit: ITEMS_PER_PAGE,
+      };
       if (search.trim()) params.search = search.trim();
       if (selectedTypes.length > 0) params.employmentTypes = selectedTypes.join(',');
       if (selectedLevels.length > 0) params.experienceLevels = selectedLevels.join(',');
@@ -117,6 +125,13 @@ export default function FindJobsPage() {
       if (res.data?.success && Array.isArray(res.data.data)) {
         const mapped = res.data.data.map(mapJobToFrontend);
         setAllJobs(mapped);
+        if (res.data.pagination) {
+          setTotalCount(res.data.pagination.total);
+          setTotalPages(res.data.pagination.totalPages);
+        } else {
+          setTotalCount(mapped.length);
+          setTotalPages(1);
+        }
       }
     } catch (err: any) {
       console.error('Fetch jobs error:', err);
@@ -126,14 +141,21 @@ export default function FindJobsPage() {
     }
   };
 
-  // Debounced query fetching whenever search parameters are updated by the user
+  // Reset to page 1 and fetch when filter parameters change
   React.useEffect(() => {
+    setCurrentPage(1);
     const delayDebounceFn = setTimeout(() => {
-      fetchJobs();
+      fetchJobs(1);
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
   }, [search, selectedTypes, selectedLevels, selectedWorkModes, location, salaryMin, sortBy]);
+
+  // Fetch when page changes explicitly via pagination buttons
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchJobs(newPage);
+  };
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
@@ -285,9 +307,9 @@ export default function FindJobsPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-4 items-start">
         {/* Desktop sidebar filters */}
-        <Card className="hidden lg:block h-fit">
+        <Card className="hidden lg:block h-fit sticky top-20">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Filters</CardTitle>
           </CardHeader>
@@ -296,8 +318,8 @@ export default function FindJobsPage() {
           </CardContent>
         </Card>
 
-        {/* Jobs list grid */}
-        <div className="lg:col-span-3">
+        {/* Jobs list column */}
+        <div className="lg:col-span-3 space-y-4">
           {loading ? (
             <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2' : 'flex flex-col gap-4'}>
               {[...Array(6)].map((_, i) => (
@@ -325,17 +347,44 @@ export default function FindJobsPage() {
               action={<Button onClick={() => { setSearch(''); setSelectedTypes([]); setSelectedLevels([]); setSelectedWorkModes([]); setLocation(''); setSalaryMin(0); }}>Reset Search</Button>}
             />
           ) : (
-            <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2' : 'flex flex-col gap-4'}>
-              {allJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  onApply={handleApply}
-                  saved={savedJobIds.includes(job.id)}
-                  onToggleSave={handleToggleSave}
-                  view={view}
-                />
-              ))}
+            <div className="space-y-4">
+              {/* Scrollable Job Cards Container (Fills height to bottom of Filters Sidebar) */}
+              <div className="max-h-[calc(100vh-210px)] lg:max-h-[720px] min-h-[580px] overflow-y-auto pr-2 space-y-4 rounded-xl">
+                <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2' : 'flex flex-col gap-4'}>
+                  {allJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onApply={handleApply}
+                      saved={savedJobIds.includes(job.id)}
+                      onToggleSave={handleToggleSave}
+                      view={view}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Pagination Footer */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border/50">
+                <p className="text-xs text-muted-foreground font-medium">
+                  Showing <span className="font-semibold text-foreground">{totalCount === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to{' '}
+                  <span className="font-semibold text-foreground">
+                    {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)}
+                  </span>{' '}
+                  of <span className="font-semibold text-foreground">{totalCount}</span> active jobs
+                </p>
+                {totalPages > 1 ? (
+                  <Pagination
+                    page={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                ) : (
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground px-2.5 py-1 rounded-md border border-border/50 bg-muted/40">
+                    Page 1 of 1
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

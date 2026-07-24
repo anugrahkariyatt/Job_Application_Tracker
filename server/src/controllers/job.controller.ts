@@ -286,7 +286,13 @@ export const getAllJobsController = async (
       sortBy,
       companyId,
       workModes,
+      page,
+      limit,
     } = req.query;
+
+    const pageNum = page ? Math.max(1, Number(page)) : 1;
+    const limitNum = limit ? Math.max(1, Number(limit)) : 10;
+    const skip = (pageNum - 1) * limitNum;
 
     const activeCompanies = await Company.find({ isActive: { $ne: false }, verified: true }).select("_id");
     const activeCompanyIds = activeCompanies.map((c) => c._id.toString());
@@ -388,14 +394,25 @@ export const getAllJobsController = async (
       sortObj = { salaryMin: 1, salaryMax: 1 };
     }
 
+    const totalJobs = await Job.countDocuments(filterQuery);
+    const totalPages = Math.ceil(totalJobs / limitNum);
+
     const jobs = await Job.find(filterQuery)
       .populate("companyId", "companyName logo location industry description")
-      .sort(sortObj);
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limitNum);
 
     return res.status(200).json({
       success: true,
       message: "Jobs fetched successfully",
       data: jobs,
+      pagination: {
+        total: totalJobs,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+      },
     });
   } catch (error) {
     next(error);
