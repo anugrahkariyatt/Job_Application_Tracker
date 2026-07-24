@@ -35,6 +35,9 @@ import {
   TrendingUp,
   Activity,
   Bell,
+  Video,
+  ExternalLink,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import axiosInstance from "@/lib/axios";
@@ -142,6 +145,7 @@ export default function DashboardPage() {
     recentApplications,
     recentNotifications,
     recentJobs,
+    upcomingInterviews,
   } = data || {};
 
   return (
@@ -341,7 +345,84 @@ export default function DashboardPage() {
 
         {/* Right Column (1/3 width) */}
         <div className="space-y-6 lg:col-span-1">
-          {/* 1. Status Distribution Pie Chart */}
+          {/* 1. Upcoming Scheduled Interviews (Top Priority) */}
+          <Card className="border-primary/20 bg-gradient-to-b from-primary/5 via-card to-card">
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-base font-bold flex items-center gap-2">
+                  <CalendarCheck className="h-4.5 w-4.5 text-primary" />
+                  Upcoming Interviews
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Scheduled candidate video rounds & meetings
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {upcomingInterviews && upcomingInterviews.length > 0 ? (
+                upcomingInterviews.map((iv: any) => {
+                  const dateObj = new Date(iv.date);
+                  const formattedTime = dateObj.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                  const formattedDate = dateObj.toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                  });
+
+                  return (
+                    <div
+                      key={iv.id}
+                      className="flex items-start gap-3 p-3 rounded-xl border border-border/60 bg-card hover:border-primary/40 transition-all shadow-xs"
+                    >
+                      <Avatar className="h-9 w-9 shrink-0 border border-border/50 rounded-lg">
+                        <AvatarImage src={iv.candidatePhoto} alt={iv.candidateName} className="rounded-lg object-cover" />
+                        <AvatarFallback className="rounded-lg text-xs font-bold bg-primary/10 text-primary">
+                          {iv.candidateName ? iv.candidateName.slice(0, 2).toUpperCase() : "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-foreground truncate">
+                            {iv.candidateName}
+                          </p>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            {iv.type || "Video"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                          {iv.title} • <span className="font-medium text-foreground">{iv.jobTitle}</span>
+                        </p>
+                        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-border/40">
+                          <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-primary" />
+                            {formattedDate}, {formattedTime}
+                          </span>
+                          {iv.link && (
+                            <a
+                              href={iv.link.startsWith("http") ? iv.link : `https://${iv.link}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline"
+                            >
+                              <Video className="h-3 w-3" /> Join Call <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  No upcoming interviews scheduled yet.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 2. Candidate Pipeline Status */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-bold">Candidate Pipeline Status</CardTitle>
@@ -383,7 +464,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* 2. Notifications & Alerts */}
+          {/* 3. Notifications & Alerts */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base font-bold flex items-center gap-2">

@@ -18,6 +18,7 @@ import Job from "../models/job.model.js";
 import Application from "../models/application.model.js";
 import Notification from "../models/notification.model.js";
 import Company from "../models/company.model.js";
+import Interview from "../models/interview.model.js";
 export const createCompany = async (
   req: Request,
   res: Response,
@@ -252,6 +253,39 @@ export const getRecruiterDashboardStats = async (
       .sort({ createdAt: -1 })
       .limit(5);
 
+    // Upcoming scheduled interviews (limit 4)
+    const rawInterviews = await Interview.find({
+      companyId: company._id,
+      status: "Scheduled",
+      date: { $gte: new Date() }
+    })
+      .sort({ date: 1 })
+      .limit(4)
+      .populate("jobId", "title")
+      .populate({
+        path: "candidateId",
+        select: "profileImage userId",
+        populate: { path: "userId", select: "name email" }
+      });
+
+    const upcomingInterviews = rawInterviews.map((iv: any) => {
+      const candidate = iv.candidateId as any;
+      const candidateUser = candidate?.userId;
+      return {
+        id: iv._id,
+        candidateName: candidateUser?.name || "Candidate",
+        candidateEmail: candidateUser?.email || "",
+        candidatePhoto: candidate?.profileImage || "",
+        jobTitle: (iv.jobId as any)?.title || "Position",
+        date: iv.date,
+        type: iv.type,
+        title: iv.title,
+        link: iv.link,
+        notes: iv.notes,
+        status: iv.status,
+      };
+    });
+
     return res.status(200).json({
       success: true,
       data: {
@@ -274,6 +308,7 @@ export const getRecruiterDashboardStats = async (
         recentApplications,
         recentNotifications,
         recentJobs,
+        upcomingInterviews,
       }
     });
   } catch (error) {
