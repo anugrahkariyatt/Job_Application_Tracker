@@ -218,7 +218,8 @@ export const sendPasswordResetLink = async (email: string) => {
   }
 
   const resetToken = await generatePasswordResetToken(user._id.toString());
-  const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const resetLink = `${clientUrl}/reset-password?token=${resetToken}`;
   await sendPasswordResetEmail({
     to: user.email,
     resetLink,
@@ -293,7 +294,8 @@ export const sendVerificationEmailService = async (userId: string) => {
 
   const verificationToken = generateEmailVerificationToken(user._id.toString());
 
-  const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const verificationLink = `${clientUrl}/verify-email?token=${verificationToken}`;
 
   await sendVerificationEmail({
     to: user.email,
@@ -317,7 +319,8 @@ export const resendVerificationEmailService = async (email: string) => {
 
   const verificationToken = generateEmailVerificationToken(user._id.toString());
 
-  const verificationLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/$/, "");
+  const verificationLink = `${clientUrl}/verify-email?token=${verificationToken}`;
 
   await sendVerificationEmail({
     to: user.email,
