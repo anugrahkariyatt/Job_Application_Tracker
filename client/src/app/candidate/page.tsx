@@ -72,46 +72,42 @@ const timelineIconMap: Record<
 > = {
   applied: {
     icon: FileText,
-    className: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   review: {
     icon: Eye,
-    className:
-      "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   interview: {
     icon: Video,
-    className: "bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   offer: {
     icon: Star,
-    className:
-      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   rejected: {
     icon: XCircle,
-    className: "bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400",
+    className: "bg-muted text-muted-foreground border border-border/50",
   },
 };
 
 const notificationIconMap = {
   application: {
     icon: FileText,
-    className: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   job_alert: {
     icon: Bell,
-    className:
-      "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   company: {
     icon: TrendingUp,
-    className:
-      "bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
   interview: {
     icon: Video,
-    className: "bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400",
+    className: "bg-primary/10 text-primary border border-primary/20",
   },
 };
 
