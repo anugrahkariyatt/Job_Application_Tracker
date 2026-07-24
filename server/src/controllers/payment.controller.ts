@@ -60,6 +60,7 @@ export const createCheckoutSessionController = async (
     const unitAmount = isRecruiterPlan ? 2999 : 999; // $29.99 or $9.99 in cents
     const planTitle = isRecruiterPlan ? "Recruiter Pro Plan" : "Candidate Pro Plan";
     const clientUrl = getClientUrl(req);
+    const rolePath = user.role === "recruiter" || isRecruiterPlan ? "recruiter" : "candidate";
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -86,8 +87,8 @@ export const createCheckoutSessionController = async (
             quantity: 1,
           },
         ],
-        success_url: `${clientUrl}/pricing?session_id={CHECKOUT_SESSION_ID}&success=true`,
-        cancel_url: `${clientUrl}/pricing?canceled=true`,
+        success_url: `${clientUrl}/${rolePath}/pricing?session_id={CHECKOUT_SESSION_ID}&success=true`,
+        cancel_url: `${clientUrl}/${rolePath}/pricing?canceled=true`,
       });
 
       return res.status(200).json({
@@ -112,7 +113,7 @@ export const createCheckoutSessionController = async (
 
       // Fallback simulation mode for local testing when Stripe secret key is not set
       console.warn("[STRIPE] Falling back to test simulation mode");
-      const fallbackUrl = `${clientUrl}/pricing?success=true`;
+      const fallbackUrl = `${clientUrl}/${rolePath}/pricing?success=true`;
       return res.status(200).json({
         success: true,
         checkoutUrl: fallbackUrl,
