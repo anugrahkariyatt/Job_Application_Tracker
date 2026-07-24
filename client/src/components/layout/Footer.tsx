@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { BriefcaseBusiness, Mail, Linkedin, Twitter, Github, Globe } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -10,100 +11,56 @@ export default function Footer() {
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     if (email) {
-      alert(`Thank you for subscribing, ${email}!`);
+      toast.success(`Thank you for subscribing, ${email}!`);
       setEmail('');
     }
   };
 
   return (
-    <footer className="border-t border-border/60 bg-surface/50 py-16 backdrop-blur-sm">
+    <footer className="border-t border-border/60 bg-card/60 py-12 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
           {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-4">
             <Link href="/" className="flex items-center gap-3">
               <img
                 src="/Nuvora-logo.png"
                 alt="Nuvora Logo"
-                className="h-10 w-auto object-contain"
+                className="h-9 w-auto object-contain"
               />
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
+              <span className="text-xl font-extrabold text-foreground">
                 Nuvora
               </span>
             </Link>
-            <p className="max-w-xs text-sm text-text-secondary leading-relaxed">
-              Simplify your job application process. Discover, apply, and monitor all your job opportunities from a single, organized dashboard.
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Simplify your job application process. Discover jobs, track applications, and manage hiring from one single dashboard.
             </p>
-            <div className="flex gap-4">
-              <a href="#" className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-text-secondary transition-all duration-200 hover:border-primary hover:text-primary" aria-label="LinkedIn">
-                <Linkedin size={18} />
-              </a>
-              <a href="#" className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-text-secondary transition-all duration-200 hover:border-primary hover:text-primary" aria-label="Twitter">
-                <Twitter size={18} />
-              </a>
-              <a href="#" className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-text-secondary transition-all duration-200 hover:border-primary hover:text-primary" aria-label="GitHub">
-                <Github size={18} />
-              </a>
-              <a href="#" className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-text-secondary transition-all duration-200 hover:border-primary hover:text-primary" aria-label="Website">
-                <Globe size={18} />
-              </a>
-            </div>
           </div>
 
           {/* For Candidates */}
           <div>
-            <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
               For Candidates
             </h4>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-2.5">
               <li>
-                <Link href="/jobs" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                <Link href="/candidate/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Browse Jobs
                 </Link>
               </li>
               <li>
-                <Link href="/register/candidate" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Create Candidate Profile
+                <Link href="/candidate/companies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Explore Companies
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Application Tracker
-                </Link>
-              </li>
-
-              <li>
-                <Link href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Career Advice
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
-              Company
-            </h4>
-            <ul className="mt-4 space-y-3">
-              <li>
-                <Link href="/about" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  About Us
+                <Link href="/candidate/applied" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Applied Jobs
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/register/candidate" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Join Candidates
-                </Link>
-              </li>
-              <li>
-                <Link href="/register/recruiter" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Employers & Hiring
+                <Link href="/candidate/saved" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Saved Jobs
                 </Link>
               </li>
             </ul>
@@ -111,56 +68,56 @@ export default function Footer() {
 
           {/* For Employers */}
           <div>
-            <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
-              For Employers
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
+              For Employers & Company
             </h4>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-2.5">
               <li>
-                <Link href="/register/recruiter" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Post a Job
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                <Link href="/recruiter/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Recruiter Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  AI Sourcing
+                <Link href="/recruiter/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Manage Jobs
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Enterprise Solutions
+                <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Contact Us
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Newsletter / Contact */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
+          {/* Newsletter */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
               Stay Updated
             </h4>
-            <p className="text-xs text-text-secondary">
-              Get weekly job alert digests and hiring insights directly to your inbox.
+            <p className="text-xs text-muted-foreground">
+              Get job alerts and updates delivered to your inbox.
             </p>
             <form onSubmit={handleSubscribe} className="space-y-2">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@email.com"
                   required
-                  className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-xs text-text outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                  className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full rounded-xl bg-primary py-2.5 text-xs font-semibold text-text-white shadow-md shadow-primary/10 transition-all duration-200 hover:bg-primary-hover hover:shadow-lg"
+                className="w-full rounded-lg bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90"
               >
                 Subscribe
               </button>
@@ -169,15 +126,10 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-14 border-t border-border/50 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-text-muted">
+        <div className="mt-10 border-t border-border/40 pt-6 text-center">
+          <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} Nuvora. All rights reserved.
           </p>
-          <div className="flex gap-6 text-xs text-text-muted">
-            <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-primary transition-colors">Cookie Settings</Link>
-          </div>
         </div>
       </div>
     </footer>

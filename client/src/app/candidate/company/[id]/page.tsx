@@ -13,6 +13,8 @@ import {
   Loader2,
   Bell,
   BellOff,
+  CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -215,156 +217,201 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Button variant="ghost" size="sm" asChild className="w-fit">
-        <Link href="/candidate/jobs"><ArrowLeft className="mr-2 h-4 w-4" />Back to Jobs</Link>
-      </Button>
+      
 
       {/* Cover / Header Section */}
-      <Card className="overflow-hidden border border-border">
-        <div className="h-40 bg-gradient-to-r from-primary/10 via-primary/5 to-background relative">
-          {company.coverImage && (
+      <Card className="overflow-hidden border border-border/70 shadow-xs rounded-2xl bg-card">
+        {/* Cover Banner */}
+        <div className="h-44 sm:h-52 bg-gradient-to-r from-primary/10 via-primary/5 to-muted relative overflow-hidden">
+          {company.coverImage ? (
             <img
               src={company.coverImage}
               alt={`${company.companyName} Cover`}
-              className="absolute inset-0 h-full w-full object-cover opacity-80"
+              className="h-full w-full object-cover"
             />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-background flex items-center justify-center">
+              <Building2 className="h-20 w-20 text-primary/20" />
+            </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
-        <CardContent className="p-6 relative">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end -mt-16 sm:-mt-20">
-            <Avatar className="h-24 w-24 rounded-2xl border-4 border-card shadow-sm shrink-0">
-              <AvatarImage src={company.logo} alt={company.companyName} />
-              <AvatarFallback className="rounded-2xl text-2xl bg-secondary text-secondary-foreground font-semibold">
-                {company.companyName.slice(0, 2).toUpperCase()}
+
+        {/* Header Profile Content */}
+        <CardContent className="p-6 pt-0 relative">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-3">
+            {/* Logo Avatar */}
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-4 border-card bg-background shadow-md shrink-0">
+              <AvatarImage src={company.logo} alt={company.companyName} className="object-cover" />
+              <AvatarFallback className="rounded-2xl text-2xl font-black bg-primary/10 text-primary">
+                {company.companyName ? company.companyName.slice(0, 2).toUpperCase() : 'CO'}
               </AvatarFallback>
             </Avatar>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">{company.companyName}</h1>
-                <Badge variant="outline" className="font-normal border-primary/20 bg-primary/5 text-primary">
-                  {company.industry || 'Technology'}
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              {company.website && (
+                <Button variant="outline" size="sm" className="rounded-xl font-medium text-xs h-10 px-4 border-border/70" asChild>
+                  <a
+                    href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                    Website
+                  </a>
+                </Button>
+              )}
+
+              <Button
+                variant={isSubscribed ? 'outline' : 'default'}
+                size="sm"
+                onClick={handleToggleSubscribe}
+                disabled={subscribing}
+                className="rounded-xl font-semibold text-xs h-10 px-5 gap-2 shadow-xs"
+              >
+                {subscribing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSubscribed ? (
+                  <>
+                    <BellOff className="h-4 w-4" />
+                    Unfollow
+                  </>
+                ) : (
+                  <>
+                    <Bell className="h-4 w-4" />
+                    Follow Updates
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Company Main Details Header */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                {company.companyName}
+              </h1>
+              <Badge variant="secondary" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border border-border/60 bg-muted/50 text-muted-foreground">
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5 text-primary" />
+                Verified Employer
+              </Badge>
+              {company.industry && (
+                <Badge variant="outline" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border-primary/20 bg-primary/5 text-primary">
+                  {company.industry}
                 </Badge>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">{company.tagline || 'Verified Employer'}</p>
+              )}
             </div>
 
-            <Button
-              variant={isSubscribed ? "outline" : "default"}
-              onClick={handleToggleSubscribe}
-              disabled={subscribing}
-              className="mt-2 sm:mt-0 gap-2 shadow-sm shrink-0"
-            >
-              {subscribing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isSubscribed ? (
-                <>
-                  <BellOff className="h-4 w-4" />
-                  Unfollow
-                </>
-              ) : (
-                <>
-                  <Bell className="h-4 w-4" />
-                  Follow
-                </>
+
+            {/* Sub-Metadata Row */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-2 text-xs font-medium text-muted-foreground border-t border-border/40 mt-3 pt-3">
+              {company.headquarters && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  {company.headquarters}
+                </span>
               )}
-            </Button>
+              {company.employees && (
+                <span className="flex items-center gap-1.5">
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                  {company.employees} Employees
+                </span>
+              )}
+  
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Main Grid Layout */}
+      {/* Top 2-Column Section: About & Overview */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column - details */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* About Company */}
-          <Card className="border border-border">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">About Company</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                {company.description || 'No description provided by the company.'}
-              </p>
-            </CardContent>
-          </Card>
+        {/* About Company */}
+        <Card className="border border-border lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">About Company</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+              {company.description || 'No description provided by the company.'}
+            </p>
+          </CardContent>
+        </Card>
 
-          {/* Active Job Openings */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold tracking-tight">Open Positions ({jobs.length})</h2>
-            {jobs.length === 0 ? (
-              <Card className="p-8 text-center border border-dashed text-sm text-muted-foreground">
-                <Briefcase className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
-                This company has no active job postings at the moment.
-              </Card>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onApply={handleApply}
-                    saved={savedJobIds.includes(job.id)}
-                    onToggleSave={handleToggleSave}
-                  />
-                ))}
+        {/* Overview Info */}
+        <Card className="border border-border lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Headquarters</p>
+                <p className="font-medium text-foreground">{company.headquarters || 'Not specified'}</p>
               </div>
-            )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Website</p>
+                {company.website ? (
+                  <a
+                    href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {company.website}
+                  </a>
+                ) : (
+                  <p className="font-medium text-foreground">Not specified</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Company Size</p>
+                <p className="font-medium text-foreground">{company.employees || 'Not specified'}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+              <div>
+                <p className="text-xs text-muted-foreground">Industry</p>
+                <p className="font-medium text-foreground">{company.industry || 'Not specified'}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Full Width Open Positions Section */}
+      <div className="space-y-4 pt-2">
+        <h2 className="text-lg font-bold tracking-tight">Open Positions ({jobs.length})</h2>
+        {jobs.length === 0 ? (
+          <Card className="p-8 text-center border border-dashed text-sm text-muted-foreground">
+            <Briefcase className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
+            This company has no active job postings at the moment.
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                onApply={handleApply}
+                saved={savedJobIds.includes(job.id)}
+                onToggleSave={handleToggleSave}
+              />
+            ))}
           </div>
-        </div>
-
-        {/* Right column - overview info */}
-        <div className="space-y-6">
-          <Card className="border border-border">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Headquarters</p>
-                  <p className="font-medium text-foreground">{company.headquarters || 'Not specified'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Website</p>
-                  {company.website ? (
-                    <a
-                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {company.website}
-                    </a>
-                  ) : (
-                    <p className="font-medium text-foreground">Not specified</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Company Size</p>
-                  <p className="font-medium text-foreground">{company.employees || 'Not specified'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Industry</p>
-                  <p className="font-medium text-foreground">{company.industry || 'Not specified'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,14 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { Search, Building2, MapPin, Globe, Users, ArrowRight, Loader2, Bell, BellOff } from 'lucide-react';
+import { Search, Building2, MapPin, Globe, Users, ArrowRight, Loader2, Bell, BellOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -119,163 +126,171 @@ export default function FindCompaniesPage() {
     );
   };
 
+  const hasActiveFilters = search.trim() !== '' || selectedIndustry !== 'All' || location.trim() !== '';
+
   return (
     <div className="space-y-6">
       <PageHeader title="Explore Companies" description="Browse company profiles, follow updates, and search open positions." />
 
-      <div className="grid gap-6 lg:grid-cols-4">
-        {/* Filters Panel */}
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Filter Companies</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="industry-filter">Industry</Label>
-              <select
-                id="industry-filter"
-                value={selectedIndustry}
-                onChange={(e) => setSelectedIndustry(e.target.value)}
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {industries.map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Top Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search company name, keywords..."
+            className="pl-9 h-11"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="location-filter">Location</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="location-filter"
-                  placeholder="e.g. San Francisco"
-                  className="pl-9"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
+        {/* Industry Select Dropdown */}
+        <div className="w-full sm:w-[210px]">
+          <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+            <SelectTrigger className="h-11">
+              <SelectValue placeholder="Select Industry" />
+            </SelectTrigger>
+            <SelectContent>
+              {industries.map((ind) => (
+                <SelectItem key={ind} value={ind}>
+                  {ind === 'All' ? 'All Industries' : ind}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Location Input */}
+        <div className="relative w-full sm:w-[220px]">
+          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Location e.g. SF"
+            className="pl-9 h-11"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
+
+        {/* Clear Filters Button */}
+        {hasActiveFilters && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-11 w-11 shrink-0"
+            onClick={() => {
+              setSearch('');
+              setSelectedIndustry('All');
+              setLocation('');
+            }}
+            title="Clear filters"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Companies Grid (Full Width) */}
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="p-5 space-y-4">
+              <div className="flex items-start gap-4">
+                <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
+                <div className="space-y-1.5 flex-1">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-3.5 w-1/3" />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Listings Section */}
-        <div className="space-y-4 lg:col-span-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by company name, keywords, industry..."
-              className="pl-9 h-11"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-
-          {loading ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="p-5 space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-8 w-full rounded-md" />
+            </Card>
+          ))}
+        </div>
+      ) : companies.length === 0 ? (
+        <EmptyState
+          icon={Building2}
+          title="No companies found"
+          description="Try adjusting your keywords or clearing filters to find more companies."
+          action={
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearch('');
+                setSelectedIndustry('All');
+                setLocation('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {companies.map((comp) => {
+            const isSubbed = getSubId(comp._id);
+            return (
+              <Card key={comp._id} className="flex flex-col justify-between transition-all hover:shadow-md animate-fade-in">
+                <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
-                    <div className="space-y-1.5 flex-1">
-                      <Skeleton className="h-5 w-2/3" />
-                      <Skeleton className="h-3.5 w-1/3" />
+                    <Avatar className="h-12 w-12 rounded-lg border">
+                      <AvatarImage src={comp.logo} alt={comp.companyName} />
+                      <AvatarFallback className="rounded-lg">{comp.companyName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground truncate">{comp.companyName}</h3>
+                      <p className="text-xs text-primary font-medium">{comp.industry || 'Tech'}</p>
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {comp.headquarters || 'Remote'}
+                        </span>
+                        {comp.employeesCount && (
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {comp.employeesCount} employees
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-8 w-full rounded-md" />
-                </Card>
-              ))}
-            </div>
-          ) : companies.length === 0 ? (
-            <EmptyState
-              icon={Building2}
-              title="No companies found"
-              description="Try adjusting your keywords or clearing filters to find more companies."
-              action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearch('');
-                    setSelectedIndustry('All');
-                    setLocation('');
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              }
-            />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {companies.map((comp) => {
-                const isSubbed = getSubId(comp._id);
-                return (
-                  <Card key={comp._id} className="flex flex-col justify-between transition-all hover:shadow-md animate-fade-in">
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-4">
-                        <Avatar className="h-12 w-12 rounded-lg border">
-                          <AvatarImage src={comp.logo} alt={comp.companyName} />
-                          <AvatarFallback className="rounded-lg">{comp.companyName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground truncate">{comp.companyName}</h3>
-                          <p className="text-xs text-primary font-medium">{comp.industry || 'Tech'}</p>
-                          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {comp.headquarters || 'Remote'}
-                            </span>
-                            {comp.employeesCount && (
-                              <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                {comp.employeesCount} employees
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs text-muted-foreground line-clamp-3">
-                        {comp.description || 'No description available.'}
-                      </p>
-                    </CardContent>
-                    
-                    <div className="flex gap-2 p-5 pt-0 border-t mt-auto pt-3 flex-wrap">
-                      <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <Link href={`/candidate/company/${comp._id}`}>
-                          View Profile
-                          <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant={isSubbed ? 'secondary' : 'default'}
-                        size="sm"
-                        onClick={() => handleToggleSubscribe(comp._id)}
-                        disabled={subscribingId === comp._id}
-                        className="gap-1.5"
-                      >
-                        {isSubbed ? (
-                          <>
-                            <BellOff className="h-3.5 w-3.5" />
-                            Unfollow
-                          </>
-                        ) : (
-                          <>
-                            <Bell className="h-3.5 w-3.5" />
-                            Follow
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+                  <p className="mt-3 text-xs text-muted-foreground line-clamp-3">
+                    {comp.description || 'No description available.'}
+                  </p>
+                </CardContent>
+                
+                <div className="flex gap-2 p-5 pt-0 border-t mt-auto pt-3 flex-wrap">
+                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Link href={`/candidate/company/${comp._id}`}>
+                      View Profile
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant={isSubbed ? 'secondary' : 'default'}
+                    size="sm"
+                    onClick={() => handleToggleSubscribe(comp._id)}
+                    disabled={subscribingId === comp._id}
+                    className="gap-1.5"
+                  >
+                    {isSubbed ? (
+                      <>
+                        <BellOff className="h-3.5 w-3.5" />
+                        Unfollow
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-3.5 w-3.5" />
+                        Follow
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
         </div>
-      </div>
+      )}
     </div>
   );
 }
