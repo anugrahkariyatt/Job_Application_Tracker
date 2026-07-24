@@ -45,7 +45,7 @@ const navItems = [
   { label: 'Saved Jobs', href: '/candidate/saved' },
 ];
 
-export function Navbar() {
+export function CandidateNavbar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -340,3 +340,6 @@ export function Navbar() {
     </header>
   );
 }
+
+export const Navbar = CandidateNavbar;
+export default CandidateNavbar;

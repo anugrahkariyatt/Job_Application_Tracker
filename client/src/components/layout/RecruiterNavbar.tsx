@@ -1,22 +1,15 @@
 'use client';
 
-import * as React from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
-  Menu,
   Search,
   Bell,
-  User,
+  Menu,
   Settings,
   LogOut,
-  Sparkles,
   Building2,
+  Sparkles,
 } from 'lucide-react';
-
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Sheet,
   SheetContent,
@@ -32,97 +25,94 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
+import { logout } from '@/features/auth/api/auth.api';
+import { useRouter, usePathname } from 'next/navigation';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', href: '/candidate' },
-  { label: 'Find Jobs', href: '/candidate/jobs' },
-  { label: 'Companies', href: '/candidate/companies' },
-  { label: 'Applied Jobs', href: '/candidate/applied' },
-  { label: 'Saved Jobs', href: '/candidate/saved' },
+  { label: 'Dashboard', href: '/recruiter/dashboard' },
+  { label: 'My Jobs', href: '/recruiter/jobs' },
+  { label: 'Post Job', href: '/recruiter/jobs/new' },
+  { label: 'Applicants', href: '/recruiter/applicants' },
+  { label: 'Company', href: '/recruiter/company' },
 ];
 
-export function Navbar() {
+export function RecruiterNavbar() {
+  const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
   const isPro = user?.subscriptionPlan === 'pro';
 
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [profileImage, setProfileImage] = React.useState('');
-  const [unreadCount, setUnreadCount] = React.useState(0);
-  const [searchVal, setSearchVal] = React.useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [company, setCompany] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [searchVal, setSearchVal] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchVal.trim()) return;
-    if (pathname.startsWith('/candidate/companies')) {
-      router.push(`/candidate/companies?search=${encodeURIComponent(searchVal)}`);
+
+    if (pathname.startsWith('/recruiter/applicants')) {
+      router.push(`/recruiter/applicants?search=${encodeURIComponent(searchVal)}`);
     } else {
-      router.push(`/candidate/jobs?search=${encodeURIComponent(searchVal)}`);
+      router.push(`/recruiter/jobs?search=${encodeURIComponent(searchVal)}`);
     }
   };
 
-  React.useEffect(() => {
-    const fetchCandidateImg = async () => {
-      try {
-        const res = await axiosInstance.get('/api/candidate');
-        if (res.data?.success && res.data.data?.profileImage) {
-          setProfileImage(res.data.data.profileImage);
-        }
-      } catch (err) {
-        // Silent catch
+  const fetchHeaderData = async () => {
+    try {
+      const compResponse = await axiosInstance.get('/api/company');
+      if (compResponse.data?.success) {
+        setCompany(compResponse.data.data);
       }
-    };
-    const fetchUnreadNotifications = async () => {
-      try {
-        const res = await axiosInstance.get('/api/notifications');
-        if (res.data?.success && Array.isArray(res.data.data)) {
-          const unread = res.data.data.filter((n: any) => !n.isRead).length;
-          setUnreadCount(unread);
-        }
-      } catch (err) {
-        // Silent catch
+    } catch (err) {
+      console.error('Error loading header company:', err);
+    }
+
+    try {
+      const notifResponse = await axiosInstance.get('/api/notifications');
+      if (notifResponse.data?.success) {
+        const unread = notifResponse.data.data.filter((n: any) => !n.isRead).length;
+        setUnreadCount(unread);
       }
-    };
+    } catch (err) {
+      console.error('Error loading header notifications:', err);
+    }
+  };
+
+  useEffect(() => {
     if (user) {
-      fetchCandidateImg();
-      fetchUnreadNotifications();
+      fetchHeaderData();
     }
   }, [user]);
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     try {
-      const response = await axiosInstance.post('/api/auth/logout');
-      if (response.data?.success) {
-        dispatch(clearUser());
-        toast.success('Successfully logged out.');
-        router.push('/login');
-      }
-    } catch (err: any) {
-      console.error('Logout error:', err);
+      await logout();
+      dispatch(clearUser());
+      toast.success('Signed out successfully.');
+      router.push('/login');
+    } catch (err) {
+      console.error('Sign out failed:', err);
       dispatch(clearUser());
       router.push('/login');
     }
   };
-
-  const name = user?.name || 'Candidate';
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md">
       <div className="flex h-20 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Left: Brand Logo & Desktop Nav Links */}
         <div className="flex items-center gap-8">
-          <Link href="/candidate" className="flex items-center gap-3 shrink-0">
+          <Link href="/recruiter/dashboard" className="flex items-center gap-3 shrink-0">
             <img
               src="/Nuvora-logo.png"
               alt="Nuvora Logo"
@@ -139,9 +129,13 @@ export function Navbar() {
           <nav className="hidden md:flex items-center gap-1.5">
             {navItems.map((item) => {
               const isActive =
-                item.href === '/candidate'
-                  ? pathname === item.href
-                  : pathname.startsWith(item.href);
+                pathname === item.href ||
+                (item.href !== '/recruiter/dashboard' &&
+                  item.href !== '/recruiter/jobs' &&
+                  pathname.startsWith(item.href)) ||
+                (item.href === '/recruiter/jobs' &&
+                  pathname.startsWith('/recruiter/jobs') &&
+                  pathname !== '/recruiter/jobs/new');
 
               return (
                 <Link
@@ -168,7 +162,7 @@ export function Navbar() {
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="search"
-              placeholder="Search jobs & companies..."
+              placeholder="Search jobs & candidates..."
               value={searchVal}
               onChange={(e) => setSearchVal(e.target.value)}
               className="h-10 w-full rounded-xl border border-input bg-muted/40 pl-9.5 pr-3 text-sm text-foreground outline-none ring-offset-background transition-colors placeholder:text-muted-foreground focus:bg-background focus:ring-1 focus:ring-ring"
@@ -177,7 +171,7 @@ export function Navbar() {
 
           {/* PRO Upgrade Badge */}
           <Link
-            href="/candidate/pricing"
+            href="/recruiter/pricing"
             className={cn(
               'hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black tracking-wider uppercase transition-all duration-200 shadow-md hover:scale-105',
               isPro
@@ -191,7 +185,7 @@ export function Navbar() {
 
           {/* Notifications */}
           <Link
-            href="/candidate/notifications"
+            href="/recruiter/notifications"
             className="relative rounded-xl p-2.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             aria-label="Notifications"
           >
@@ -211,43 +205,37 @@ export function Navbar() {
                 className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-muted p-0 ring-2 ring-border/50 hover:ring-primary/40"
               >
                 <Avatar className="h-10 w-10 sm:h-11 sm:w-11">
-                  {profileImage ? (
-                    <AvatarImage src={profileImage} alt={name} />
+                  {company?.logo ? (
+                    <AvatarImage src={company.logo} alt={user?.name} />
                   ) : null}
                   <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
-                    {initials}
+                    {(user?.name || 'R').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">{name}</span>
+                <span className="text-sm font-semibold text-foreground">{user?.name}</span>
                 <span className="text-xs font-normal text-muted-foreground text-ellipsis overflow-hidden">
-                  {user?.email}
+                  {company?.companyName || user?.email}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/candidate/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4 text-primary" />
-                  My Profile
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/candidate/subscriptions" className="cursor-pointer">
+                <Link href="/recruiter/company" className="cursor-pointer">
                   <Building2 className="mr-2 h-4 w-4 text-primary" />
-                  Subscriptions
+                  Company Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/candidate/settings" className="cursor-pointer">
+                <Link href="/recruiter/settings" className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4 text-primary" />
                   Settings
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/candidate/pricing" className="cursor-pointer">
+                <Link href="/recruiter/pricing" className="cursor-pointer">
                   <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
                   Subscription Plans
                 </Link>
@@ -255,7 +243,7 @@ export function Navbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive cursor-pointer"
-                onClick={handleLogout}
+                onClick={handleSignOut}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
@@ -290,9 +278,9 @@ export function Navbar() {
               <div className="mt-4 space-y-1">
                 {navItems.map((item) => {
                   const isActive =
-                    item.href === '/candidate'
-                      ? pathname === item.href
-                      : pathname.startsWith(item.href);
+                    pathname === item.href ||
+                    (item.href !== '/recruiter/dashboard' &&
+                      pathname.startsWith(item.href));
 
                   return (
                     <Link
@@ -311,7 +299,7 @@ export function Navbar() {
                   );
                 })}
                 <Link
-                  href="/candidate/settings"
+                  href="/recruiter/settings"
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 >
@@ -326,7 +314,7 @@ export function Navbar() {
                   className="w-full justify-start text-destructive hover:text-destructive"
                   onClick={() => {
                     setMobileOpen(false);
-                    handleLogout();
+                    handleSignOut();
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -340,3 +328,5 @@ export function Navbar() {
     </header>
   );
 }
+
+export const Navbar = RecruiterNavbar;
