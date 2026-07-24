@@ -29,18 +29,24 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
   const [userRole, setUserRole] = useState<"candidate" | "recruiter">(initialRole);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
+  const verifiedRef = React.useRef(false);
+
   useEffect(() => {
     const success = searchParams.get("success");
     const sessionId = searchParams.get("session_id");
 
-    if (success === "true" && currentUser && currentUser.subscriptionPlan !== "pro") {
+    if (success === "true" && currentUser && !verifiedRef.current) {
+      verifiedRef.current = true;
       const handleStripeReturn = async () => {
         try {
           const endpoint = sessionId ? "/api/payments/verify-session" : "/api/payments/success";
           const res = await axiosInstance.post(endpoint, { sessionId, plan: "pro" });
           if (res.data?.success) {
             dispatch(setUser({ ...currentUser, subscriptionPlan: "pro" }));
-            toast.success("Successfully upgraded to PRO via Stripe!");
+            toast.success("Successfully upgraded to PRO!");
+            if (typeof window !== "undefined") {
+              window.history.replaceState(null, "", window.location.pathname);
+            }
           }
         } catch (err: any) {
           console.error("[STRIPE VERIFY ERROR]", err);

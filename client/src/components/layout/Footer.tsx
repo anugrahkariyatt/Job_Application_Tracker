@@ -80,6 +80,35 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Company */}
+          <div>
+            <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
+              Company
+            </h4>
+            <ul className="mt-4 space-y-3">
+              <li>
+                <Link href="/about" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/register/candidate" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Join Candidates
+                </Link>
+              </li>
+              <li>
+                <Link href="/register/recruiter" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  Employers & Hiring
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* For Employers */}
           <div>
             <h4 className="text-sm font-semibold text-text uppercase tracking-wider">
@@ -97,12 +126,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
-                  Talent Sourcing
+                <Link href="/about" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                  AI Sourcing
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-text-secondary hover:text-primary transition-colors">
+                <Link href="/contact" className="text-sm text-text-secondary hover:text-primary transition-colors">
                   Enterprise Solutions
                 </Link>
               </li>

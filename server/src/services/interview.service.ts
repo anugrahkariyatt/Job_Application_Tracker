@@ -176,8 +176,8 @@ export const getMyInterviews = async (
       return [];
     }
     return await Interview.find({ candidateId: candidate._id })
-      .populate("jobId")
-      .populate("companyId")
+      .populate("jobId", "title location jobType")
+      .populate("companyId", "companyName logo industry")
       .sort({ date: 1 });
   } else if (role === "recruiter") {
     const company = await Company.findOne({ ownerId: userId });
@@ -185,7 +185,7 @@ export const getMyInterviews = async (
       return [];
     }
     return await Interview.find({ companyId: company._id })
-      .populate("jobId")
+      .populate("jobId", "title location jobType")
       .populate({
         path: "candidateId",
         populate: { path: "userId", select: "name email" },

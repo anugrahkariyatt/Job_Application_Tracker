@@ -58,9 +58,15 @@ export const applyForJob = async (userId: string, jobId: string) => {
     console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
   }
 
-  // Trigger n8n AI Candidate Screening Asynchronously
+  // Trigger n8n AI Candidate Screening Asynchronously (PRO feature for Recruiters)
   (async () => {
     try {
+      const recruiterUser = await User.findById(company.ownerId);
+      if (recruiterUser?.subscriptionPlan !== "pro") {
+        console.log("[APPLICATION SERVICE] Recruiter is on FREE plan - skipping n8n AI Candidate Screening");
+        return;
+      }
+
       const aiResult = await triggerCandidateAIScreening({
         applicationId: application._id.toString(),
         candidateName: user.name,
@@ -106,16 +112,20 @@ export const FetchAllAppliedApplications = async (userId: string) => {
 
   const applications = await Application.find({
     candidateId: candidate._id,
-  }).populate({
-    path: "jobId",
-    populate: {
-      path: "companyId",
+  })
+    .sort({ createdAt: -1 })
+    .populate({
+      path: "jobId",
+      select: "title location jobType experienceLevel salaryMin salaryMax companyId status",
       populate: {
-        path: "ownerId",
-        select: "preferences",
+        path: "companyId",
+        select: "companyName logo industry ownerId",
+        populate: {
+          path: "ownerId",
+          select: "preferences",
+        },
       },
-    },
-  });
+    });
 
   return applications.map((app: any) => {
     const appObj = app.toObject();

@@ -27,7 +27,7 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = React.useState(true);
   const [subs, setSubs] = React.useState<CompanySubscription[]>([]);
 
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = React.useCallback(async () => {
     try {
       setLoading(true);
       const res = await axiosInstance.get('/api/subscriptions');
@@ -50,11 +50,11 @@ export default function SubscriptionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     fetchSubscriptions();
-  }, []);
+  }, [fetchSubscriptions]);
 
   const unsubscribe = async (id: string) => {
     try {

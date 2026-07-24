@@ -138,7 +138,6 @@ export const getRecruiterDashboardStats = async (
 
     const jobs = await Job.find({ companyId: company._id });
     const activeJobs = jobs.filter(j => j.status === "Open").length;
-    const draftJobs = jobs.filter(j => j.status === "Draft").length;
 
     const jobIds = jobs.map(j => j._id);
     const applications = await Application.find({ jobId: { $in: jobIds } })
@@ -153,13 +152,6 @@ export const getRecruiterDashboardStats = async (
 
     const totalApplications = applications.length;
 
-    // Calculate new applications (Applied in the last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const newApplications = applications.filter(
-      app => app.createdAt >= sevenDaysAgo
-    ).length;
-
     const interviewsScheduled = applications.filter(
       app => app.status === "Interview"
     ).length;
@@ -168,14 +160,12 @@ export const getRecruiterDashboardStats = async (
       app => app.status === "Hired"
     ).length;
 
-    // Define date ranges for comparison
+    // Define 30-day & 60-day date ranges for monthly delta comparisons
     const now = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(now.getDate() - 30);
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(now.getDate() - 60);
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(now.getDate() - 14);
 
     const calculateDelta = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -187,20 +177,10 @@ export const getRecruiterDashboardStats = async (
     const activeJobsLastMonth = jobs.filter(j => j.status === "Open" && j.createdAt >= sixtyDaysAgo && j.createdAt < thirtyDaysAgo).length;
     const activeJobsDelta = calculateDelta(activeJobsThisMonth, activeJobsLastMonth);
 
-    // Calculate Draft Jobs Delta (vs last month)
-    const draftJobsThisMonth = jobs.filter(j => j.status === "Draft" && j.createdAt >= thirtyDaysAgo).length;
-    const draftJobsLastMonth = jobs.filter(j => j.status === "Draft" && j.createdAt >= sixtyDaysAgo && j.createdAt < thirtyDaysAgo).length;
-    const draftJobsDelta = calculateDelta(draftJobsThisMonth, draftJobsLastMonth);
-
     // Calculate Total Applications Delta (vs last month)
     const totalAppsThisMonth = applications.filter(app => app.createdAt >= thirtyDaysAgo).length;
     const totalAppsLastMonth = applications.filter(app => app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
     const totalApplicationsDelta = calculateDelta(totalAppsThisMonth, totalAppsLastMonth);
-
-    // Calculate New Applications Delta (last 7 days vs previous 7 days)
-    const newAppsThisPeriod = applications.filter(app => app.createdAt >= sevenDaysAgo).length;
-    const newAppsLastPeriod = applications.filter(app => app.createdAt >= fourteenDaysAgo && app.createdAt < sevenDaysAgo).length;
-    const newApplicationsDelta = calculateDelta(newAppsThisPeriod, newAppsLastPeriod);
 
     // Calculate Interviews Delta (vs last month)
     const interviewsThisMonth = applications.filter(app => app.status === "Interview" && app.createdAt >= thirtyDaysAgo).length;
@@ -212,45 +192,7 @@ export const getRecruiterDashboardStats = async (
     const hiredLastMonth = applications.filter(app => app.status === "Hired" && app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
     const hiredCandidatesDelta = calculateDelta(hiredThisMonth, hiredLastMonth);
 
-    // Calculate jobs posted over time (last 6 months cumulative)
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const jobsByMonthMap = new Map<string, number>();
-    const trackedMonths: string[] = [];
-    const cutoffDate = new Date();
-    cutoffDate.setMonth(cutoffDate.getMonth() - 5);
-    cutoffDate.setDate(1);
-    cutoffDate.setHours(0, 0, 0, 0);
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const monthName = monthNames[d.getMonth()];
-      jobsByMonthMap.set(monthName, 0);
-      trackedMonths.push(monthName);
-    }
-
-    let priorJobsCount = 0;
-    jobs.forEach(j => {
-      const jobDate = new Date(j.createdAt);
-      if (jobDate < cutoffDate) {
-        priorJobsCount++;
-      } else {
-        const monthName = monthNames[jobDate.getMonth()];
-        if (jobsByMonthMap.has(monthName)) {
-          jobsByMonthMap.set(monthName, jobsByMonthMap.get(monthName)! + 1);
-        }
-      }
-    });
-
-    let runningTotal = priorJobsCount;
-    const jobsOverTime = trackedMonths.map(monthName => {
-      runningTotal += jobsByMonthMap.get(monthName) || 0;
-      return {
-        name: monthName,
-        jobs: runningTotal,
-      };
-    });
-    // Applications per job
+    // Applications per job distribution
     const appsPerJobMap = new Map<string, number>();
     jobs.forEach(j => {
       if (j.status === "Open") {
@@ -305,10 +247,10 @@ export const getRecruiterDashboardStats = async (
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, 4);
 
-    // Recent notifications (limit 3)
+    // Recent notifications (limit 5)
     const recentNotifications = await Notification.find({ userId: req.user!.id })
       .sort({ createdAt: -1 })
-      .limit(3);
+      .limit(5);
 
     return res.status(200).json({
       success: true,
@@ -320,12 +262,8 @@ export const getRecruiterDashboardStats = async (
         stats: {
           activeJobs,
           activeJobsDelta,
-          draftJobs,
-          draftJobsDelta,
           totalApplications,
           totalApplicationsDelta,
-          newApplications,
-          newApplicationsDelta,
           interviewsScheduled,
           interviewsScheduledDelta,
           hiredCandidates,
@@ -336,7 +274,6 @@ export const getRecruiterDashboardStats = async (
         recentApplications,
         recentNotifications,
         recentJobs,
-        jobsOverTime,
       }
     });
   } catch (error) {

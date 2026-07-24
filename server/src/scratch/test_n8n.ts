@@ -63,8 +63,25 @@ async function runAllTests() {
     link: "https://meet.google.com/abc-defg-hij",
   });
 
-  // 4. Payment Success Receipt
-  await testPayload("4. Payment Success Receipt", "/send-email", {
+  // 4. Application Status Updated
+  await testPayload("4. Application Status Updated", "/send-email", {
+    type: "application-status-updated",
+    email: "test.candidate@example.com",
+    candidateName: "Alex Developer",
+    jobTitle: "Senior Full Stack Engineer",
+    companyName: "Techno Careers Inc",
+    status: "SHORTLISTED",
+  });
+
+  // 5. Password Reset
+  await testPayload("5. Password Reset", "/send-email", {
+    type: "forgot-password",
+    email: "test.candidate@example.com",
+    resetLink: "http://localhost:3000/reset-password?token=reset_token_123",
+  });
+
+  // 6. Payment Success Receipt
+  await testPayload("6. Payment Success Receipt", "/send-email", {
     type: "payment-success",
     email: "test.candidate@example.com",
     userName: "Alex Developer",
@@ -73,8 +90,30 @@ async function runAllTests() {
     expiresAt: "8/22/2026",
   });
 
-  // 5. AI Candidate Screening
-  await testPayload("5. Candidate AI Resume Screening", "/ai-screen-candidate", {
+  // 7. Job Alert Email
+  await testPayload("7. Job Alert Email", "/send-email", {
+    type: "job-alert",
+    email: "test.candidate@example.com",
+    candidateName: "Alex Developer",
+    jobTitle: "Lead DevOps Engineer",
+    companyName: "CloudTech Systems",
+    location: "Remote",
+    jobId: "job_123456",
+  });
+
+  // 8. Company New Job Email
+  await testPayload("8. Company New Job Email", "/send-email", {
+    type: "company-new-job",
+    email: "test.candidate@example.com",
+    candidateName: "Alex Developer",
+    jobTitle: "Full Stack Developer",
+    companyName: "Techno Careers Inc",
+    location: "New York, NY",
+    jobId: "job_789012",
+  });
+
+  // 9. AI Candidate Screening
+  await testPayload("9. Candidate AI Resume Screening", "/ai-screen-candidate", {
     applicationId: "test_app_669fc9876",
     candidateName: "Alex Developer",
     candidateEmail: "test.candidate@example.com",

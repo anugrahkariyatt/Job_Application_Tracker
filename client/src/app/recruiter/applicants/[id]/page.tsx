@@ -52,6 +52,7 @@ import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
 import { calculateRealSkillMatch } from '@/lib/skillMatcher';
+import { useAppSelector } from '@/store/hooks';
 
 type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Interview' | 'Rejected' | 'Hired';
 
@@ -70,6 +71,9 @@ export default function ApplicationDetailsPage({
 }) {
   const resolvedParams = use(params);
   const id = resolvedParams.id;
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isPro = currentUser?.subscriptionPlan === 'pro';
 
   const [app, setApp] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
@@ -322,13 +326,15 @@ export default function ApplicationDetailsPage({
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Button
-                  variant="default"
+                  variant={isPro ? "default" : "outline"}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                  className={isPro ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" : "border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1.5 font-bold"}
                   onClick={() => setIsAIModalOpen(true)}
                 >
-                  <Award className="h-4 w-4 text-white" />
-                  Skill Assessment ({app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)
+                  <Award className="h-4 w-4" />
+                  {isPro
+                    ? `Skill Assessment (${app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)`
+                    : "Unlock AI Skill Assessment 🔒"}
                 </Button>
                 {candidate.resumeUrl && (
                   <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer">

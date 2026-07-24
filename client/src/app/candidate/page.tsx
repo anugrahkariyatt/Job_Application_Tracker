@@ -218,88 +218,99 @@ export default function DashboardPage() {
         setLoading(true);
         setProfileMissing(false);
 
-        // Fetch candidate profile details
-        try {
-          const profileResponse = await axiosInstance.get("/api/candidate");
-          if (profileResponse.data?.success) {
-            setProfile(profileResponse.data.data);
-          }
-        } catch (profileError: any) {
-          if (profileError.response?.status === 404) {
-            setProfileMissing(true);
-          } else {
-            throw profileError;
-          }
+        // Fetch candidate dashboard resources in parallel
+        const [profileRes, appsRes, interviewRes, jobsRes, notifRes] =
+          await Promise.allSettled([
+            axiosInstance.get("/api/candidate"),
+            axiosInstance.get("/api/application"),
+            axiosInstance.get("/api/interviews"),
+            axiosInstance.get("/api/jobs"),
+            axiosInstance.get("/api/notifications"),
+          ]);
+
+        // Process profile
+        if (
+          profileRes.status === "fulfilled" &&
+          profileRes.value.data?.success
+        ) {
+          setProfile(profileRes.value.data.data);
+        } else if (
+          profileRes.status === "rejected" &&
+          profileRes.reason?.response?.status === 404
+        ) {
+          setProfileMissing(true);
         }
 
-        // Fetch applications submitted by candidate
-        const appsResponse = await axiosInstance.get("/api/application");
+        // Process applications & timeline
         if (
-          appsResponse.data?.success &&
-          Array.isArray(appsResponse.data.data)
+          appsRes.status === "fulfilled" &&
+          appsRes.value.data?.success &&
+          Array.isArray(appsRes.value.data.data)
         ) {
-          const mappedApps: Application[] = appsResponse.data.data.map(
+          const mappedApps: Application[] = appsRes.value.data.data.map(
             mapApplicationToFrontend,
           );
           setApplications(mappedApps);
 
-          // Build timeline events from applications
-          const events = appsResponse.data.data.map(mapTimelineEventToFrontend);
+          const events = appsRes.value.data.data.map(
+            mapTimelineEventToFrontend,
+          );
           setTimeline(events.slice(0, 5));
-
-          // Fetch real upcoming interviews
-          try {
-            const interviewRes = await axiosInstance.get('/api/interviews');
-            if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
-              const mappedInterviews = interviewRes.data.data
-                .filter((iv: any) => iv.status === 'Scheduled')
-                .map((iv: any) => {
-                  const dateObj = new Date(iv.date);
-                  return {
-                    id: iv._id,
-                    jobTitle: iv.jobId?.title || 'Position',
-                    company: iv.companyId?.companyName || 'Company',
-                    companyLogo: iv.companyId?.logo || '',
-                    date: dateObj.toISOString(),
-                    time: dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    format: iv.type === 'Video Call' ? 'Video' : iv.type,
-                    round: iv.title,
-                    link: iv.link,
-                    notes: iv.notes,
-                    status: iv.status,
-                  };
-                });
-              setUpcomingInterviews(mappedInterviews);
-            }
-          } catch (ivErr) {
-            console.error("Error fetching candidate interviews:", ivErr);
-          }
         }
 
-        // Fetch recommended open jobs
-        const jobsResponse = await axiosInstance.get("/api/jobs");
+        // Process interviews
         if (
-          jobsResponse.data?.success &&
-          Array.isArray(jobsResponse.data.data)
+          interviewRes.status === "fulfilled" &&
+          interviewRes.value.data?.success &&
+          Array.isArray(interviewRes.value.data.data)
         ) {
-          const mappedJobs = jobsResponse.data.data.map(mapJobToFrontend);
+          const mappedInterviews = interviewRes.value.data.data
+            .filter((iv: any) => iv.status === "Scheduled")
+            .map((iv: any) => {
+              const dateObj = new Date(iv.date);
+              return {
+                id: iv._id,
+                jobTitle: iv.jobId?.title || "Position",
+                company: iv.companyId?.companyName || "Company",
+                companyLogo: iv.companyId?.logo || "",
+                date: dateObj.toISOString(),
+                time: dateObj.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                format: iv.type === "Video Call" ? "Video" : iv.type,
+                round: iv.title,
+                link: iv.link,
+                notes: iv.notes,
+                status: iv.status,
+              };
+            });
+          setUpcomingInterviews(mappedInterviews);
+        }
+
+        // Process recommendations
+        if (
+          jobsRes.status === "fulfilled" &&
+          jobsRes.value.data?.success &&
+          Array.isArray(jobsRes.value.data.data)
+        ) {
+          const mappedJobs = jobsRes.value.data.data.map(mapJobToFrontend);
           setRecommendations(mappedJobs);
         }
 
-        // Fetch user notifications
-        const notifResponse = await axiosInstance.get("/api/notifications");
+        // Process notifications
         if (
-          notifResponse.data?.success &&
-          Array.isArray(notifResponse.data.data)
+          notifRes.status === "fulfilled" &&
+          notifRes.value.data?.success &&
+          Array.isArray(notifRes.value.data.data)
         ) {
-          const mappedNotifs = notifResponse.data.data.map(
+          const mappedNotifs = notifRes.value.data.data.map(
             mapNotificationToFrontend,
           );
           setNotifications(mappedNotifs);
         }
       } catch (err: any) {
         console.error("Failed to load candidate dashboard:", err);
-        toast.error("Failed to load dashboard statistics.");
       } finally {
         setLoading(false);
       }
@@ -413,214 +424,219 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome + Profile Completion */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardContent className="flex items-center gap-4 p-6">
-            <Avatar className="h-16 w-16">
+      {/* Streamlined Hero Header Banner */}
+      <Card className="border-border/60 shadow-sm bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden">
+        <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 border-2 border-primary/20 shadow-sm">
               <AvatarImage
                 src={profile?.profileImage || ""}
                 alt={profile?.fullName || user?.name}
               />
-              <AvatarFallback>{initials}</AvatarFallback>
+              <AvatarFallback className="font-bold text-base bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-2xl font-black tracking-tight text-foreground">
                 Welcome back,{" "}
-                {(profile?.fullName || user?.name || "Candidate").split(" ")[0]}
+                {(profile?.fullName || user?.name || "Candidate").split(" ")[0]}!
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {profile?.headline || "Job Seeker"}
+              <p className="mt-0.5 text-xs text-muted-foreground font-medium">
+                {profile?.headline || "Full Stack Developer · Job Seeker"}
               </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Profile Completion</CardTitle>
-            <CardDescription>
-              Complete your profile to get better matches
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <Progress
-                value={calculateProfileCompletion(profile)}
-                className="h-2"
-              />
-              <span className="text-sm font-semibold">
+          </div>
+
+          {/* Inline Compact Profile Completion */}
+          <div className="w-full sm:w-auto min-w-[220px] p-3.5 rounded-xl border border-border/50 bg-background/80 backdrop-blur-sm space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-foreground">Profile Strength</span>
+              <span className="font-extrabold text-primary">
                 {calculateProfileCompletion(profile)}%
               </span>
             </div>
-            <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
-              <Link href="/candidate/profile">
-                <User className="mr-2 h-4 w-4" />
-                Complete Profile
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+            <Progress
+              value={calculateProfileCompletion(profile)}
+              className="h-2 bg-muted"
+            />
+            <Link
+              href="/candidate/profile"
+              className="inline-flex items-center justify-between w-full pt-1 text-[11px] font-bold text-primary hover:underline"
+            >
+              <span>{calculateProfileCompletion(profile) === 100 ? "View Profile" : "Update Profile Info"}</span>
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Link href="/candidate/profile">
-          <Card className="cursor-pointer transition-shadow hover:shadow-md h-full">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <User className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Complete Profile</p>
-                <p className="text-xs text-muted-foreground">
-                  Update your information
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/candidate/profile">
-          <Card className="cursor-pointer transition-shadow hover:shadow-md h-full">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Upload className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Upload Resume</p>
-                <p className="text-xs text-muted-foreground">
-                  PDF, DOCX up to 5MB
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href="/candidate/jobs">
-          <Card className="cursor-pointer transition-shadow hover:shadow-md h-full">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Search className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">Find Jobs</p>
-                <p className="text-xs text-muted-foreground">
-                  Search new opportunities
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {/* Streamlined Key Metric Summary Bar (4 High-Value Cards) */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Applications Sent"
           value={stats.applicationsSent}
           icon={FileText}
         />
         <StatCard label="Under Review" value={stats.underReview} icon={Eye} />
-        <StatCard label="Shortlisted" value={stats.shortlisted} icon={Star} />
-        <StatCard label="Interviews" value={stats.interviews} icon={Video} />
-        <StatCard label="Rejected" value={stats.rejected} icon={XCircle} />
+        <StatCard label="Interviews Scheduled" value={stats.interviews} icon={Video} />
         <StatCard label="Saved Jobs" value={stats.savedJobs} icon={Bookmark} />
       </div>
 
-      {/* Recent Applications Table */}
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-lg">Recent Applications</CardTitle>
-            <CardDescription>Your latest job applications</CardDescription>
-          </div>
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/candidate/applied">
-              View All
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {applications.length === 0 ? (
-            <div className="text-center py-6 text-sm text-muted-foreground">
-              You haven't submitted any job applications yet.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Job</TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    Company
-                  </TableHead>
-                  <TableHead className="hidden sm:table-cell">
-                    Applied Date
-                  </TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {applications.slice(0, 5).map((app) => (
-                  <TableRow key={app.id}>
-                    <TableCell>
-                      <Link
-                        href={`/candidate/jobs/${app.jobId}`}
-                        className="font-medium hover:underline"
-                      >
-                        {app.job.title}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
-                      {app.job.company}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
-                      {formatDate(app.appliedDate)}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={app.status} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Job Recommendations + Side Widgets */}
+      {/* Main Grid: Left (2/3) & Right (1/3) */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              Latest Job Recommendations
-            </h2>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/candidate/jobs">View All</Link>
-            </Button>
+        {/* Left Column (2/3) */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* 1. Recent Applications Table */}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-base font-bold">Recent Applications</CardTitle>
+                <CardDescription className="text-xs">Your latest job applications</CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs gap-1 font-semibold text-primary hover:text-primary/80" asChild>
+                <Link href="/candidate/applied">
+                  View All
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {applications.length === 0 ? (
+                <div className="text-center py-6 text-xs text-muted-foreground">
+                  You haven't submitted any job applications yet.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="text-xs">Job</TableHead>
+                      <TableHead className="hidden md:table-cell text-xs">
+                        Company
+                      </TableHead>
+                      <TableHead className="hidden sm:table-cell text-xs">
+                        Applied Date
+                      </TableHead>
+                      <TableHead className="text-xs">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {applications.slice(0, 5).map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell>
+                          <Link
+                            href={`/candidate/jobs/${app.jobId}`}
+                            className="font-semibold text-xs text-foreground hover:text-primary transition-colors"
+                          >
+                            {app.job.title}
+                          </Link>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">
+                          {app.job.company}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">
+                          {formatDate(app.appliedDate)}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={app.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 2. Latest Job Recommendations */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-foreground">
+                  Latest Job Recommendations
+                </h2>
+                <p className="text-xs text-muted-foreground">Tailored opportunities for your skills</p>
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
+                <Link href="/candidate/jobs">View All</Link>
+              </Button>
+            </div>
+            {recommendations.length === 0 ? (
+              <div className="text-center py-8 border rounded-xl bg-card text-muted-foreground text-xs">
+                No recommended jobs available at this time.
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {recommendations.slice(0, 4).map((job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onApply={handleApplyJob}
+                    saved={savedJobIds.includes(job.id)}
+                    onToggleSave={handleToggleSave}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          {recommendations.length === 0 ? (
-            <div className="text-center py-12 border rounded-xl bg-card text-muted-foreground text-sm">
-              No recommended jobs available at this time.
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {recommendations.slice(0, 4).map((job) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  onApply={handleApplyJob}
-                  saved={savedJobIds.includes(job.id)}
-                  onToggleSave={handleToggleSave}
-                />
-              ))}
-            </div>
-          )}
+
+          {/* 3. Application Activity Timeline */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-bold">Application Activity</CardTitle>
+              <CardDescription className="text-xs">
+                Recent activity on your applications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {timeline.length === 0 ? (
+                <div className="text-center py-6 text-xs text-muted-foreground">
+                  No recent application activity.
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {timeline.map((event, idx) => {
+                    const config =
+                      timelineIconMap[event.type] || timelineIconMap.applied;
+                    return (
+                      <div key={event.id} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={cn(
+                              "flex h-8 w-8 items-center justify-center rounded-full shrink-0",
+                              config.className,
+                            )}
+                          >
+                            <config.icon className="h-3.5 w-3.5" />
+                          </div>
+                          {idx < timeline.length - 1 && (
+                            <div className="w-px flex-1 bg-border/60" />
+                          )}
+                        </div>
+                        <div className="pb-5">
+                          <p className="text-xs font-bold text-foreground">{event.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {event.description}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground">
+                            {relativeTime(event.time)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="space-y-6">
-          {/* Upcoming Interviews */}
+        {/* Right Column (1/3) */}
+        <div className="space-y-6 lg:col-span-1">
+          {/* 1. Upcoming Interviews */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Upcoming Interviews</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-bold">Upcoming Interviews</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {upcomingInterviews.length === 0 ? (
@@ -629,24 +645,24 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 upcomingInterviews.map((iv) => (
-                  <div key={iv.id} className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10 rounded-lg">
+                  <div key={iv.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+                    <Avatar className="h-9 w-9 rounded-lg shrink-0">
                       <AvatarImage src={iv.companyLogo} alt={iv.company} />
-                      <AvatarFallback className="rounded-lg">
+                      <AvatarFallback className="rounded-lg text-xs font-bold">
                         {iv.company.slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{iv.jobTitle}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-foreground truncate">{iv.jobTitle}</p>
+                      <p className="text-[11px] text-muted-foreground">
                         {iv.company} · {iv.round}
                       </p>
-                      <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3 text-primary" />
                         {formatDate(iv.date)} at {iv.time}
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="font-normal">
+                        <Badge variant="secondary" className="font-normal text-[10px]">
                           {iv.format}
                         </Badge>
                         {iv.link && (
@@ -654,14 +670,14 @@ export default function DashboardPage() {
                             href={iv.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold"
                           >
                             <ExternalLink className="h-3 w-3" /> Join Meet
                           </a>
                         )}
                       </div>
                       {iv.notes && (
-                        <p className="mt-2 text-xs text-muted-foreground bg-muted/40 p-2 rounded border border-border/50">
+                        <p className="mt-2 text-[11px] text-muted-foreground bg-muted/50 p-2 rounded border border-border/40">
                           {iv.notes}
                         </p>
                       )}
@@ -672,11 +688,11 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Notifications Widget */}
+          {/* 2. Notifications Widget */}
           <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-base">Notifications</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base font-bold">Notifications</CardTitle>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
                 <Link href="/candidate/notifications">All</Link>
               </Button>
             </CardHeader>
@@ -694,25 +710,25 @@ export default function DashboardPage() {
                     <div key={n.id} className="flex items-start gap-3">
                       <div
                         className={cn(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg mt-0.5",
                           config.className,
                         )}
                       >
-                        <config.icon className="h-4 w-4" />
+                        <config.icon className="h-3.5 w-3.5" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium leading-tight">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold leading-tight text-foreground truncate">
                           {n.title}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                        <p className="mt-0.5 text-[11px] text-muted-foreground line-clamp-2">
                           {n.message}
                         </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">
                           {relativeTime(n.time)}
                         </p>
                       </div>
                       {!n.read && (
-                        <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                       )}
                     </div>
                   );
@@ -722,56 +738,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-
-      {/* Application Activity Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Application Activity</CardTitle>
-          <CardDescription>
-            Recent activity on your applications
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {timeline.length === 0 ? (
-            <div className="text-center py-6 text-sm text-muted-foreground">
-              No recent application activity.
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {timeline.map((event, idx) => {
-                const config =
-                  timelineIconMap[event.type] || timelineIconMap.applied;
-                return (
-                  <div key={event.id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div
-                        className={cn(
-                          "flex h-9 w-9 items-center justify-center rounded-full",
-                          config.className,
-                        )}
-                      >
-                        <config.icon className="h-4 w-4" />
-                      </div>
-                      {idx < timeline.length - 1 && (
-                        <div className="w-px flex-1 bg-border" />
-                      )}
-                    </div>
-                    <div className="pb-6">
-                      <p className="text-sm font-medium">{event.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {event.description}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {relativeTime(event.time)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
