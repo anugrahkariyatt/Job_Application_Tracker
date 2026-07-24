@@ -59,7 +59,8 @@ export const createCheckoutSessionController = async (
 
     const unitAmount = isRecruiterPlan ? 2999 : 999; // $29.99 or $9.99 in cents
     const planTitle = isRecruiterPlan ? "Recruiter Pro Plan" : "Candidate Pro Plan";
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+    const clientUrl = getClientUrl(req);
+    const rolePath = user.role === "recruiter" || isRecruiterPlan ? "recruiter" : "candidate";
 
     try {
       const session = await stripe.checkout.sessions.create({
