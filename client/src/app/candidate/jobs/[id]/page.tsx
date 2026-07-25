@@ -37,6 +37,8 @@ import { cn } from '@/lib/utils';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { mapJobToFrontend } from '@/lib/candidate-mappers';
+import { ShareThisButtons } from '@/components/shared/ShareThisButtons';
+
 
 export default function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params);
@@ -276,10 +278,13 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                   <Bookmark className={cn('mr-2 h-4 w-4', saved && 'fill-primary text-primary')} />
                   {saved ? 'Saved' : 'Save'}
                 </Button>
-                <Button variant="outline" onClick={handleShare}>
-                  <Share2 className="mr-2 h-4 w-4" />Share
-                </Button>
+                <ShareThisButtons
+                  title={job.title}
+                  company={job.company}
+                  description={job.description}
+                />
               </div>
+
             </CardContent>
           </Card>
 

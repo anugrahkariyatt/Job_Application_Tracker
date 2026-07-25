@@ -87,9 +87,9 @@ export default function FindJobsPage() {
     if (saved) {
       try {
         currentSaved = JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { }
     }
-    
+
     const isSaved = currentSaved.some(j => j.id === jobId);
     if (isSaved) {
       currentSaved = currentSaved.filter(j => j.id !== jobId);

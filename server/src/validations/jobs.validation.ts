@@ -145,3 +145,4 @@ export const updateJobStatusSchema = z.object({
 export type UpdateJobStatusInput = z.infer<typeof updateJobStatusSchema>;
 export type UpdateJobInput = z.infer<typeof updateJobSchema>;
 export type CreateJobInput = z.infer<typeof createJobSchema>;
+

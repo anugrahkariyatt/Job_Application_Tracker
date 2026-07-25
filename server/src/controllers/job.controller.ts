@@ -82,11 +82,11 @@ export const getMyJobsController = async (
     const company = await Company.findOne({ ownerId: req.user!.id });
     const stats = company
       ? {
-          total: await Job.countDocuments({ companyId: company._id }),
-          open: await Job.countDocuments({ companyId: company._id, status: "Open" }),
-          closed: await Job.countDocuments({ companyId: company._id, status: "Closed" }),
-          draft: await Job.countDocuments({ companyId: company._id, status: "Draft" }),
-        }
+        total: await Job.countDocuments({ companyId: company._id }),
+        open: await Job.countDocuments({ companyId: company._id, status: "Open" }),
+        closed: await Job.countDocuments({ companyId: company._id, status: "Closed" }),
+        draft: await Job.countDocuments({ companyId: company._id, status: "Draft" }),
+      }
       : { total: 0, open: 0, closed: 0, draft: 0 };
 
     return res.status(200).json({
