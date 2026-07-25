@@ -41,7 +41,6 @@ const navItems = [
   { label: 'My Jobs', href: '/recruiter/jobs' },
   { label: 'Post Job', href: '/recruiter/jobs/new' },
   { label: 'Applicants', href: '/recruiter/applicants' },
-  { label: 'Company', href: '/recruiter/company' },
 ];
 
 export function Navbar() {

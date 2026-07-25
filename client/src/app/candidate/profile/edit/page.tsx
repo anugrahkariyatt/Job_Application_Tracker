@@ -86,6 +86,7 @@ import {
   FileText,
   Loader2,
   Camera,
+  ArrowLeft,
 } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -581,19 +582,12 @@ export default function EditProfilePage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/candidate/profile">Profile</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Edit Profile</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <Button variant="ghost" size="sm" asChild className="w-fit">
+        <Link href="/candidate/profile">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profile
+        </Link>
+      </Button>
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>

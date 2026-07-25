@@ -200,10 +200,8 @@ export default function CreateJobPage() {
       <PageHeader
         title="Post a Job"
         description="Create a new job opening for your company."
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/recruiter/dashboard' },
-          { label: 'Post a Job' },
-        ]}
+        backHref="/recruiter/jobs"
+        backLabel="Back to My Jobs"
         icon={PlusCircle}
         actions={
           <>

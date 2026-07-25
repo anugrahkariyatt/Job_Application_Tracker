@@ -1,8 +1,6 @@
 import { cn } from '@/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
-  icon: LucideIcon;
   title: string;
   description?: string;
   action?: React.ReactNode;
@@ -10,7 +8,6 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon: Icon,
   title,
   description,
   action,
@@ -23,9 +20,6 @@ export function EmptyState({
         className
       )}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-        <Icon className="h-6 w-6" />
-      </div>
       <div className="space-y-1">
         <p className="text-sm font-medium text-foreground">{title}</p>
         {description && (

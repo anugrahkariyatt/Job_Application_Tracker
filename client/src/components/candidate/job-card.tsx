@@ -22,7 +22,11 @@ interface JobCardProps {
 export function JobCard({ job, saved, onToggleSave, onApply, view = 'grid' }: JobCardProps) {
   const router = useRouter();
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('a, button, [role="button"]')) {
+      return;
+    }
     router.push(`/candidate/jobs/${job.id}`);
   };
 

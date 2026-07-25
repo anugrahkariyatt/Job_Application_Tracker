@@ -32,7 +32,6 @@ const primaryNavItems: NavItem[] = [
   { label: "My Jobs", href: "/recruiter/jobs", icon: Briefcase },
   { label: "Post a Job", href: "/recruiter/jobs/new", icon: PlusCircle },
   { label: "Applicants", href: "/recruiter/applicants", icon: Users },
-  { label: "Company Profile", href: "/recruiter/company", icon: Building2 },
 ];
 
 const secondaryNavItems: NavItem[] = [

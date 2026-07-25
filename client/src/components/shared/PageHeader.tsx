@@ -1,13 +1,16 @@
 import { cn } from '@/lib/utils';
-import { ChevronRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface PageHeaderProps {
   title: string;
   description?: string;
   icon?: LucideIcon;
   breadcrumbs?: { label: string; href?: string }[];
+  backHref?: string;
+  backLabel?: string;
   actions?: React.ReactNode;
   className?: string;
 }
@@ -17,39 +20,41 @@ export function PageHeader({
   description,
   icon: Icon,
   breadcrumbs,
+  backHref,
+  backLabel,
   actions,
   className,
 }: PageHeaderProps) {
+  let effectiveBackHref = backHref;
+  let effectiveBackLabel = backLabel;
+
+  if (!effectiveBackHref && breadcrumbs && breadcrumbs.length >= 3) {
+    const parentCrumb = breadcrumbs[breadcrumbs.length - 2];
+    if (parentCrumb && parentCrumb.href) {
+      effectiveBackHref = parentCrumb.href;
+      effectiveBackLabel = `Back to ${parentCrumb.label}`;
+    }
+  }
+
   return (
     <div className={cn('space-y-3', className)}>
-      {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground">
-          {breadcrumbs.map((b, i) => (
-            <span key={i} className="flex items-center gap-1">
-              {b.href ? (
-                <Link
-                  href={b.href}
-                  className="hover:text-foreground transition-colors"
-                >
-                  {b.label}
-                </Link>
-              ) : (
-                <span className="text-foreground">{b.label}</span>
-              )}
-              {i < breadcrumbs.length - 1 && (
-                <ChevronRight className="h-3 w-3" />
-              )}
-            </span>
-          ))}
-        </nav>
+      {effectiveBackHref && (
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="-ml-2.5 h-8 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Link href={effectiveBackHref}>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>{effectiveBackLabel || 'Back'}</span>
+            </Link>
+          </Button>
+        </div>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          {Icon && (
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Icon className="h-5 w-5" />
-            </div>
-          )}
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {title}

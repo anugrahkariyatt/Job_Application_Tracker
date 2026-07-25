@@ -205,19 +205,12 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href="/candidate/jobs">Find Jobs</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{company.companyName}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      
+      <Button variant="ghost" size="sm" asChild className="w-fit">
+        <Link href="/candidate/companies">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Companies
+        </Link>
+      </Button>
 
       {/* Cover / Header Section */}
       <Card className="overflow-hidden border border-border/70 shadow-xs rounded-2xl bg-card">

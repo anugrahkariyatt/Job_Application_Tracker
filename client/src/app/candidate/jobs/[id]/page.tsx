@@ -199,19 +199,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   if (!job) return null;
 
   return (
-    <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href="/candidate/jobs">Find Jobs</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{job.title}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
+    <div className={cn("space-y-6")}>
       <Button variant="ghost" size="sm" asChild className="w-fit">
         <Link href="/candidate/jobs"><ArrowLeft className="mr-2 h-4 w-4" />Back to Jobs</Link>
       </Button>

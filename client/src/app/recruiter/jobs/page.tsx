@@ -17,14 +17,10 @@ import {
   Eye,
   MapPin,
   MoreHorizontal,
-  Pencil,
-  Copy,
   Trash2,
   Ban,
-  Users,
   Calendar,
   DollarSign,
-  Loader2,
   CheckCircle,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -167,8 +163,6 @@ export default function MyJobsPage() {
       <PageHeader
         title="My Jobs"
         description="Manage all your job postings — like a job board for your company."
-        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'My Jobs' }]}
-        icon={Briefcase}
         actions={
           <Link
             href="/recruiter/jobs/new"
@@ -246,8 +240,7 @@ export default function MyJobsPage() {
       ) : paged.length === 0 ? (
         <Card>
           <EmptyState
-            icon={Briefcase}
-            title="No jobs found"
+            title="No jobs posted yet."
             description="Try adjusting your filters or post a new job."
             action={
               <Link
