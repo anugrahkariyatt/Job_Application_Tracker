@@ -22,7 +22,6 @@ export const navItems: NavItem[] = [
   { label: 'Companies', href: '/admin/companies', icon: Building2 },
   { label: 'Pending Verifications', href: '/admin/verification', icon: ShieldAlert },
   { label: 'Jobs', href: '/admin/jobs', icon: Briefcase },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export const logoutItem: NavItem = { label: 'Logout', href: '/admin', icon: LogOut };

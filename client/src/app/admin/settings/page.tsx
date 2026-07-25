@@ -216,14 +216,8 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Settings"
-        description="Manage your admin profile, password and platform details."
+        description="Manage your admin security settings and password."
         breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]}
-        actions={
-          <Button onClick={handleSaveProfile} disabled={savingProfile}>
-            <Save className="h-4 w-4" />
-            {savingProfile ? 'Saving...' : 'Save changes'}
-          </Button>
-        }
       />
 
       <Card>
@@ -248,29 +242,22 @@ export default function SettingsPage() {
               <Input
                 id="admin-name"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (profileErrors.name) setProfileErrors((prev) => ({ ...prev, name: '' }));
-                }}
+                readOnly
+                disabled
+                className="bg-muted/50 text-muted-foreground cursor-not-allowed"
               />
-              {profileErrors.name && (
-                <p className="text-xs text-red-500 font-medium mt-1">{profileErrors.name}</p>
-              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="admin-email">Email</Label>
+              <Label htmlFor="admin-email">Email Address</Label>
               <Input
                 id="admin-email"
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (profileErrors.email) setProfileErrors((prev) => ({ ...prev, email: '' }));
-                }}
+                readOnly
+                disabled
+                className="bg-muted/50 text-muted-foreground cursor-not-allowed"
               />
-              {profileErrors.email && (
-                <p className="text-xs text-red-500 font-medium mt-1">{profileErrors.email}</p>
-              )}
+              <p className="text-[11px] text-muted-foreground">Admin credentials are locked for security.</p>
             </div>
           </div>
         </CardContent>
@@ -382,47 +369,6 @@ export default function SettingsPage() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <User className="h-4 w-4" />
-            Platform
-          </CardTitle>
-          <CardDescription>Core platform information shown across the app.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="p-name">Platform name</Label>
-            <Input
-              id="p-name"
-              value={platformName}
-              onChange={(e) => {
-                setPlatformName(e.target.value);
-                if (profileErrors.platformName) setProfileErrors((prev) => ({ ...prev, platformName: '' }));
-              }}
-            />
-            {profileErrors.platformName && (
-              <p className="text-xs text-red-500 font-medium mt-1">{profileErrors.platformName}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="p-support">Support email</Label>
-            <Input
-              id="p-support"
-              type="email"
-              value={supportEmail}
-              onChange={(e) => {
-                setSupportEmail(e.target.value);
-                if (profileErrors.supportEmail) setProfileErrors((prev) => ({ ...prev, supportEmail: '' }));
-              }}
-            />
-            {profileErrors.supportEmail && (
-              <p className="text-xs text-red-500 font-medium mt-1">{profileErrors.supportEmail}</p>
-            )}
-          </div>
         </CardContent>
       </Card>
     </div>

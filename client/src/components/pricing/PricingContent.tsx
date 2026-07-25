@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface PricingContentProps {
   defaultRole?: "candidate" | "recruiter";
@@ -97,20 +98,19 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
   };
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8">
+    <div className="py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-10rem)] flex flex-col justify-center">
       {/* Header Section */}
-      <div className="max-w-3xl mx-auto text-center mb-12">
-
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-4">
+      <div className="max-w-3xl mx-auto text-center mb-10 space-y-3">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
           Simple, Transparent Pricing
         </h1>
-        <p className="text-muted-foreground text-base max-w-xl mx-auto">
+        <p className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           Choose the right plan to supercharge your career or hire top tech talent with AI-powered automations.
         </p>
 
         {/* Role Toggle Switch */}
         {showToggle && (
-          <div className="mt-8 inline-flex p-1 bg-muted/60 border border-border rounded-xl">
+          <div className="pt-4 inline-flex p-1 bg-muted/60 border border-border/70 rounded-xl">
             <button
               onClick={() => setUserRole("candidate")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${userRole === "candidate"
@@ -136,21 +136,21 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-stretch">
+      <div className="max-w-4xl mx-auto w-full grid md:grid-cols-2 gap-6 items-stretch pt-4">
         {/* FREE TIER CARD */}
-        <Card className="flex flex-col justify-between border-border bg-card shadow-sm hover:shadow-md transition-all">
+        <Card className="flex flex-col justify-between border-border/70 bg-card shadow-xs hover:shadow-md transition-all rounded-2xl p-2">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-bold">Starter Free</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               {userRole === "candidate"
                 ? "Essential job tracking & application features"
                 : "For small teams and standard job postings"}
             </CardDescription>
             <div className="pt-4">
-              <span className="text-4xl font-extrabold text-foreground">$0</span>
-              <span className="text-muted-foreground text-sm"> / forever</span>
+              <span className="text-4xl font-black text-foreground">$0</span>
+              <span className="text-muted-foreground text-xs font-medium"> / forever</span>
             </div>
           </CardHeader>
 
@@ -159,61 +159,66 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
               {userRole === "candidate" ? (
                 <>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Subscribe up to 10 companies</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Standard job search & application tracking</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Daily email job updates</span>
                   </li>
                 </>
               ) : (
                 <>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Post up to 3 active jobs</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Standard applicant management dashboard</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Direct candidate email notifications</span>
                   </li>
                 </>
               )}
             </ul>
 
-            <Button variant="outline" className="w-full mt-6" asChild>
+            <Button variant="outline" className="w-full mt-6 h-11 font-semibold rounded-xl" asChild>
               <Link href="/register">Get Started Free</Link>
             </Button>
           </CardContent>
         </Card>
 
         {/* PRO TIER CARD */}
-        <Card className={`relative flex flex-col justify-between overflow-hidden transition-all duration-300 ${currentUser?.subscriptionPlan === "pro"
-          ? "border-2 border-emerald-500 bg-gradient-to-b from-emerald-500/10 via-card to-card shadow-xl shadow-emerald-500/10"
-          : "border-2 border-primary/80 bg-gradient-to-b from-primary/10 via-card to-card shadow-xl shadow-primary/10 hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1"
+        <Card className={`relative flex flex-col justify-between transition-all duration-300 rounded-2xl p-2 ${currentUser?.subscriptionPlan === "pro"
+          ? "border-2 border-primary bg-primary/[0.03] shadow-md"
+          : "border-2 border-primary/80 bg-card shadow-md hover:shadow-lg"
           }`}>
-          <div className={`absolute -top-3 right-6 text-[11px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 ${currentUser?.subscriptionPlan === "pro"
-            ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/30 ring-2 ring-emerald-400/40"
-            : "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/30 ring-2 ring-amber-400/40"
-            }`}>
-            <Zap className="w-3 h-3 fill-white text-white animate-bounce" />
-            <span>{currentUser?.subscriptionPlan === "pro" ? "Your Active Plan" : "Most Popular"}</span>
-          </div>
-
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-2xl font-black text-foreground">
-                {userRole === "candidate" ? "Candidate Pro" : "Recruiter Pro"}
-              </CardTitle>
-              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">PRO</span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  {userRole === "candidate" ? "Candidate Pro" : "Recruiter Pro"}
+                </CardTitle>
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-semibold">
+                  PRO
+                </Badge>
+              </div>
+              {currentUser?.subscriptionPlan === "pro" ? (
+                <Badge className="text-[10px] px-2.5 py-0.5 font-semibold">
+                  Active Plan
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] px-2.5 py-0.5 font-semibold text-primary border-primary/30 bg-primary/5">
+                  Most Popular
+                </Badge>
+              )}
             </div>
             <CardDescription className="text-xs sm:text-sm font-medium">
               {userRole === "candidate"
@@ -274,14 +279,14 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
             {currentUser?.subscriptionPlan === "pro" ? (
               <Button
                 disabled
-                className="w-full mt-6 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold shadow-md opacity-100 cursor-default h-11 rounded-xl"
+                className="w-full mt-6 flex items-center justify-center gap-2 bg-primary/20 text-primary border border-primary/30 font-bold opacity-100 cursor-default h-11 rounded-xl"
               >
                 <Check className="w-4 h-4 stroke-[3]" />
                 <span>Active Pro Plan</span>
               </Button>
             ) : (
               <Button
-                className="w-full mt-6 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-primary to-primary text-white font-extrabold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all h-11 rounded-xl"
+                className="w-full mt-6 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold shadow-sm hover:bg-primary/90 transition-all h-11 rounded-xl"
                 onClick={() => handleSubscribe(userRole === "candidate" ? "candidate-pro" : "recruiter-pro")}
                 disabled={loadingPlan !== null}
               >

@@ -164,7 +164,7 @@ export default function DashboardPage() {
             </Avatar>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                Welcome, {user?.name || "Recruiter"}! 👋
+                Welcome, {user?.name || "Recruiter"}!
               </h2>
               <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground font-medium">
                 Managing recruitment & applications for <span className="font-semibold text-foreground">{company?.name || "your company"}</span>

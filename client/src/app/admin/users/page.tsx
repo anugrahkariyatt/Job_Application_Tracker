@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, Trash2, UserCheck, UserX, Loader2 } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { RowActions } from '@/components/admin/row-actions';
@@ -29,6 +29,7 @@ interface UserItem {
   status: 'Active' | 'Disabled';
   joined: string;
   initials: string;
+  profileImage?: string | null;
 }
 
 const roleOptions = [
@@ -43,6 +44,7 @@ const statusOptions = [
 
 export default function UsersPage() {
   const [items, setItems] = useState<UserItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<UserItem | null>(null);
 
@@ -59,10 +61,17 @@ export default function UsersPage() {
       if (params?.filters?.status && params.filters.status !== 'all') {
         queryParams.set('status', params.filters.status);
       }
+      if (params?.page) {
+        queryParams.set('page', String(params.page));
+      }
 
       const res = await axiosInstance.get(`/api/admin/users?${queryParams.toString()}`);
       if (res.data?.success) {
-        const mapped: UserItem[] = res.data.data.map((u: any) => {
+        const rawUsers = Array.isArray(res.data.data) ? res.data.data : (res.data.data?.users || []);
+        const total = res.data.totalCount || res.data.data?.totalCount || rawUsers.length;
+        setTotalCount(total);
+
+        const mapped: UserItem[] = rawUsers.map((u: any) => {
           const initials = u.name
             ? u.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
             : 'U';
@@ -75,6 +84,7 @@ export default function UsersPage() {
             status: u.isActive ? 'Active' : 'Disabled',
             joined: new Date(u.createdAt).toLocaleDateString(),
             initials,
+            profileImage: u.profileImage || null,
           };
         });
         setItems(mapped);
@@ -125,7 +135,8 @@ export default function UsersPage() {
       header: 'User',
       cell: (u) => (
         <div className="flex items-center gap-3">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border border-border/50">
+            {u.profileImage && <AvatarImage src={u.profileImage} alt={u.name} />}
             <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{u.initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
@@ -173,6 +184,7 @@ export default function UsersPage() {
         searchPlaceholder="Search users…"
         getRowId={(u) => u.id}
         serverSide={true}
+        serverTotalItems={totalCount}
         loading={loading}
         onServerParamsChange={(p) => fetchUsers(p)}
         filters={[

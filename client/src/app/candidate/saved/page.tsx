@@ -56,7 +56,7 @@ export default function SavedJobsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-[calc(100vh-10rem)] flex flex-col">
       <PageHeader title="Saved Jobs" description={`You have ${savedJobs.length} bookmarked position${savedJobs.length === 1 ? '' : 's'}.`}>
         <Button asChild>
           <Link href="/candidate/jobs">Explore More Jobs</Link>
@@ -106,41 +106,45 @@ export default function SavedJobsPage() {
       </div>
 
       {/* Content Section */}
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={Bookmark}
-          title={savedJobs.length === 0 ? 'No saved jobs yet' : 'No matching saved jobs'}
-          description={
-            savedJobs.length === 0
-              ? 'Bookmark jobs while exploring to save them for later applications.'
-              : 'Try clearing your search keyword to view your saved jobs.'
-          }
-          action={
-            savedJobs.length === 0 ? (
-              <Button asChild>
-                <Link href="/candidate/jobs">Browse Active Jobs</Link>
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={() => setSearch('')}>
-                Clear Search
-              </Button>
-            )
-          }
-        />
-      ) : (
-        <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'}>
-          {filtered.map((job) => (
-            <JobCard
-              key={job.id}
-              job={job}
-              saved
-              onToggleSave={toggleSave}
-              onApply={handleApply}
-              view={view}
+      <div className="flex-1 flex flex-col">
+        {filtered.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              icon={Bookmark}
+              title={savedJobs.length === 0 ? 'No saved jobs yet' : 'No matching saved jobs'}
+              description={
+                savedJobs.length === 0
+                  ? 'Bookmark jobs while exploring to save them for later applications.'
+                  : 'Try clearing your search keyword to view your saved jobs.'
+              }
+              action={
+                savedJobs.length === 0 ? (
+                  <Button asChild>
+                    <Link href="/candidate/jobs">Browse Active Jobs</Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => setSearch('')}>
+                    Clear Search
+                  </Button>
+                )
+              }
             />
-          ))}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className={view === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-4'}>
+            {filtered.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                saved
+                onToggleSave={toggleSave}
+                onApply={handleApply}
+                view={view}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

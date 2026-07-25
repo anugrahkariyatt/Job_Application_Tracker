@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                     <TableRow key={c._id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold text-white bg-blue-600">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold bg-primary/10 text-primary">
                             {c.companyName.slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex flex-col">

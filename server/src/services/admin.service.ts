@@ -71,11 +71,13 @@ export const getAllUsers = async (query: {
   search?: string;
   role?: string;
   status?: string;
+  page?: number;
+  limit?: number;
 }) => {
   const filter: any = {};
 
   if (query.role && query.role !== "all") {
-    filter.role = query.role;
+    filter.role = query.role.toLowerCase();
   }
 
   if (query.status && query.status !== "all") {
@@ -87,8 +89,34 @@ export const getAllUsers = async (query: {
     filter.$or = [{ name: searchRegex }, { email: searchRegex }];
   }
 
-  const users = await User.find(filter).select("-password").sort({ createdAt: -1 });
-  return users;
+  const page = query.page ? Math.max(1, Number(query.page)) : 1;
+  const limit = query.limit ? Math.max(1, Number(query.limit)) : 8;
+  const skip = (page - 1) * limit;
+
+  const totalCount = await User.countDocuments(filter);
+  const users = await User.find(filter)
+    .select("-password")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const usersWithImages = await Promise.all(
+    users.map(async (u) => {
+      const userObj: any = u.toObject();
+      let profileImage = null;
+      if (u.role === "candidate") {
+        const candidate = await Candidate.findOne({ userId: u._id }).select("profileImage");
+        if (candidate?.profileImage) profileImage = candidate.profileImage;
+      } else if (u.role === "recruiter") {
+        const company = await CompanyProfile.findOne({ ownerId: u._id }).select("logo");
+        if (company?.logo) profileImage = company.logo;
+      }
+      userObj.profileImage = profileImage;
+      return userObj;
+    })
+  );
+
+  return { users: usersWithImages, totalCount, page, limit, totalPages: Math.ceil(totalCount / limit) };
 };
 
 export const updateUserStatus = async (userId: string, isActive: boolean) => {

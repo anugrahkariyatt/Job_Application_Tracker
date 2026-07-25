@@ -6,11 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
   Bell,
-  User,
   Settings,
   LogOut,
-  Sparkles,
-  Building2,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -154,25 +151,24 @@ export function Navbar() {
           <Link
             href="/candidate/pricing"
             className={cn(
-              'hidden sm:inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black tracking-wider uppercase transition-all duration-200 shadow-md hover:scale-105',
+              'hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all',
               isPro
-                ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-400/30'
-                : 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-amber-500/25 ring-2 ring-amber-400/40 hover:shadow-lg hover:shadow-amber-500/35'
+                ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
+                : 'bg-secondary text-secondary-foreground border-border/80 hover:bg-secondary/80'
             )}
           >
-            <Sparkles className="h-3.5 w-3.5 fill-white text-white animate-pulse shrink-0" />
-            <span>{isPro ? 'PRO Active' : 'Upgrade PRO'}</span>
+            <span>{isPro ? 'PRO Active' : 'Upgrade to PRO'}</span>
           </Link>
 
           {/* Notifications */}
           <Link
             href="/candidate/notifications"
-            className="relative rounded-xl p-2.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            className="relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 inline-flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground">
+              <span className="absolute top-0.5 right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
                 {unreadCount}
               </span>
             )}
@@ -205,26 +201,28 @@ export function Navbar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/candidate/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4 text-primary" />
                   My Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
+                <Link href="/candidate/alerts" className="cursor-pointer">
+                  Job Alerts
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/candidate/subscriptions" className="cursor-pointer">
-                  <Building2 className="mr-2 h-4 w-4 text-primary" />
                   Subscriptions
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link href="/candidate/pricing" className="cursor-pointer">
+                  Subscription Plans
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/candidate/settings" className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4 text-primary" />
                   Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/candidate/pricing" className="cursor-pointer">
-                  <Sparkles className="mr-2 h-4 w-4 text-amber-500" />
-                  Subscription Plans
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

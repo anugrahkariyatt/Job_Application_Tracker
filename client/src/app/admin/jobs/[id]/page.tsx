@@ -22,6 +22,16 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { PageHeader } from '@/components/admin/page-header';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 
@@ -59,6 +69,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   const [job, setJob] = React.useState<JobDetails | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [deleting, setDeleting] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
 
   const fetchJob = React.useCallback(async () => {
     try {
@@ -84,9 +95,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   }, [fetchJob]);
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this job posting? This will also delete all associated applications.')) {
-      return;
-    }
     try {
       setDeleting(true);
       const res = await axiosInstance.delete(`/api/admin/jobs/${id}`);
@@ -99,6 +107,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
       toast.error(err.response?.data?.message || 'Failed to delete job posting.');
     } finally {
       setDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -123,171 +132,151 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           { label: 'Detail' },
         ]}
         actions={
-          <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} disabled={deleting}>
             <Trash2 className="mr-2 h-4 w-4" />
             {deleting ? 'Deleting...' : 'Delete Posting'}
           </Button>
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Job Details Card */}
-        <div className="space-y-6 lg:col-span-2">
-          <Card className="border-border/50 bg-background/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">Role Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-3">
-                  <Briefcase className="h-5 w-5 text-sky-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Vacancies</p>
-                    <p className="text-sm font-semibold">{job.vacancies || 1}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-5 w-5 text-emerald-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Salary Range (Annual)</p>
-                    <p className="text-sm font-semibold">
-                      {job.salaryMin !== undefined && job.salaryMax !== undefined
-                        ? `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
-                        : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-rose-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Location</p>
-                    <p className="text-sm font-semibold">{job.location}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Job Type</p>
-                    <Badge variant="secondary" className="mt-0.5">{job.employmentType}</Badge>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Award className="h-5 w-5 text-indigo-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Experience Level</p>
-                    <p className="text-sm font-semibold">{job.experienceLevel}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-purple-500" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Posted Date</p>
-                    <p className="text-sm font-semibold">{new Date(job.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="mb-2 text-base font-semibold text-foreground">Job Description</h3>
-                <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.description}</p>
-              </div>
-
-              {job.responsibilities && (
-                <div>
-                  <h3 className="mb-2 text-base font-semibold text-foreground">Responsibilities</h3>
-                  <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.responsibilities}</p>
-                </div>
-              )}
-
-              {(() => {
-                const reqList = typeof job.requirements === 'string'
-                  ? job.requirements.split('\n').filter((r) => r.trim() !== '')
-                  : Array.isArray(job.requirements)
-                  ? job.requirements
-                  : [];
-                if (reqList.length === 0) return null;
-                return (
-                  <div>
-                    <h3 className="mb-3 text-base font-semibold text-foreground">Requirements</h3>
-                    <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                      {reqList.map((req, idx) => (
-                        <li key={idx}>{req}</li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Company and Stats Columns */}
-        <div className="space-y-6">
-          <Card className="border-border/50 bg-background/60 backdrop-blur-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-3 flex justify-center">
-                <Avatar className="h-16 w-16 border">
-                  <AvatarImage src={job.companyId?.logo} />
-                  <AvatarFallback className="bg-primary/5 text-xl font-bold text-primary">
-                    {job.companyId?.companyName.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              <CardTitle className="text-lg font-bold flex items-center justify-center gap-1.5">
-                {job.companyId?.companyName}
-                {job.companyId?.verified && <CheckCircle className="h-4 w-4 fill-sky-500 text-white" />}
-              </CardTitle>
-              <CardDescription>{job.companyId?.industry || 'Unknown Industry'}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {job.companyId?.description && (
-                <p className="text-xs text-muted-foreground leading-normal text-center italic">
-                  &ldquo;{job.companyId.description}&rdquo;
-                </p>
-              )}
-              
-              <Separator />
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium">{job.companyId?.location || 'Not Specified'}</span>
-                </div>
+      {/* Single Unified Master Card */}
+      <Card className="overflow-hidden p-6 space-y-6">
+        {/* Header with Company Logo, Title, Company Name, Industry, Website & Applications Pill */}
+        <div className="flex flex-wrap items-start justify-between gap-4 pb-6 border-b border-border/50">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 rounded-xl border border-border/50 shrink-0">
+              <AvatarImage src={job.companyId?.logo} />
+              <AvatarFallback className="bg-primary/10 text-lg font-bold text-primary rounded-xl">
+                {job.companyId?.companyName.slice(0, 2).toUpperCase() || 'CO'}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-1.5">
+                {job.title}
+              </h2>
+              <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-2 mt-1">
+                <span className="font-semibold text-primary">{job.companyId?.companyName}</span>
+                {job.companyId?.verified && <CheckCircle className="h-3.5 w-3.5 fill-primary text-primary-foreground shrink-0" />}
+                <span>·</span>
+                <span>{job.companyId?.industry || 'Tech'}</span>
                 {job.companyId?.website && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Website</span>
-                    <a
-                      href={job.companyId.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline flex items-center gap-1"
-                    >
-                      <Globe className="h-3 w-3" /> Visit website
+                  <>
+                    <span>·</span>
+                    <a href={job.companyId.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5 font-medium">
+                      <Globe className="h-3 w-3" /> Website
                     </a>
-                  </div>
+                  </>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card className="border-border/50 bg-background/60 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">Application Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-6">
-              <p className="text-4xl font-extrabold text-primary">{job.applicationsCount}</p>
-              <p className="text-xs text-muted-foreground mt-2">Total candidate applications submitted for this role.</p>
-            </CardContent>
-          </Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="px-3 py-1 rounded-full border border-border bg-muted/30 text-xs font-semibold text-foreground">
+              <strong className="text-primary font-bold">{job.applicationsCount}</strong> Applications
+            </div>
+            <Badge variant="secondary" className="text-xs font-semibold">
+              {job.employmentType}
+            </Badge>
+          </div>
         </div>
-      </div>
+
+        {/* Specs Bar */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+            <Briefcase className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="text-[11px] text-muted-foreground">Vacancies</p>
+              <p className="text-xs font-semibold">{job.vacancies || 1}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+            <DollarSign className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="text-[11px] text-muted-foreground">Salary (Annual)</p>
+              <p className="text-xs font-semibold">
+                {job.salaryMin !== undefined && job.salaryMax !== undefined
+                  ? `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
+                  : 'N/A'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+            <MapPin className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="text-[11px] text-muted-foreground">Location</p>
+              <p className="text-xs font-semibold">{job.location}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+            <Award className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="text-[11px] text-muted-foreground">Experience Level</p>
+              <p className="text-xs font-semibold">{job.experienceLevel}</p>
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Content Sections */}
+        <div className="space-y-4 pt-1">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Job Description</h3>
+            <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.description}</p>
+          </div>
+
+          {job.responsibilities && (
+            <div className="pt-3 border-t border-border/50">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Responsibilities</h3>
+              <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.responsibilities}</p>
+            </div>
+          )}
+
+          {(() => {
+            const reqList = typeof job.requirements === 'string'
+              ? job.requirements.split('\n').filter((r) => r.trim() !== '')
+              : Array.isArray(job.requirements)
+              ? job.requirements
+              : [];
+            if (reqList.length === 0) return null;
+            return (
+              <div className="pt-3 border-t border-border/50">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Requirements</h3>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {reqList.map((req, idx) => (
+                    <li key={idx}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
+        </div>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={(o) => !o && setShowDeleteDialog(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Job Posting</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete <span className="font-semibold text-foreground">{job.title}</span>?
+              This will also remove all candidate applications submitted for this role.
+              <span className="mt-2 block font-medium text-destructive">This action cannot be undone.</span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Yes, Delete Posting'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

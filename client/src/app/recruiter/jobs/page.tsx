@@ -159,7 +159,7 @@ export default function MyJobsPage() {
   const paged = jobs;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex-1 flex flex-col min-h-[calc(100vh-10rem)]">
       <PageHeader
         title="My Jobs"
         description="Manage all your job postings — like a job board for your company."
@@ -224,140 +224,144 @@ export default function MyJobsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className={view === 'grid' ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
-          {[...Array(PER_PAGE)].map((_, i) => (
-            <Card key={i} className="p-4 space-y-4">
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <div className="space-y-2 pt-2">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-3 w-5/6" />
+      <div className="flex-1 flex flex-col justify-between space-y-6">
+        <div>
+          {loading ? (
+            <div className={view === 'grid' ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
+              {[...Array(PER_PAGE)].map((_, i) => (
+                <Card key={i} className="p-4 space-y-4">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                  <div className="space-y-2 pt-2">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : paged.length === 0 ? (
+            <Card className="min-h-[300px] flex items-center justify-center">
+              <EmptyState
+                title="No jobs posted yet."
+                description="Try adjusting your filters or post a new job."
+                action={
+                  <Link
+                    href="/recruiter/jobs/new"
+                    className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Post a Job
+                  </Link>
+                }
+              />
+            </Card>
+          ) : view === 'grid' ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {paged.map((job) => (
+                <JobCard
+                  key={job._id}
+                  job={job}
+                  companyLogo={company?.logo}
+                  companyName={company?.companyName}
+                  showActions={true}
+                  onClose={handleCloseJob}
+                  onOpen={handleOpenJob}
+                  onDelete={handleDeleteJob}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="overflow-hidden">
+              <div className="divide-y">
+                {paged.map((job) => {
+                  const jobId = job._id;
+                  const statusVal = job.status === 'Open' ? 'Published' : job.status;
+                  const logo = company?.logo;
+                  const companyName = company?.companyName || 'Company';
+
+                  return (
+                    <div
+                      key={jobId}
+                      className="flex items-start gap-3 p-4 hover:bg-accent/50 transition-colors"
+                    >
+                      {logo ? (
+                        <img
+                          src={logo}
+                          alt={companyName}
+                          className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-border"
+                        />
+                      ) : (
+                        <div className="h-11 w-11 shrink-0 rounded-lg bg-muted flex items-center justify-center text-muted-foreground font-semibold text-sm ring-1 ring-border">
+                          {companyName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/recruiter/jobs/${jobId}`}
+                          className="text-sm font-semibold text-foreground hover:text-primary"
+                        >
+                          {job.title}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">{companyName}</p>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" /> {job.location}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Briefcase className="h-3.5 w-3.5" /> {job.employmentType}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="h-3.5 w-3.5" /> {job.salaryMin?.toLocaleString()}–{job.salaryMax?.toLocaleString()} USD
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" /> {new Date(job.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StatusChip status={statusVal} />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/recruiter/jobs/${jobId}`}>
+                                <Eye className="mr-2 h-4 w-4" /> View
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {job.status === 'Open' ? (
+                              <DropdownMenuItem onClick={() => handleCloseJob(jobId)}>
+                                <Ban className="mr-2 h-4 w-4" /> Close Job
+                              </DropdownMenuItem>
+                            ) : job.status === 'Closed' ? (
+                              <DropdownMenuItem onClick={() => handleOpenJob(jobId)}>
+                                <CheckCircle className="mr-2 h-4 w-4" /> Re-open Job
+                              </DropdownMenuItem>
+                            ) : job.status === 'Draft' ? (
+                              <DropdownMenuItem onClick={() => handleOpenJob(jobId)}>
+                                <CheckCircle className="mr-2 h-4 w-4" /> Publish Job
+                              </DropdownMenuItem>
+                            ) : null}
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDeleteJob(jobId)}>
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </Card>
-          ))}
+          )}
         </div>
-      ) : paged.length === 0 ? (
-        <Card>
-          <EmptyState
-            title="No jobs posted yet."
-            description="Try adjusting your filters or post a new job."
-            action={
-              <Link
-                href="/recruiter/jobs/new"
-                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Post a Job
-              </Link>
-            }
-          />
-        </Card>
-      ) : view === 'grid' ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {paged.map((job) => (
-            <JobCard
-              key={job._id}
-              job={job}
-              companyLogo={company?.logo}
-              companyName={company?.companyName}
-              showActions={true}
-              onClose={handleCloseJob}
-              onOpen={handleOpenJob}
-              onDelete={handleDeleteJob}
-            />
-          ))}
-        </div>
-      ) : (
-        <Card className="overflow-hidden">
-          <div className="divide-y">
-            {paged.map((job) => {
-              const jobId = job._id;
-              const statusVal = job.status === 'Open' ? 'Published' : job.status;
-              const logo = company?.logo;
-              const companyName = company?.companyName || 'Company';
 
-              return (
-                <div
-                  key={jobId}
-                  className="flex items-start gap-3 p-4 hover:bg-accent/50 transition-colors"
-                >
-                  {logo ? (
-                    <img
-                      src={logo}
-                      alt={companyName}
-                      className="h-11 w-11 shrink-0 rounded-lg object-cover ring-1 ring-border"
-                    />
-                  ) : (
-                    <div className="h-11 w-11 shrink-0 rounded-lg bg-muted flex items-center justify-center text-muted-foreground font-semibold text-sm ring-1 ring-border">
-                      {companyName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      href={`/recruiter/jobs/${jobId}`}
-                      className="text-sm font-semibold text-foreground hover:text-primary"
-                    >
-                      {job.title}
-                    </Link>
-                    <p className="text-xs text-muted-foreground">{companyName}</p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5" /> {job.location}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Briefcase className="h-3.5 w-3.5" /> {job.employmentType}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-3.5 w-3.5" /> {job.salaryMin?.toLocaleString()}–{job.salaryMax?.toLocaleString()} USD
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" /> {new Date(job.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <StatusChip status={statusVal} />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/recruiter/jobs/${jobId}`}>
-                            <Eye className="mr-2 h-4 w-4" /> View
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {job.status === 'Open' ? (
-                          <DropdownMenuItem onClick={() => handleCloseJob(jobId)}>
-                            <Ban className="mr-2 h-4 w-4" /> Close Job
-                          </DropdownMenuItem>
-                        ) : job.status === 'Closed' ? (
-                          <DropdownMenuItem onClick={() => handleOpenJob(jobId)}>
-                            <CheckCircle className="mr-2 h-4 w-4" /> Re-open Job
-                          </DropdownMenuItem>
-                        ) : job.status === 'Draft' ? (
-                          <DropdownMenuItem onClick={() => handleOpenJob(jobId)}>
-                            <CheckCircle className="mr-2 h-4 w-4" /> Publish Job
-                          </DropdownMenuItem>
-                        ) : null}
-                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDeleteJob(jobId)}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="py-2" />
+      </div>
     </div>
   );
 }

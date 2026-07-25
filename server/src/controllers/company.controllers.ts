@@ -149,7 +149,7 @@ export const getRecruiterDashboardStats = async (
           select: "name email"
         }
       })
-      .populate("jobId", "title");
+      .populate("jobId", "title skills location employmentType experienceLevel");
 
     const totalApplications = applications.length;
 
@@ -339,7 +339,7 @@ export const getAllCompaniesPublicController = async (
   next: NextFunction,
 ) => {
   try {
-    const { search, industry, location } = req.query;
+    const { search, industry, location, page, limit } = req.query;
     const filter: any = { isActive: { $ne: false }, verified: true };
 
     if (search) {
@@ -351,7 +351,7 @@ export const getAllCompaniesPublicController = async (
       ];
     }
 
-    if (industry && industry !== "all") {
+    if (industry && industry !== "All" && industry !== "all") {
       filter.industry = industry;
     }
 
@@ -360,11 +360,27 @@ export const getAllCompaniesPublicController = async (
       filter.headquarters = regex;
     }
 
-    const companies = await Company.find(filter).sort({ companyName: 1 });
+    const pageNum = page ? Math.max(1, Number(page)) : 1;
+    const limitNum = limit ? Math.max(1, Number(limit)) : 9;
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalCount = await Company.countDocuments(filter);
+    const companies = await Company.find(filter)
+      .sort({ companyName: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     return res.status(200).json({
       success: true,
       data: companies,
+      pagination: {
+        totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+      },
     });
   } catch (error) {
     next(error);

@@ -162,11 +162,11 @@ export const statusConfig: Record<
   { className: string; dot: string }
 > = {
   Applied: { className: 'bg-blue-500/10 text-blue-600 border-blue-500/20', dot: 'bg-blue-500' },
-  'Under Review': { className: 'bg-amber-500/10 text-amber-600 border-amber-500/20', dot: 'bg-amber-500' },
-  Shortlisted: { className: 'bg-violet-500/10 text-violet-600 border-violet-500/20', dot: 'bg-violet-500' },
-  Interview: { className: 'bg-teal-500/10 text-teal-600 border-teal-500/20', dot: 'bg-teal-500' },
-  Rejected: { className: 'bg-rose-500/10 text-rose-600 border-rose-500/20', dot: 'bg-rose-500' },
-  Hired: { className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', dot: 'bg-emerald-500' },
+  'Under Review': { className: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', dot: 'bg-yellow-500' },
+  Shortlisted: { className: 'bg-blue-500/10 text-blue-600 border-blue-500/20', dot: 'bg-blue-500' },
+  Interview: { className: 'bg-blue-500/10 text-blue-600 border-blue-500/20', dot: 'bg-blue-500' },
+  Rejected: { className: 'bg-red-500/10 text-red-600 border-red-500/20', dot: 'bg-red-500' },
+  Hired: { className: 'bg-green-500/10 text-green-600 border-green-500/20', dot: 'bg-green-500' },
 };
 
 export function formatDate(dateStr: string): string {

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Search, Building2, MapPin, Globe, Users, ArrowRight, Loader2, Bell, BellOff, X } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/candidate/page-header';
 import { EmptyState } from '@/components/candidate/empty-state';
+import { Pagination } from '@/components/shared/Pagination';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 
@@ -35,8 +36,10 @@ const industries = [
   'Automotive',
   'E-commerce',
 ];
+const PER_PAGE = 9;
 
 export default function FindCompaniesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParam = searchParams.get('search') || '';
 
@@ -48,6 +51,9 @@ export default function FindCompaniesPage() {
   const [location, setLocation] = React.useState('');
   const [subscribingId, setSubscribingId] = React.useState<string | null>(null);
 
+  const [page, setPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+
   // Sync with global header search query
   React.useEffect(() => {
     setSearch(searchParams.get('search') || '');
@@ -56,22 +62,28 @@ export default function FindCompaniesPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch all companies matching filters
-      const companyParams: any = {};
+      const companyParams: any = {
+        page,
+        limit: PER_PAGE,
+      };
       if (search.trim()) companyParams.search = search.trim();
       if (selectedIndustry !== 'All') companyParams.industry = selectedIndustry;
       if (location.trim()) companyParams.location = location.trim();
 
       const companiesRes = await axiosInstance.get('/api/company/list/all', { params: companyParams });
-      
+
       // Fetch subscriptions to check follow status
       const subsRes = await axiosInstance.get('/api/subscriptions');
-      
+
       if (companiesRes.data?.success && Array.isArray(companiesRes.data.data)) {
         setCompanies(companiesRes.data.data);
+        if (companiesRes.data.pagination) {
+          setTotalPages(companiesRes.data.pagination.totalPages || 1);
+        }
       }
-      
+
       if (subsRes.data?.success && Array.isArray(subsRes.data.data)) {
         setSubscriptions(subsRes.data.data);
       }
@@ -90,7 +102,7 @@ export default function FindCompaniesPage() {
     }, 450);
 
     return () => clearTimeout(delayDebounce);
-  }, [search, selectedIndustry, location]);
+  }, [search, selectedIndustry, location, page]);
 
   const handleToggleSubscribe = async (companyId: string) => {
     try {
@@ -129,8 +141,9 @@ export default function FindCompaniesPage() {
   const hasActiveFilters = search.trim() !== '' || selectedIndustry !== 'All' || location.trim() !== '';
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Explore Companies" description="Browse company profiles, follow updates, and search open positions." />
+    <div className="space-y-6 flex-1 flex flex-col justify-between min-h-[calc(100vh-10rem)]">
+      <div className="space-y-6">
+        <PageHeader title="Explore Companies" description="Browse company profiles, follow updates, and search open positions." />
 
       {/* Top Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
@@ -230,15 +243,25 @@ export default function FindCompaniesPage() {
           {companies.map((comp) => {
             const isSubbed = getSubId(comp._id);
             return (
-              <Card key={comp._id} className="flex flex-col justify-between transition-all hover:shadow-md animate-fade-in">
+              <Card
+                key={comp._id}
+                className="flex flex-col justify-between transition-all hover:shadow-md hover:border-primary/40 cursor-pointer animate-fade-in"
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.closest('button, a, [role="button"]')) {
+                    return;
+                  }
+                  router.push(`/candidate/company/${comp._id}`);
+                }}
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12 rounded-lg border">
+                    <Avatar className="h-12 w-12 rounded-lg border shrink-0">
                       <AvatarImage src={comp.logo} alt={comp.companyName} />
-                      <AvatarFallback className="rounded-lg">{comp.companyName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="rounded-lg font-bold">{comp.companyName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate">{comp.companyName}</h3>
+                      <h3 className="font-semibold text-foreground truncate hover:text-primary transition-colors">{comp.companyName}</h3>
                       <p className="text-xs text-primary font-medium">{comp.industry || 'Tech'}</p>
                       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -254,14 +277,14 @@ export default function FindCompaniesPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground line-clamp-3">
+                  <p className="mt-3 text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                     {comp.description || 'No description available.'}
                   </p>
                 </CardContent>
-                
+
                 <div className="flex gap-2 p-5 pt-0 border-t mt-auto pt-3 flex-wrap">
-                  <Button variant="outline" size="sm" className="flex-1" asChild>
-                    <Link href={`/candidate/company/${comp._id}`}>
+                  <Button variant="outline" size="sm" className="flex-1 font-medium" asChild>
+                    <Link href={`/candidate/company/${comp._id}`} onClick={(e) => e.stopPropagation()}>
                       View Profile
                       <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Link>
@@ -269,9 +292,12 @@ export default function FindCompaniesPage() {
                   <Button
                     variant={isSubbed ? 'secondary' : 'default'}
                     size="sm"
-                    onClick={() => handleToggleSubscribe(comp._id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleSubscribe(comp._id);
+                    }}
                     disabled={subscribingId === comp._id}
-                    className="gap-1.5"
+                    className="gap-1.5 font-medium"
                   >
                     {isSubbed ? (
                       <>
@@ -291,6 +317,9 @@ export default function FindCompaniesPage() {
           })}
         </div>
       )}
+      </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} className="py-2" />
     </div>
   );
 }

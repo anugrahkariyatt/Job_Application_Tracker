@@ -33,17 +33,19 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-2.5 border-b px-5">
+      <Link href="/admin" className="flex h-16 items-center gap-3 border-b px-5 transition-opacity hover:opacity-90">
         <img
           src="/Nuvora-logo.png"
           alt="Nuvora Logo"
-          className="h-8 w-auto object-contain"
+          className="h-9 w-auto object-contain"
         />
         <div className="flex flex-col leading-none">
-          <span className="text-base font-semibold tracking-tight">Nuvora</span>
-          <span className="text-xs text-muted-foreground">Admin Console</span>
+          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
+            Nuvora
+          </span>
+          <span className="text-[11px] text-muted-foreground font-medium mt-0.5">Admin Console</span>
         </div>
-      </div>
+      </Link>
 
       <nav className="scrollbar-thin flex-1 overflow-y-auto px-3 py-4">
         <p className="px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">

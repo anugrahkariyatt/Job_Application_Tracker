@@ -70,62 +70,66 @@ export default function SubscriptionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex-1 flex flex-col min-h-[calc(100vh-10rem)]">
       <PageHeader title="Company Subscriptions" description={`Following ${subs.length} companies`} />
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="p-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-5 w-2/3" />
-                  <Skeleton className="h-3.5 w-1/3" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-8 w-20 rounded-md" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : subs.length === 0 ? (
-        <EmptyState
-          icon={Building2}
-          title="No subscriptions"
-          description="Subscribe to companies to get notified when they post new jobs."
-        />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {subs.map((sub) => (
-            <Card key={sub.id}>
-              <CardContent className="p-5">
+      <div className="flex-1 flex flex-col">
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="p-5 space-y-4">
                 <div className="flex items-start gap-3">
-                  <Avatar className="h-12 w-12 rounded-lg">
-                    <AvatarImage src={sub.companyLogo} alt={sub.company} />
-                    <AvatarFallback className="rounded-lg">{sub.company.slice(0, 2)}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-semibold">{sub.company}</p>
-                    <p className="text-sm text-muted-foreground">{sub.industry}</p>
+                  <Skeleton className="h-12 w-12 rounded-lg shrink-0" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-3.5 w-1/3" />
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <Badge variant="secondary" className="font-normal">{sub.latestJobCount} open jobs</Badge>
-                    <p className="mt-2 text-xs text-muted-foreground">Subscribed {formatDate(sub.subscribedAt)}</p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => unsubscribe(sub.id)}>
-                    <X className="mr-1 h-3.5 w-3.5" />Unsubscribe
-                  </Button>
+                <div className="flex items-center justify-between pt-2">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-20 rounded-md" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </Card>
+            ))}
+          </div>
+        ) : subs.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              icon={Building2}
+              title="No subscriptions"
+              description="Subscribe to companies to get notified when they post new jobs."
+            />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {subs.map((sub) => (
+              <Card key={sub.id}>
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 rounded-lg">
+                      <AvatarImage src={sub.companyLogo} alt={sub.company} />
+                      <AvatarFallback className="rounded-lg">{sub.company.slice(0, 2)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold">{sub.company}</p>
+                      <p className="text-sm text-muted-foreground">{sub.industry}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <div>
+                      <Badge variant="secondary" className="font-normal">{sub.latestJobCount} open jobs</Badge>
+                      <p className="mt-2 text-xs text-muted-foreground">Subscribed {formatDate(sub.subscribedAt)}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => unsubscribe(sub.id)}>
+                      <X className="mr-1 h-3.5 w-3.5" />Unsubscribe
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

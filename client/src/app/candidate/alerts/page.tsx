@@ -205,7 +205,7 @@ export default function JobAlertsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex-1 flex flex-col min-h-[calc(100vh-10rem)]">
       <PageHeader title="Job Alerts" description="Get notified when new jobs match your criteria">
         <Button onClick={openCreate}>
           <Plus className="mr-2 h-4 w-4" />
@@ -213,90 +213,122 @@ export default function JobAlertsPage() {
         </Button>
       </PageHeader>
 
-      {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="p-5 space-y-4">
-              <div className="flex items-start gap-3">
-                <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-                <div className="space-y-1.5 flex-1">
-                  <Skeleton className="h-5 w-2/3" />
-                  <Skeleton className="h-3.5 w-1/3" />
+      <div className="flex-1 flex flex-col">
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[...Array(4)].map((_, i) => (
+              <Card key={i} className="p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-3.5 w-1/3" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between pt-2">
-                <Skeleton className="h-5 w-20 rounded-full" />
-                <Skeleton className="h-8 w-16 rounded-md" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      ) : alerts.length === 0 ? (
-        <EmptyState
-          icon={Bell}
-          title="No job alerts"
-          description="Create an alert to get notified when new jobs match your search criteria."
-          action={<Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Create Alert</Button>}
-        />
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {alerts.map((alert) => (
-            <Card key={alert.id}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Bell className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-semibold">{alert.keyword}</p>
-                      {alert.location && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />{alert.location}
+                <div className="flex items-center justify-between pt-2">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-md" />
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : alerts.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <EmptyState
+              icon={Bell}
+              title="No job alerts"
+              description="Create an alert to get notified when new jobs match your search criteria."
+              action={<Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Create Alert</Button>}
+            />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {alerts.map((alert) => (
+              <Card
+                key={alert.id}
+                className="relative overflow-hidden border border-border/60 shadow-xs hover:shadow-md hover:border-primary/40 transition-all rounded-2xl bg-card flex flex-col justify-between"
+              >
+                <CardContent className="p-5 space-y-4">
+                  {/* Top Row: Target Keywords & Active Switch */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-base text-foreground tracking-tight">{alert.keyword}</h3>
+                        <Badge
+                          variant={alert.active ? 'default' : 'secondary'}
+                          className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                        >
+                          {alert.active ? 'Active' : 'Paused'}
+                        </Badge>
+                      </div>
+                      {alert.location ? (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                          <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                          {alert.location}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                          <MapPin className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+                          Any Location
                         </p>
                       )}
                     </div>
+
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={alert.active}
+                        onCheckedChange={() => toggleActive(alert.id, alert.active)}
+                      />
+                    </div>
                   </div>
-                  <Switch checked={alert.active} onCheckedChange={() => toggleActive(alert.id, alert.active)} />
-                </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="secondary" className="font-normal">{alert.frequency}</Badge>
-                    <Badge variant="outline" className="font-normal">{alert.employmentType}</Badge>
-                    {alert.remote && <Badge variant="secondary" className="bg-sky-50 text-sky-700 font-normal">Remote</Badge>}
-                    <Badge variant={alert.active ? 'default' : 'outline'} className="font-normal">
-                      {alert.active ? 'Active' : 'Paused'}
+
+                  {/* Metadata Badges Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <Badge variant="outline" className="text-xs font-normal border-border/70 bg-muted/30">
+                      {alert.frequency} Digest
                     </Badge>
-                    <span className="text-xs text-muted-foreground">Created {formatDate(alert.createdAt)}</span>
+                    <Badge variant="outline" className="text-xs font-normal border-border/70 bg-muted/30">
+                      {alert.employmentType}
+                    </Badge>
+                    {alert.remote && (
+                      <Badge variant="outline" className="text-xs font-normal border-primary/30 text-primary bg-primary/5">
+                        Remote Only
+                      </Badge>
+                    )}
                   </div>
-                </div>
-                <div className="mt-4 flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(alert)}>
-                    <Pencil className="mr-1 h-3.5 w-3.5" />Edit
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="mr-1 h-3.5 w-3.5" />Delete
+
+                  {/* Footer Row: Created Date & Actions */}
+                  <div className="flex items-center justify-between border-t border-border/40 pt-3 mt-2 text-xs text-muted-foreground">
+                    <span>Created {formatDate(alert.createdAt)}</span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(alert)} className="h-8 px-2 text-xs font-medium">
+                        <Pencil className="mr-1 h-3.5 w-3.5 text-muted-foreground" /> Edit
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this alert?</AlertDialogTitle>
-                        <AlertDialogDescription>You will stop receiving notifications for "{alert.keyword}".</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(alert.id)}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 px-2 text-xs font-medium text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this alert?</AlertDialogTitle>
+                            <AlertDialogDescription>You will stop receiving job notifications for "{alert.keyword}".</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(alert.id)}>Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
