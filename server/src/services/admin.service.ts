@@ -489,38 +489,3 @@ export const getCompanyByIdForAdmin = async (companyId: string) => {
     jobsPosted: jobsCount,
   };
 };
-
-export const globalSearch = async (query: string) => {
-  if (!query || query.trim().length < 2) {
-    return { users: [], companies: [], jobs: [] };
-  }
-
-  const q = query.trim();
-  const regex = new RegExp(q, "i");
-
-  const [users, companies, jobs] = await Promise.all([
-    User.find({
-      $or: [{ name: regex }, { email: regex }],
-    })
-      .select("name email role isActive")
-      .limit(5)
-      .lean(),
-
-    CompanyProfile.find({
-      $or: [{ companyName: regex }, { industry: regex }, { location: regex }],
-    })
-      .select("companyName industry location verified isActive logo")
-      .limit(5)
-      .lean(),
-
-    Job.find({
-      $or: [{ title: regex }, { location: regex }],
-    })
-      .populate({ path: "companyId", select: "companyName" })
-      .select("title location status companyId createdAt")
-      .limit(5)
-      .lean(),
-  ]);
-
-  return { users, companies, jobs };
-};

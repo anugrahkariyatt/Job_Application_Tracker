@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Search,
   Bell,
   Menu,
   Settings,
@@ -53,18 +52,6 @@ export function RecruiterNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [company, setCompany] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [searchVal, setSearchVal] = useState('');
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchVal.trim()) return;
-
-    if (pathname.startsWith('/recruiter/applicants')) {
-      router.push(`/recruiter/applicants?search=${encodeURIComponent(searchVal)}`);
-    } else {
-      router.push(`/recruiter/jobs?search=${encodeURIComponent(searchVal)}`);
-    }
-  };
 
   const fetchHeaderData = async () => {
     try {
@@ -107,25 +94,23 @@ export function RecruiterNavbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-md">
-      <div className="flex h-20 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
+      <div className="flex h-20 w-full items-center justify-between px-6 lg:px-10">
         {/* Left: Brand Logo & Desktop Nav Links */}
-        <div className="flex items-center gap-8">
-          <Link href="/recruiter/dashboard" className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-10">
+          <Link href="/recruiter/dashboard" className="flex items-center gap-3 shrink-0 transition-opacity hover:opacity-90">
             <img
               src="/Nuvora-logo.png"
               alt="Nuvora Logo"
-              className="h-10 sm:h-11 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
-            <div className="flex flex-col leading-none">
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
-                Nuvora
-              </span>
-            </div>
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-primary">
+              Nuvora
+            </span>
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1.5">
+          <nav className="hidden md:flex items-center gap-8">
             {navItems.map((item) => {
               const isActive =
                 pathname === item.href ||
@@ -141,10 +126,10 @@ export function RecruiterNavbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'px-3.5 py-2.5 text-sm sm:text-base font-semibold transition-colors',
+                    'relative py-2 text-sm font-medium transition-colors hover:text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full',
                     isActive
-                      ? 'text-primary font-bold'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'text-primary font-bold after:w-full'
+                      : 'text-muted-foreground'
                   )}
                 >
                   <span>{item.label}</span>
@@ -156,17 +141,6 @@ export function RecruiterNavbar() {
 
         {/* Right Action Icons & Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Search bar */}
-          <form onSubmit={handleSearchSubmit} className="relative hidden lg:block w-52 xl:w-72">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search jobs & candidates..."
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              className="h-10 w-full rounded-xl border border-input bg-muted/40 pl-9.5 pr-3 text-sm text-foreground outline-none ring-offset-background transition-colors placeholder:text-muted-foreground focus:bg-background focus:ring-1 focus:ring-ring"
-            />
-          </form>
 
           {/* PRO Upgrade Badge */}
           <Link

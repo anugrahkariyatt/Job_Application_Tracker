@@ -14,7 +14,6 @@ import {
   deleteJobController,
   getJobByIdController,
   getCompanyByIdController,
-  globalSearchController,
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -95,13 +94,6 @@ router.get(
   authenticate,
   authorize("admin"),
   getCompanyByIdController,
-);
-
-router.get(
-  "/search",
-  authenticate,
-  authorize("admin"),
-  globalSearchController,
 );
 
 export default router;
