@@ -1,15 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { navItems, logoutItem } from '@/lib/admin-nav';
-import { ShieldCheck } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  Briefcase,
+  ShieldAlert,
+  LogOut,
+} from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
 import axiosInstance from '@/lib/axios';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+
+const navItems = [
+  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Companies', href: '/admin/companies', icon: Building2 },
+  { label: 'Pending Verifications', href: '/admin/verification', icon: ShieldAlert },
+  { label: 'Jobs', href: '/admin/jobs', icon: Briefcase },
+];
+
 
 export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -84,8 +98,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           onClick={handleLogout}
           className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground text-left"
         >
-          <logoutItem.icon className="h-[18px] w-[18px]" />
-          {logoutItem.label}
+          <LogOut className="h-[18px] w-[18px]" />
+          Logout
         </button>
       </div>
     </div>

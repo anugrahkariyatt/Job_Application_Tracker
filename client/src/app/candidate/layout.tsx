@@ -3,8 +3,8 @@
 import * as React from 'react';
 import { Navbar } from '@/components/candidate/navbar';
 import Footer from '@/components/layout/Footer';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import RoleGuard from '@/components/auth/RoleGuard';
+import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
+import RoleGuard from '@/features/auth/components/RoleGuard';
 
 export default function CandidateLayout({ children }: { children: React.ReactNode }) {
   return (

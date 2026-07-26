@@ -4,7 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   CreateCompanyInput,
   UpdateCompanyInput,
-} from "../validations/company.validations.js";
+} from "../validations/company.validation.js";
 import { uploadImage } from "./cloudinary.service.js";
 import { createNotification } from "./notification.service.js";
 

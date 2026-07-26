@@ -4,7 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   registerCompanySchema,
   updateCompanySchema,
-} from "../validations/company.validations.js";
+} from "../validations/company.validation.js";
 import {
   createCompanyService,
   getMyCompanyDetails,

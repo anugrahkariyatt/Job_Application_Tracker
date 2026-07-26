@@ -9,22 +9,24 @@ import Experience from "../models/experience.model.js";
 import Skill from "../models/skill.model.js";
 import JobAlert from "../models/jobAlert.model.js";
 import Subscription from "../models/subscription.model.js";
-import { generateAccessToken } from "../utils/generateAccessToken.js";
-import { generateRefreshToken } from "../utils/generateRefreshToken.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+  generatePasswordVerificationToken,
+  verifyPasswordVerificationToken,
+  generatePasswordResetToken,
+  verifyPasswordResetToken,
+  generateEmailVerificationToken,
+  verifyEmailVerificationToken,
+} from "../utils/jwt.util.js";
 import { compareValue, hashValue } from "../utils/bcrypt.js";
 import { LoginInput, RegisterInput } from "../validations/auth.validation.js";
 import RefreshToken from "../models/refreshToken.model.js";
-import { verifyRefreshToken } from "../utils/verifyRefreshToken.js";
-import { generatePasswordVerificationToken } from "../utils/generatePasswordVerificationToken.js";
-import { verifyPasswordVerificationToken } from "../utils/verifyPasswordVerificationToken.js";
-import { generatePasswordResetToken } from "../utils/generatePasswordRestToken.js";
 import {
   sendPasswordResetEmail,
   sendVerificationEmail,
 } from "./mail.service.js";
-import { verifyPasswordResetToken } from "../utils/verifyPasswordResetToken.js";
-import { verifyEmailVerificationToken } from "../utils/verifyEmailVerificationToken.js";
-import { generateEmailVerificationToken } from "../utils/generateEmailVerificationToken.js";
 import { Request } from "express";
 import { getClientUrl } from "../utils/clientUrl.util.js";
 

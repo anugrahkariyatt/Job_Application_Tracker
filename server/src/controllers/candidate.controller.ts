@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   createCandidateSchema,
   updateCandidateSchema,
-} from "../validations/candidate.validations.js";
+} from "../validations/candidate.validation.js";
 import {
   createCandidate,
   getMyCandidate,

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
-import { verifyAccessToken } from "../utils/verifyAccessToken.js";
+import { verifyAccessToken } from "../utils/jwt.util.js";
 import User from "../models/user.model.js";
 
 export const authenticate = async (

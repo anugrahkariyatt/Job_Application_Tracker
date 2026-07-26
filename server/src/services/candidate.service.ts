@@ -4,7 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   CreateCandidateInput,
   UpdateCandidateInput,
-} from "../validations/candidate.validations.js";
+} from "../validations/candidate.validation.js";
 import { uploadImage } from "./cloudinary.service.js";
 
 export const createCandidate = async (

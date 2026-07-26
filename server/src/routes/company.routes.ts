@@ -11,7 +11,7 @@ import {
   getRecruiterDashboardStats,
   getCompanyByIdController,
   getAllCompaniesPublicController,
-} from "../controllers/company.controllers.js";
+} from "../controllers/company.controller.js";
 const router = Router();
 
 router.get("/dashboard-stats", authenticate, authorize("recruiter"), getRecruiterDashboardStats);

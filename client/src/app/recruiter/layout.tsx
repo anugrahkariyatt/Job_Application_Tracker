@@ -1,7 +1,7 @@
-import { Navbar } from '@/components/layout/Navbar';
+import { Navbar } from '@/components/recruiter/Navbar';
 import Footer from '@/components/layout/Footer';
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import RoleGuard from "@/components/auth/RoleGuard";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import RoleGuard from "@/features/auth/components/RoleGuard";
 
 export default function DashboardLayout({
   children,
