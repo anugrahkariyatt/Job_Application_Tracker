@@ -8,7 +8,14 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppDispatch } from "@/store/hooks";
 
+import {
+  GoogleLogin,
+  CredentialResponse,
+} from "@react-oauth/google";
+import { googleAuth } from "@/features/auth/api/auth.api";
+import { setUser } from "@/store/slices/authSlice";
 const registerSchema = z.object({
   name: z
     .string()
@@ -73,16 +80,40 @@ export default function CandidateRegisterPage() {
       setIsLoading(false);
     }
   };
+  const dispatch = useAppDispatch();
 
-  const handleGoogleSignup = () => {
-    toast.info("Google signup feature clicked");
+  const handleGoogleSignup = async (
+    credentialResponse: CredentialResponse
+  ) => {
+    try {
+      const idToken = credentialResponse.credential;
+
+      if (!idToken) {
+        toast.error("Google authentication failed.");
+        return;
+      }
+
+      const response = await googleAuth({
+        idToken,
+        role: "candidate",
+      });
+
+      toast.success(response.message);
+
+
+      dispatch(setUser(response.user));
+      router.push("/candidate/dashboard");
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Google authentication failed."
+      );
+    }
   };
-
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] grid grid-cols-1 lg:grid-cols-2 bg-background">
       {/* LEFT PANEL */}
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-muted/40 border-r border-border/70 overflow-hidden">
-       
+
 
         {/* Vector Illustration */}
         <div className="relative my-6 flex flex-1 items-center justify-center">
@@ -134,7 +165,7 @@ export default function CandidateRegisterPage() {
           </div>
 
           {/* OAuth Google Button */}
-          <button
+          {/* <button
             type="button"
             onClick={handleGoogleSignup}
             className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 bg-background border border-border rounded-xl text-sm font-semibold text-foreground hover:bg-accent hover:border-border/80 transition-colors shadow-xs active:translate-y-px cursor-pointer"
@@ -146,8 +177,11 @@ export default function CandidateRegisterPage() {
               <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.94l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z" />
             </svg>
             Continue with Google
-          </button>
-
+          </button> */}
+          <GoogleLogin
+            onSuccess={handleGoogleSignup}
+            onError={() => toast.error("Google Sign Up failed")}
+          />
           {/* Divider */}
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-border" />
@@ -184,7 +218,7 @@ export default function CandidateRegisterPage() {
               </div>
               {errors.name && (
                 <p className="text-xs text-destructive mt-1 font-medium flex items-center gap-1">
-                  <span>⚠</span> {errors.name}
+                  {errors.name}
                 </p>
               )}
             </div>

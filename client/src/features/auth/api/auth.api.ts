@@ -7,6 +7,7 @@ import type {
   RegisterResponse,
   CurrentUserResponse,
   LogoutResponse,
+  User,
 } from "@/types/auth.types";
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
@@ -60,4 +61,28 @@ export const verifyEmail = async (token: string) => {
   );
 
   return data;
+};
+
+// Google Auth
+
+export interface GoogleAuthRequest {
+  idToken: string;
+  role: "candidate" | "recruiter";
+}
+
+export interface GoogleAuthResponse {
+  success: boolean;
+  message: string;
+  user: User;
+}
+
+export const googleAuth = async (
+  data: GoogleAuthRequest,
+): Promise<GoogleAuthResponse> => {
+  const response = await axiosInstance.post<GoogleAuthResponse>(
+    "/api/auth/google",
+    data,
+  );
+
+  return response.data;
 };

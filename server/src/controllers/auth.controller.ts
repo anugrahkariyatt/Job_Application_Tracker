@@ -29,6 +29,7 @@ import {
 } from "../validations/auth.validation.js";
 import { z } from "zod";
 import { AppError } from "../utils/AppError.js";
+import { googleLoginUser } from "../services/google.service.js";
 
 export const register = async (
   req: Request,
@@ -481,7 +482,6 @@ export const updateProfileController = async (
     const userId = req.user!.id;
     const { name, email } = validation.data;
 
-    // Check if email is already taken by another user
     const existingUser = await User.findOne({ email, _id: { $ne: userId } });
     if (existingUser) {
       throw new AppError("Email is already taken by another user", 409);
@@ -511,5 +511,49 @@ export const updateProfileController = async (
     });
   } catch (error) {
     next(error);
+  }
+};
+
+
+// Google auth controller
+
+export const googleLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { idToken, role } = req.body;
+
+    if (!idToken) {
+      throw new AppError("Google ID token is required", 400);
+    }
+
+    const result = await googleLoginUser(idToken, role);
+    const isProd = process.env.NODE_ENV === "production";
+
+    res.cookie("accessToken", result.accessToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      user: result.user,
+    });
+  } catch (error) {
+    next(error);
+    console.log("Error", error);
+    
   }
 };
