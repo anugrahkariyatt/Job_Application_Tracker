@@ -63,7 +63,10 @@ export default function AppliedJobsPage() {
       try {
         const interviewRes = await axiosInstance.get('/api/interviews');
         if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
-          setInterviews(interviewRes.data.data);
+          const sorted = [...interviewRes.data.data].sort(
+            (a: any, b: any) => new Date(b.date || b.createdAt).getTime() - new Date(a.date || a.createdAt).getTime()
+          );
+          setInterviews(sorted);
         }
       } catch (ivErr) {
         console.error('Fetch interviews error:', ivErr);

@@ -40,17 +40,5 @@ router.post("/deactivate", authenticate, deactivateAccount);
 router.delete("/delete-account", authenticate, deleteAccount);
 
 
-router.get("/test-n8n", async (req, res) => {
-  const response = await axios.post(
-    "http://localhost:5678/webhook/send-email",
-    {
-      type: "verification",
-      email: "your-email@gmail.com",
-      verificationLink: "https://google.com",
-    }
-  );
-
-  res.json(response.data);
-});
 
 export default router;

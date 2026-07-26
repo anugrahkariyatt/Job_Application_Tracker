@@ -9,7 +9,6 @@ import { createNotification } from "./notification.service.js";
 import {
   sendApplicationStatusEmail,
   sendApplicationSubmittedEmail,
-  triggerCandidateAIScreening,
 } from "./mail.service.js";
 
 export const applyForJob = async (userId: string, jobId: string) => {
@@ -58,38 +57,6 @@ export const applyForJob = async (userId: string, jobId: string) => {
     console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
   }
 
-  // Trigger n8n AI Candidate Screening Asynchronously (PRO feature for Recruiters)
-  (async () => {
-    try {
-      const recruiterUser = await User.findById(company.ownerId);
-      if (recruiterUser?.subscriptionPlan !== "pro") {
-        console.log("[APPLICATION SERVICE] Recruiter is on FREE plan - skipping n8n AI Candidate Screening");
-        return;
-      }
-
-      const aiResult = await triggerCandidateAIScreening({
-        applicationId: application._id.toString(),
-        candidateName: user.name,
-        candidateEmail: user.email,
-        candidateSkills: candidate.headline ? [candidate.headline] : [],
-        candidateExperienceSummary: candidate.bio || "",
-        jobTitle: job.title,
-        jobDescription: job.description || "",
-        jobRequiredSkills: (job as any).skills || [],
-      });
-
-      if (aiResult && (aiResult.aiMatchScore !== undefined || aiResult.aiSummary)) {
-        await Application.findByIdAndUpdate(application._id, {
-          aiMatchScore: aiResult.aiMatchScore,
-          aiStrengths: aiResult.aiStrengths || [],
-          aiSummary: aiResult.aiSummary,
-        });
-        console.log("[APPLICATION SERVICE] Updated application with n8n AI Screening result");
-      }
-    } catch (aiErr) {
-      console.error("[APPLICATION SERVICE ERROR] Failed n8n AI screening processing:", aiErr);
-    }
-  })();
 
   try {
     await createNotification(
@@ -238,6 +205,34 @@ export const updateApplicationStatus = async (
       400,
     );
   }
+
+  // Prevent modifying finalized terminal statuses (Hired / Rejected)
+  if (application.status === "Hired" || application.status === "Rejected") {
+    throw new AppError(
+      `Application status is finalized as '${application.status}' and cannot be modified further.`,
+      400,
+    );
+  }
+
+  const statusHierarchy: Record<string, number> = {
+    Applied: 1,
+    "Under Review": 2,
+    Shortlisted: 3,
+    Interview: 4,
+    Hired: 5,
+    Rejected: 6,
+  };
+
+  if (
+    status !== "Rejected" &&
+    (statusHierarchy[status] || 0) < (statusHierarchy[application.status] || 0)
+  ) {
+    throw new AppError(
+      `Cannot revert application status backwards from '${application.status}' to '${status}'.`,
+      400,
+    );
+  }
+
   application.status = status;
   await application.save();
 

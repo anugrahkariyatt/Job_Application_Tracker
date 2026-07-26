@@ -6,7 +6,7 @@ import Job from "../models/job.model.js";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { createNotification } from "./notification.service.js";
-import { sendInterviewEmail } from "./mail.service.js";
+import { sendInterviewEmail, sendInterviewCancelledEmail } from "./mail.service.js";
 
 export const createInterview = async (
   recruiterUserId: string,
@@ -140,25 +140,74 @@ export const updateInterviewStatus = async (
   interview.status = status;
   await interview.save();
 
-  // Create notification for candidate/recruiter
+  // Create notification and trigger n8n email for candidate/recruiter
   try {
+    const candidate = await Candidate.findById(interview.candidateId);
+    const job = await Job.findById(interview.jobId);
+    const company = await Company.findById(interview.companyId);
+
     if (role === "recruiter") {
-      const candidate = await Candidate.findById(interview.candidateId);
       if (candidate) {
         const candidateUser = await User.findById(candidate.userId);
         if (candidateUser) {
+          // Push In-App Notification to candidate
+          const notifTitle = status === "Cancelled" 
+            ? `Interview Cancelled: ${interview.title}`
+            : `Interview Status Updated: ${status}`;
+          const notifMsg = status === "Cancelled"
+            ? `Your scheduled interview "${interview.title}" for ${job?.title || 'the job'} at ${company?.companyName || 'the company'} has been cancelled by the interviewer.`
+            : `Your interview "${interview.title}" is now marked as ${status}.`;
+
           await createNotification(
             candidateUser._id.toString(),
-            `Interview Status Updated: ${status}`,
-            `Your interview "${interview.title}" is now marked as ${status}.`,
+            notifTitle,
+            notifMsg,
             "APPLICATION",
           );
+
+          // Trigger n8n email webhook if interview is cancelled
+          if (status === "Cancelled" && candidateUser.email) {
+            await sendInterviewCancelledEmail({
+              email: candidateUser.email,
+              candidateName: candidateUser.name || "Candidate",
+              jobTitle: job?.title || "Position",
+              companyName: company?.companyName || "Company",
+              interviewTitle: interview.title,
+              dateTime: new Date(interview.date).toLocaleString(),
+              cancelledBy: "Interviewer",
+            });
+          }
+        }
+      }
+    } else if (role === "candidate") {
+      if (company) {
+        const companyOwner = await User.findById(company.ownerId);
+        if (companyOwner) {
+          const candidateUser = candidate ? await User.findById(candidate.userId) : null;
+          await createNotification(
+            companyOwner._id.toString(),
+            `Interview Status Updated by Candidate: ${status}`,
+            `${candidateUser?.name || 'Candidate'} updated interview "${interview.title}" status to ${status}.`,
+            "APPLICATION",
+          );
+
+          if (status === "Cancelled" && companyOwner.email) {
+            await sendInterviewCancelledEmail({
+              email: companyOwner.email,
+              candidateName: candidateUser?.name || "Candidate",
+              jobTitle: job?.title || "Position",
+              companyName: company.companyName,
+              interviewTitle: interview.title,
+              dateTime: new Date(interview.date).toLocaleString(),
+              cancelledBy: "Candidate",
+            });
+          }
         }
       }
     }
   } catch (err) {
     console.error(
-      "[INTERVIEW SERVICE ERROR] Notification failed on status update:",
+      "[INTERVIEW SERVICE ERROR] Notification/n8n dispatch failed on status update:",
       err,
     );
   }
@@ -178,7 +227,7 @@ export const getMyInterviews = async (
     return await Interview.find({ candidateId: candidate._id })
       .populate("jobId", "title location jobType")
       .populate("companyId", "companyName logo industry")
-      .sort({ date: 1 });
+      .sort({ createdAt: -1, date: -1 });
   } else if (role === "recruiter") {
     const company = await Company.findOne({ ownerId: userId });
     if (!company) {
@@ -190,7 +239,7 @@ export const getMyInterviews = async (
         path: "candidateId",
         populate: { path: "userId", select: "name email" },
       })
-      .sort({ date: 1 });
+      .sort({ createdAt: -1, date: -1 });
   }
   return [];
 };
