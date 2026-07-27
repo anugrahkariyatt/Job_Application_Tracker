@@ -65,12 +65,26 @@ export default function FindJobsPage() {
   const ITEMS_PER_PAGE = 10;
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     setSearch(searchParams.get('search') || '');
   }, [searchParams]);
 
   React.useEffect(() => {
+    const fetchAppliedJobs = async () => {
+      try {
+        const res = await axiosInstance.get('/api/application');
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const ids = res.data.data.map((app: any) => app.jobId?._id || app.jobId?.id || app.jobId);
+          setAppliedJobIds(ids);
+        }
+      } catch (e) {
+        console.error('Error fetching candidate applications:', e);
+      }
+    };
+    fetchAppliedJobs();
+
     const saved = localStorage.getItem('savedJobs');
     if (saved) {
       try {
@@ -173,13 +187,15 @@ export default function FindJobsPage() {
       const response = await axiosInstance.post('/api/application', { jobId });
       if (response.data?.success) {
         toast.success('Successfully applied for this job!');
+        setAppliedJobIds((prev) => [...prev, jobId]);
       }
     } catch (err: any) {
       console.error('Apply job error:', err);
       const status = err.response?.status;
       const msg = err.response?.data?.message || 'Failed to submit application.';
+      const isProfileMissing = status === 404 || msg.toLowerCase().includes('profile');
 
-      if (status === 404 && (msg.includes('profile not found') || msg.includes('Candidate profile'))) {
+      if (isProfileMissing) {
         toast.error('Please create your candidate profile before applying.');
         router.push('/candidate/profile');
       } else {
@@ -366,6 +382,7 @@ export default function FindJobsPage() {
                       job={job}
                       onApply={handleApply}
                       saved={savedJobIds.includes(job.id)}
+                      applied={appliedJobIds.includes(job.id)}
                       onToggleSave={handleToggleSave}
                       view={view}
                     />

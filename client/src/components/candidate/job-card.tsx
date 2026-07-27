@@ -14,12 +14,13 @@ import { cn } from '@/lib/utils';
 interface JobCardProps {
   job: Job;
   saved?: boolean;
+  applied?: boolean;
   onToggleSave?: (jobId: string) => void;
   onApply?: (jobId: string) => void;
   view?: 'grid' | 'list';
 }
 
-export function JobCard({ job, saved, onToggleSave, onApply, view = 'grid' }: JobCardProps) {
+export function JobCard({ job, saved, applied, onToggleSave, onApply, view = 'grid' }: JobCardProps) {
   const router = useRouter();
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -150,13 +151,14 @@ export function JobCard({ job, saved, onToggleSave, onApply, view = 'grid' }: Jo
       <CardFooter className={cn('flex items-center justify-between gap-2 p-5 pt-0 mt-auto', view === 'list' && 'p-5 md:w-auto md:shrink-0')}>
         <Button
           size="sm"
+          disabled={applied}
           className="flex-1 font-semibold text-xs h-9 rounded-lg"
           onClick={(e) => {
             e.stopPropagation();
             onApply?.(job.id);
           }}
         >
-          Apply Now
+          {applied ? 'Applied' : 'Apply Now'}
         </Button>
 
         <Button
