@@ -41,7 +41,7 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
   const isLoading = useAppSelector((state) => state.auth.isLoading);
 
   const isPublic = PUBLIC_PATHS.some(
-    (path) => pathname === path || pathname.startsWith(path + "/"),
+    (path) => pathname === path || (path !== "/" && pathname.startsWith(path + "/")),
   );
 
   useEffect(() => {
