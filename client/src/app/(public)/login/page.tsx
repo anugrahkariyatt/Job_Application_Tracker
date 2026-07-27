@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { googleAuth } from "@/features/auth/api/auth.api";
 
+import { Suspense } from "react";
+
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -23,7 +25,7 @@ type FormErrors = {
   password?: string;
 };
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
@@ -332,5 +334,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

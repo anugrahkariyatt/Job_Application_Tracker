@@ -18,13 +18,16 @@ import {
   verifyEmail,
 } from "@/features/auth/api/auth.api";
 
+import { Suspense } from "react";
+
 type Status =
   | "waiting"
   | "verifying"
   | "verified"
   | "alreadyVerified"
   | "expired";
-export default function VerifyEmailPage() {
+
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
 
   const email = searchParams.get("email");
@@ -212,5 +215,17 @@ export default function VerifyEmailPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
