@@ -206,7 +206,7 @@ export default function FindJobsPage() {
 
   const activeFilters = selectedTypes.length + selectedLevels.length + selectedWorkModes.length + (location ? 1 : 0) + (salaryMin > 0 ? 1 : 0);
 
-  const FiltersContent = () => (
+  const renderFilters = () => (
     <div className="space-y-6">
       <div>
         <Label className="text-sm font-semibold">Location</Label>
@@ -305,7 +305,7 @@ export default function FindJobsPage() {
                 <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
               <div className="mt-4">
-                <FiltersContent />
+                {renderFilters()}
               </div>
             </SheetContent>
           </Sheet>
@@ -339,7 +339,7 @@ export default function FindJobsPage() {
             <CardTitle className="text-base font-semibold">Filters</CardTitle>
           </CardHeader>
           <CardContent>
-            <FiltersContent />
+            {renderFilters()}
           </CardContent>
         </Card>
 

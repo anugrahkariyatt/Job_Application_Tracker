@@ -66,7 +66,17 @@ export default function CreateJobPage() {
   const [applicationDeadline, setApplicationDeadline] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Proactively check company profile on mount
   useEffect(() => {
+    axiosInstance.get('/api/company').catch((err) => {
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || '';
+      if (status === 404 || msg.toLowerCase().includes('company profile')) {
+        toast.error('Please create your company profile before posting a job.');
+        router.push('/recruiter/company/edit');
+      }
+    });
+
     const savedPrefs = localStorage.getItem('recruiter_company_prefs');
     if (savedPrefs) {
       try {
@@ -180,13 +190,21 @@ export default function CreateJobPage() {
       }
     } catch (err: any) {
       console.error('Error creating job:', err);
+      const msg = err.response?.data?.message || '';
       const fieldErrors = err.response?.data?.errors?.fieldErrors;
+
+      if (msg.toLowerCase().includes('company profile')) {
+        toast.error('Please create your company profile before posting a job.');
+        router.push('/recruiter/company/edit');
+        return;
+      }
+
       if (fieldErrors) {
         Object.keys(fieldErrors).forEach((key) => {
           toast.error(`${key}: ${fieldErrors[key].join(', ')}`);
         });
       } else {
-        toast.error(err.response?.data?.message || 'Failed to submit job.');
+        toast.error(msg || 'Failed to submit job.');
       }
     } finally {
       setSaving(false);

@@ -8,6 +8,8 @@ import {
   Bell,
   Settings,
   LogOut,
+  Gem,
+
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -147,17 +149,24 @@ export function Navbar() {
         {/* Right Action Icons & Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
 
-          {/* PRO Upgrade Badge */}
           <Link
             href="/candidate/pricing"
             className={cn(
-              'hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all',
+              "hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all",
               isPro
-                ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
-                : 'bg-secondary text-secondary-foreground border-border/80 hover:bg-secondary/80'
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
             )}
           >
-            <span>{isPro ? 'PRO Active' : 'Upgrade to PRO'}</span>
+            <Gem
+              className={cn(
+                "h-3.5 w-3.5",
+                isPro
+                  ? "text-emerald-500 fill-emerald-500/20"
+                  : "text-muted-foreground"
+              )}
+            />
+            <span>{isPro ? "PRO" : "Upgrade to PRO"}</span>
           </Link>
 
           {/* Notifications */}

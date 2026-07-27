@@ -49,6 +49,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
   const [subId, setSubId] = React.useState<string | null>(null);
   const [subscribing, setSubscribing] = React.useState(false);
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = React.useState<string[]>([]);
   
   const JOBS_PER_PAGE = 6;
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -139,6 +140,14 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
         setSavedJobIds(parsed.map((j: any) => j.id));
       } catch (e) { }
     }
+
+    // Fetch applied job IDs
+    axiosInstance.get('/api/application').then((res) => {
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const ids = res.data.data.map((app: any) => app.jobId?._id || app.jobId?.id || app.jobId);
+        setAppliedJobIds(ids);
+      }
+    }).catch((e) => console.error('Error fetching applications:', e));
   }, [id]);
 
   const handleToggleSubscribe = async () => {
@@ -197,10 +206,19 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
       const response = await axiosInstance.post('/api/application', { jobId });
       if (response.data?.success) {
         toast.success('Successfully applied for this job!');
+        setAppliedJobIds((prev) => [...prev, jobId]);
       }
     } catch (err: any) {
       console.error('Apply job error:', err);
-      toast.error(err.response?.data?.message || 'Failed to submit application.');
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || 'Failed to submit application.';
+      const isProfileMissing = status === 404 || msg.toLowerCase().includes('profile');
+      if (isProfileMissing) {
+        toast.error('Please create your candidate profile before applying.');
+        router.push('/candidate/profile');
+      } else {
+        toast.error(msg);
+      }
     }
   };
 
@@ -324,10 +342,12 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
               <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
                 {company.companyName}
               </h1>
-              <Badge variant="secondary" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border border-border/60 bg-muted/50 text-muted-foreground">
-                <CheckCircle2 className="mr-1 h-3.5 w-3.5 text-primary" />
-                Verified Employer
-              </Badge>
+              {company.verified && (
+                <Badge className="font-semibold text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/15">
+                  <CheckCircle2 className="mr-1 h-3.5 w-3.5 fill-blue-500/20 text-blue-500" />
+                  Verified
+                </Badge>
+              )}
               {company.industry && (
                 <Badge variant="outline" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border-primary/20 bg-primary/5 text-primary">
                   {company.industry}
@@ -419,6 +439,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
                   job={job}
                   onApply={handleApply}
                   saved={savedJobIds.includes(job.id)}
+                  applied={appliedJobIds.includes(job.id)}
                   onToggleSave={handleToggleSave}
                 />
               ))}
