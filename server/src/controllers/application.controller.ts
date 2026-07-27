@@ -271,8 +271,8 @@ export const getRecruiterApplicationsController = async (
           (e) => e.candidateId.toString() === candIdStr
         );
 
-        appObj.candidateId.skills = candSkills;
-        appObj.candidateId.experience = candExp;
+        (appObj.candidateId as any).skills = candSkills;
+        (appObj.candidateId as any).experience = candExp;
 
         const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
         appObj.aiMatchScore = match.score;
@@ -353,8 +353,8 @@ export const getApplicationByIdController = async (
         Experience.find({ candidateId: candIdStr }),
       ]);
 
-      appObj.candidateId.skills = skillsList.map((s) => s.name);
-      appObj.candidateId.experience = expList;
+      (appObj.candidateId as any).skills = skillsList.map((s) => s.name);
+      (appObj.candidateId as any).experience = expList;
 
       const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
       appObj.aiMatchScore = match.score;
