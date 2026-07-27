@@ -1,5 +1,16 @@
 import { type Job, type Application, type NotificationItem, type TimelineEvent } from './candidate-data';
 
+export const getCompanySlug = (company: any): string => {
+  const name: string = company?.companyName || company?.name || '';
+  if (!name) return company?._id || company?.id || '';
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
+
 export const mapJobToFrontend = (dbJob: any): Job => {
   if (!dbJob) return {} as Job;
   const companyInfo = dbJob.companyId || {};
