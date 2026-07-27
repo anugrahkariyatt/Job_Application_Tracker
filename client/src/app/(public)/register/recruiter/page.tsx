@@ -99,7 +99,7 @@ export default function RecruiterRegisterPage() {
     <div className="w-full min-h-[calc(100vh-4rem)] grid grid-cols-1 lg:grid-cols-2 bg-background">
       {/* LEFT PANEL */}
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-muted/40 border-r border-border/70 overflow-hidden">
-        
+
         {/* Vector Illustration */}
         <div className="relative my-6 flex flex-1 items-center justify-center">
           <svg className="w-full max-w-md h-auto" viewBox="0 0 420 320" fill="none">
@@ -155,6 +155,7 @@ export default function RecruiterRegisterPage() {
             onError={() => toast.error("Google Sign Up failed")}
           />
 
+
           {/* Divider */}
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-border" />
@@ -191,7 +192,7 @@ export default function RecruiterRegisterPage() {
               </div>
               {errors.name && (
                 <p className="text-xs text-destructive mt-1 font-medium flex items-center gap-1">
-                  <span>⚠</span> {errors.name}
+                  {errors.name}
                 </p>
               )}
             </div>
@@ -199,14 +200,14 @@ export default function RecruiterRegisterPage() {
             {/* Email Address */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="block text-xs font-semibold text-foreground">
-                Company email address
+                Email address
               </label>
               <div className="relative flex items-center">
                 <Mail className="absolute left-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
                   id="email"
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);

@@ -173,7 +173,7 @@ export const verifyStripeSessionController = async (
       // Push In-App Notification
       await createNotification(
         user._id.toString(),
-        `Payment Successful - ${planTitle} Activated! 🎉`,
+        `Payment Successful - ${planTitle} Activated!`,
         `Thank you for upgrading! Your payment of ${amount} for ${planTitle} subscription was processed successfully. Valid until ${expiresAt}. All PRO features are now unlocked!`,
         "SYSTEM",
       );
@@ -228,7 +228,7 @@ export const handlePaymentSuccessController = async (
       // Push In-App Notification
       await createNotification(
         user._id.toString(),
-        `Payment Successful - ${planTitle} Activated! 🎉`,
+        `Payment Successful - ${planTitle} Activated!`,
         `Thank you for upgrading! Your payment of ${amount} for ${planTitle} subscription was processed successfully. Valid until ${expiresAt}. All PRO features are now unlocked!`,
         "SYSTEM",
       );

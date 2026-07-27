@@ -226,110 +226,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FEATURED OPPORTUNITIES */}
-      <section className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-6 space-y-12">
-          <div className="text-center max-w-xl mx-auto space-y-2">
-            <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-              Featured Opportunities
+      <section className="py-20 px-6 lg:px-10 bg-muted/30 border-y border-border/40">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
+              How Nuvora Powers Your Journey
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Explore high-impact positions from venture-backed startups and industry leaders.
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              From smart profile evaluation to seamless pipeline tracking, experience an automated end-to-end recruitment process.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Job Card 1 */}
-            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between space-y-6 hover:border-primary/60 transition-all shadow-xs hover:shadow-md">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="h-11 w-11 rounded-xl bg-red-500/10 text-red-600 flex items-center justify-center font-bold text-lg">
-                    G
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                    Full-time
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-foreground">Senior React Developer</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    Google • Mountain View, CA (Remote)
-                  </p>
-                </div>
+          {/* Step Grid */}
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="relative rounded-2xl border border-border/80 bg-card p-6 space-y-4 shadow-xs hover:shadow-md transition-all">
+              <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground font-black flex items-center justify-center text-base shadow-sm">
+                01
               </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <span className="font-bold text-sm text-foreground">$140k - $180k</span>
-                <Link
-                  href="/register/candidate"
-                  className="px-3.5 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
-                >
-                  Apply Now
-                </Link>
-              </div>
+              <h3 className="text-lg font-bold text-foreground">Build or Import Profile</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Job seekers upload resumes for automatic parsing, while recruiters set up verified company profiles and post open requisitions in minutes.
+              </p>
             </div>
 
-            {/* Job Card 2 */}
-            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between space-y-6 hover:border-primary/60 transition-all shadow-xs hover:shadow-md">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                    <Bot className="h-5 w-5" />
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                    Full-time
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-foreground">Frontend Engineer (Core UI)</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    OpenAI • San Francisco, CA
-                  </p>
-                </div>
+            {/* Step 2 */}
+            <div className="relative rounded-2xl border border-border/80 bg-card p-6 space-y-4 shadow-xs hover:shadow-md transition-all">
+              <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground font-black flex items-center justify-center text-base shadow-sm">
+                02
               </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <span className="font-bold text-sm text-foreground">$160k - $210k</span>
-                <Link
-                  href="/register/candidate"
-                  className="px-3.5 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
-                >
-                  Apply Now
-                </Link>
-              </div>
+              <h3 className="text-lg font-bold text-foreground">AI Match & Screening</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Our match engine evaluates skill overlap, gap analysis, and experience alignment in real time, delivering instant suitability scores.
+              </p>
             </div>
 
-            {/* Job Card 3 */}
-            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col justify-between space-y-6 hover:border-primary/60 transition-all shadow-xs hover:shadow-md">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="h-11 w-11 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                    S
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
-                    Remote
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-foreground">DevOps / Cloud Architect</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    Spotify • Remote (Worldwide)
-                  </p>
-                </div>
+            {/* Step 3 */}
+            <div className="relative rounded-2xl border border-border/80 bg-card p-6 space-y-4 shadow-xs hover:shadow-md transition-all">
+              <div className="h-10 w-10 rounded-xl bg-primary text-primary-foreground font-black flex items-center justify-center text-base shadow-sm">
+                03
               </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <span className="font-bold text-sm text-foreground">$130k - $170k</span>
-                <Link
-                  href="/register/candidate"
-                  className="px-3.5 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-muted transition-colors"
-                >
-                  Apply Now
-                </Link>
-              </div>
+              <h3 className="text-lg font-bold text-foreground">Direct Pipeline Progress</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                Track application updates, schedule interview rounds, and receive real-time status notifications right inside your unified dashboard.
+              </p>
             </div>
           </div>
         </div>

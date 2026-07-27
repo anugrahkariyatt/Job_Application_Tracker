@@ -103,7 +103,7 @@ export default function LoginPage() {
       );
     }
   };
- 
+
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] grid grid-cols-1 lg:grid-cols-2 bg-background">
       {/* LEFT PANEL */}
@@ -203,10 +203,20 @@ export default function LoginPage() {
           </div>
 
           {/* OAuth Google Button */}
-          <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => toast.error("Google login failed")}
-          />
+          {/* OAuth Google Button Wrapper */}
+          <div className="w-full flex justify-center min-h-[44px]">
+            <div className="w-full max-w-[360px] overflow-hidden rounded-xl flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => toast.error("Google login failed")}
+                width="360"
+                theme="outline"
+                shape="rectangular"
+                size="large"
+                text="continue_with"
+              />
+            </div>
+          </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-4">

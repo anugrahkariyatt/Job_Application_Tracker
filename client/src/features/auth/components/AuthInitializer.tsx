@@ -19,6 +19,8 @@ interface AuthInitializerProps {
 const PUBLIC_PATHS = [
   "/",
   "/pricing",
+  "/about",
+  "/contact",
   "/login",
   "/register",
   "/register/candidate",
@@ -33,11 +35,14 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
   const router = useRouter();
   const pathname = usePathname() || "";
   const dispatch = useAppDispatch();
-
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const initialized = useAppSelector((state) => state.auth.initialized);
   const isLoading = useAppSelector((state) => state.auth.isLoading);
+
+  const isPublic = PUBLIC_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(path + "/"),
+  );
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -56,18 +61,14 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
         dispatch(setInitialized(true));
       }
     };
-
     initializeAuth();
   }, [dispatch]);
 
   useEffect(() => {
     if (!initialized) return;
 
-    const isPublic = PUBLIC_PATHS.some(
-      (path) => pathname === path || pathname.startsWith(path + "/"),
-    );
     if (isAuthenticated) {
-      // Authenticated users shouldn't see login or registration pages
+      // Authenticated users accessing auth forms get redirected to their dashboard
       if (
         pathname === "/login" ||
         pathname === "/register" ||
@@ -83,15 +84,16 @@ export default function AuthInitializer({ children }: AuthInitializerProps) {
         }
       }
     } else {
-      // Unauthenticated users trying to access private dashboard pages are redirected
+      // Unauthenticated users accessing private pages get redirected to login
       if (!isPublic) {
         router.push("/login");
       }
     }
-  }, [initialized, isAuthenticated, pathname, router]);
+  }, [initialized, isAuthenticated, pathname, router, isPublic, user?.role]);
 
-  // Show a full screen loading indicator during authentication checks to prevent flicker
-  if (!initialized || (isLoading && !isAuthenticated)) {
+  // FIX: Do NOT block rendering on public routes!
+  // Only show the full-screen loader on private/protected routes while verifying auth state.
+  if (!initialized && !isPublic) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">

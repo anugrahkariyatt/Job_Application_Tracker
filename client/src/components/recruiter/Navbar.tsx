@@ -6,8 +6,7 @@ import {
   Menu,
   Settings,
   LogOut,
-  Building2,
-  Sparkles,
+  Gem,
 } from 'lucide-react';
 import {
   Sheet,
@@ -142,22 +141,23 @@ export function Navbar() {
         {/* Right Action Icons & Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
 
-          {/* PRO Upgrade Badge */}
+          {/* PRO Badge with Gem Icon */}
           <Link
-            href="/recruiter/pricing"
+            href={user?.role === 'candidate' ? '/candidate/pricing' : '/recruiter/pricing'}
             className={cn(
               'hidden sm:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all',
               isPro
-                ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/15'
-                : 'bg-secondary text-secondary-foreground border-border/80 hover:bg-secondary/80'
+                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                : 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80'
             )}
           >
-            <span>{isPro ? 'PRO Active' : 'Upgrade to PRO'}</span>
+            <Gem className={cn("h-3.5 w-3.5", isPro ? "text-emerald-500 fill-emerald-500/20" : "text-muted-foreground")} />
+            <span>{isPro ? 'PRO ' : 'Upgrade to PRO'}</span>
           </Link>
 
           {/* Notifications */}
           <Link
-            href="/recruiter/notifications"
+            href={user?.role === 'candidate' ? '/candidate/notifications' : '/recruiter/notifications'}
             className="relative rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             aria-label="Notifications"
           >
@@ -174,24 +174,36 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-muted p-0 ring-2 ring-border/50 hover:ring-primary/40"
+                className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full p-0 overflow-hidden ring-2 ring-border/50 hover:ring-primary/40 focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <Avatar className="h-10 w-10 sm:h-11 sm:w-11">
+                <Avatar className="h-full w-full rounded-full">
                   {company?.logo ? (
-                    <AvatarImage src={company.logo} alt={user?.name} />
+                    <AvatarImage src={company.logo} alt={company?.companyName || user?.name} className="object-cover h-full w-full" />
                   ) : null}
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
-                    {(user?.name || 'R').charAt(0).toUpperCase()}
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold h-full w-full flex items-center justify-center">
+                    {(company?.companyName || user?.name || 'R').charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm font-semibold text-foreground">{user?.name}</span>
-                <span className="text-xs font-normal text-muted-foreground text-ellipsis overflow-hidden">
-                  {company?.companyName || user?.email}
-                </span>
+            <DropdownMenuContent align="end" className="w-60 p-2">
+              <DropdownMenuLabel className="p-2">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9 rounded-md border shrink-0">
+                    {company?.logo ? (
+                      <AvatarImage src={company.logo} alt={company?.companyName} className="object-cover h-full w-full" />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold rounded-md">
+                      {(company?.companyName || user?.name || 'R').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-sm font-semibold text-foreground truncate">{user?.name}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {company?.companyName || user?.email}
+                    </span>
+                  </div>
+                </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
