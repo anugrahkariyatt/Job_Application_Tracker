@@ -327,7 +327,7 @@ export default function ProfilePage() {
           </SectionCard>
 
           {/* Professional Information */}
-          <SectionCard title="Professional Information" icon={Briefcase}>
+          <SectionCard title="Professional Information" icon={FileText}>
             <div className="space-y-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">
@@ -354,38 +354,40 @@ export default function ProfilePage() {
                 No experience details added yet.
               </p>
             ) : (
-              <div className="space-y-1">
-                {experience.map((exp, idx) => (
-                  <div key={exp._id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Briefcase className="h-4 w-4" />
+              <div className="space-y-4">
+                {experience.map((exp, idx) => {
+                  const title = exp.jobTitle || exp.role || exp.title || "Position";
+                  const company = exp.companyName || exp.company || "";
+                  const isCurrent = exp.currentlyWorking || exp.current || false;
+                  const empType = exp.employmentType;
+
+                  return (
+                    <div key={exp._id || idx} className="space-y-1.5 pb-4 border-b border-border/40 last:border-0 last:pb-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-sm font-bold text-foreground">{title}</h4>
+                          {empType && (
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0 font-medium">
+                              {empType}
+                            </Badge>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium">
+                          {exp.startDate ? formatDate(exp.startDate) : ''} —{" "}
+                          {isCurrent ? "Present" : exp.endDate ? formatDate(exp.endDate) : "Present"}
+                        </span>
                       </div>
-                      {idx < experience.length - 1 && (
-                        <div className="w-px flex-1 bg-border" />
-                      )}
-                    </div>
-                    <div className="pb-6">
-                      <p className="text-sm font-semibold">{exp.role}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {exp.company} · {exp.location}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(exp.startDate)} —{" "}
-                        {exp.current
-                          ? "Present"
-                          : exp.endDate
-                            ? formatDate(exp.endDate)
-                            : ""}
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {company}{exp.location ? ` · ${exp.location}` : ''}
                       </p>
                       {exp.description && (
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-2 text-xs leading-relaxed text-muted-foreground whitespace-pre-line bg-muted/30 p-2.5 rounded-lg border border-border/40">
                           {exp.description}
                         </p>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </SectionCard>
@@ -398,20 +400,34 @@ export default function ProfilePage() {
               </p>
             ) : (
               <div className="space-y-4">
-                {education.map((edu) => (
+                {education.map((edu, idx) => (
                   <div
-                    key={edu._id}
-                    className="border-l-2 border-primary/20 pl-4 py-1"
+                    key={edu._id || idx}
+                    className="border-l-2 border-primary/40 pl-4 py-1 space-y-1"
                   >
-                    <p className="text-sm font-semibold">{edu.degree}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {edu.institution}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-sm font-bold text-foreground">
+                        {edu.degree || edu.institution}
+                      </h4>
+                      {edu.fieldOfStudy && (
+                        <Badge variant="outline" className="text-[10px] px-2 py-0">
+                          {edu.fieldOfStudy}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {edu.institution}{edu.grade ? ` · Grade: ${edu.grade}` : ''}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDate(edu.startDate)} — {formatDate(edu.endDate)}
+                      {edu.startDate ? formatDate(edu.startDate) : ''} —{" "}
+                      {edu.currentlyStudying
+                        ? "Present"
+                        : edu.endDate
+                          ? formatDate(edu.endDate)
+                          : "Present"}
                     </p>
                     {edu.description && (
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {edu.description}
                       </p>
                     )}

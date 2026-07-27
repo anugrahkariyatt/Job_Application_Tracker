@@ -26,11 +26,11 @@ import {
   Briefcase,
   Mail,
   Loader2,
-  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { ApplicationStatus } from '@/lib/types';
+import { useAppSelector } from '@/store/hooks';
 import {
   Select,
   SelectContent,
@@ -62,6 +62,9 @@ export default function ApplicantsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobParam = searchParams.get('job');
+
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isPro = currentUser?.subscriptionPlan === 'pro';
 
   const [applicants, setApplicants] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -245,6 +248,16 @@ export default function ApplicantsPage() {
             const jobTitle = app.jobId?.title || 'Unknown Job';
             const companyName = company?.companyName || 'Company';
 
+            const skillMatchData = calculateRealSkillMatch(candidate, app.jobId);
+            const score = app.aiMatchScore ?? skillMatchData.score;
+
+            const badgeStyle =
+              score >= 80
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
+                : score >= 60
+                ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20';
+
             return (
               <Card
                 key={app._id}
@@ -284,15 +297,19 @@ export default function ApplicantsPage() {
                           <MapPin className="h-3 w-3" /> {candidate.location || 'Not specified'}
                         </span>
                       </div>
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                      <div
+                        className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors cursor-pointer ${badgeStyle}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedApplicantForAI(app);
                           setIsAIModalOpen(true);
                         }}
                       >
-                        <Sparkles className="h-3 w-3 text-amber-500 fill-amber-500" />
-                        <span>Skill Match: {app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%</span>
+                        <span>
+                          {isPro
+                            ? `Skill Match: ${score}%`
+                            : 'Skill Match: PRO 🔒'}
+                        </span>
                       </div>
                     </div>
                     <DropdownMenu>
@@ -308,7 +325,7 @@ export default function ApplicantsPage() {
                             setIsAIModalOpen(true);
                           }}
                         >
-                          <Sparkles className="mr-2 h-4 w-4 text-amber-500" /> View AI Assessment
+                          {isPro ? 'View AI Assessment' : 'Unlock AI Assessment 🔒'}
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href={`/recruiter/applicants/${app._id}`}>

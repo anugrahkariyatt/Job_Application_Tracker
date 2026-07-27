@@ -11,24 +11,21 @@ const experienceSchema = z
     companyName: z.string().trim().min(1, "Company name is required"),
     startDate: z.string().min(1, "Start date is required"),
     endDate: z.union([z.string(), z.literal("")]).optional(),
-    currentlyWorking: z.boolean(),
-    location: z.string().trim().min(1, "Location is required"),
-    description: z
-      .string()
-      .trim()
-      .min(10, "Description must be at least 10 characters"),
+    currentlyWorking: z.boolean().optional().default(false),
+    location: z.string().trim().optional().or(z.literal("")),
+    description: z.string().trim().optional().or(z.literal("")),
   })
   .refine(
     (data) => {
       if (data.currentlyWorking) return true;
-
       return !!data.endDate?.trim();
     },
     {
       path: ["endDate"],
-      message: "End date is required",
+      message: "End date is required unless currently working",
     },
   );
+
 const candidateProfileSchema = z.object({
   fullName: z
     .string()
@@ -86,6 +83,7 @@ import {
   FileText,
   Loader2,
   Camera,
+  ArrowLeft,
 } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -347,7 +345,7 @@ export default function EditProfilePage() {
 
     if (!validation.success) {
       const fe = validation.error.flatten().fieldErrors;
-      setFieldErrors({
+      const newErrors = {
         fullName: fe.fullName?.[0],
         phone: fe.phone?.[0],
         location: fe.location?.[0],
@@ -356,12 +354,27 @@ export default function EditProfilePage() {
         github: fe.github?.[0],
         linkedin: fe.linkedin?.[0],
         portfolio: fe.portfolio?.[0],
-      });
+      };
+      setFieldErrors(newErrors);
+
+      const firstErr = Object.values(newErrors).find(Boolean);
+      toast.error(firstErr ? `Validation Error: ${firstErr}` : "Please check the form for validation errors.");
       return;
     }
     const expErrors: ExperienceErrors = {};
+    const validExperiences = [];
 
-    for (const exp of experience) {
+    for (let i = 0; i < experience.length; i++) {
+      const exp = experience[i];
+      const isBlank =
+        !exp.jobTitle?.trim() &&
+        !exp.companyName?.trim() &&
+        !exp.startDate?.trim();
+      if (isBlank && exp._id.startsWith("temp-")) {
+        continue;
+      }
+      validExperiences.push(exp);
+
       const result = experienceSchema.safeParse({
         jobTitle: exp.jobTitle,
         companyName: exp.companyName,
@@ -374,8 +387,7 @@ export default function EditProfilePage() {
 
       if (!result.success) {
         const fe = result.error.flatten().fieldErrors;
-
-        expErrors[exp._id] = {
+        const errObj = {
           jobTitle: fe.jobTitle?.[0],
           companyName: fe.companyName?.[0],
           startDate: fe.startDate?.[0],
@@ -383,6 +395,11 @@ export default function EditProfilePage() {
           location: fe.location?.[0],
           description: fe.description?.[0],
         };
+        expErrors[exp._id] = errObj;
+        const firstErr = Object.values(errObj).find(Boolean);
+        if (firstErr) {
+          toast.error(`Experience #${i + 1}: ${firstErr}`);
+        }
       }
     }
 
@@ -390,6 +407,8 @@ export default function EditProfilePage() {
       setExperienceErrors(expErrors);
       return;
     }
+
+
 
     try {
       setSaving(true);
@@ -447,7 +466,7 @@ export default function EditProfilePage() {
         await axiosInstance.delete(`/api/experience/${exp._id}`);
       }
       // Created and Updated
-      for (const exp of experience) {
+      for (const exp of validExperiences) {
         const payload = {
           companyName: exp.companyName,
           jobTitle: exp.jobTitle,
@@ -581,19 +600,12 @@ export default function EditProfilePage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/candidate/profile">Profile</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Edit Profile</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <Button variant="ghost" size="sm" asChild className="w-fit">
+        <Link href="/candidate/profile">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Profile
+        </Link>
+      </Button>
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
@@ -956,7 +968,43 @@ export default function EditProfilePage() {
                 {idx > 0 && <Separator className="my-4" />}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
+                    <Label>Job Title</Label>
+
+                    <Input
+                      value={exp.jobTitle || ""}
+                      onChange={(e) => {
+                        updateExperienceField(
+                          exp._id,
+                          "jobTitle",
+                          e.target.value,
+                        );
+
+                        setExperienceErrors((prev) => ({
+                          ...prev,
+                          [exp._id]: {
+                            ...prev[exp._id],
+                            jobTitle: undefined,
+                          },
+                        }));
+                      }}
+                      placeholder="Senior Frontend Developer"
+                      className={
+                        experienceErrors[exp._id]?.jobTitle
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }
+                    />
+
+                    {experienceErrors[exp._id]?.jobTitle && (
+                      <p className="text-xs text-red-500">
+                        {experienceErrors[exp._id].jobTitle}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>Company</Label>
+
 
                     <Input
                       value={exp.companyName || ""}

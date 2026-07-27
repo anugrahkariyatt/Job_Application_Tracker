@@ -46,12 +46,14 @@ import {
   XCircle,
   Video,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
 import { calculateRealSkillMatch } from '@/lib/skillMatcher';
+import { useAppSelector } from '@/store/hooks';
 
 type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Interview' | 'Rejected' | 'Hired';
 
@@ -71,6 +73,9 @@ export default function ApplicationDetailsPage({
   const resolvedParams = use(params);
   const id = resolvedParams.id;
 
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isPro = currentUser?.subscriptionPlan === 'pro';
+
   const [app, setApp] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +83,9 @@ export default function ApplicationDetailsPage({
   const [notes, setNotes] = useState<any[]>([]);
   const [newNote, setNewNote] = useState('');
   const [interviews, setInterviews] = useState<any[]>([]);
+  const [interviewStatusFilter, setInterviewStatusFilter] = useState<string>('all');
+  const [interviewTypeFilter, setInterviewTypeFilter] = useState<string>('all');
+  const [cancelInterviewTarget, setCancelInterviewTarget] = useState<any | null>(null);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [interviewForm, setInterviewForm] = useState({
@@ -127,7 +135,10 @@ export default function ApplicationDetailsPage({
       try {
         const interviewRes = await axiosInstance.get('/api/interviews');
         if (interviewRes.data?.success && Array.isArray(interviewRes.data.data)) {
-          const appInterviews = interviewRes.data.data.filter((iv: any) => iv.applicationId === id);
+          // Pure backend order (backend performs .sort({ createdAt: -1, date: -1 }))
+          const appInterviews = interviewRes.data.data.filter(
+            (iv: any) => iv.applicationId === id || iv.applicationId?._id === id
+          );
           setInterviews(appInterviews);
         }
       } catch (err) {
@@ -281,6 +292,16 @@ export default function ApplicationDetailsPage({
   const job = app.jobId || {};
   const currentIdx = statusFlow.indexOf(app.status);
 
+  const filteredInterviews = interviews.filter((iv) => {
+    if (interviewStatusFilter !== 'all' && iv.status !== interviewStatusFilter) {
+      return false;
+    }
+    if (interviewTypeFilter !== 'all' && iv.type !== interviewTypeFilter) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -322,13 +343,15 @@ export default function ApplicationDetailsPage({
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Button
-                  variant="default"
+                  variant={isPro ? "default" : "outline"}
                   size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+                  className={isPro ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" : "border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1.5 font-bold"}
                   onClick={() => setIsAIModalOpen(true)}
                 >
-                  <Award className="h-4 w-4 text-white" />
-                  Skill Assessment ({app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)
+                  <Award className="h-4 w-4" />
+                  {isPro
+                    ? `Skill Assessment (${app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)`
+                    : "Unlock AI Skill Assessment 🔒"}
                 </Button>
                 {candidate.resumeUrl && (
                   <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer">
@@ -534,8 +557,13 @@ export default function ApplicationDetailsPage({
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold">Update Status</CardTitle>
+              {(app.status === 'Hired' || app.status === 'Rejected') && (
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Application status is finalized as {app.status} and cannot be modified further.
+                </p>
+              )}
             </CardHeader>
             <CardContent className="space-y-2">
               {updating ? (
@@ -544,21 +572,37 @@ export default function ApplicationDetailsPage({
                 </div>
               ) : (
                 (['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Hired', 'Rejected'] as ApplicationStatus[]).map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => handleUpdateStatus(status)}
-                      disabled={updating || app.status === status}
-                      className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                        app.status === status
-                          ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-muted-foreground hover:bg-accent'
-                      }`}
-                    >
-                      {status}
-                      {app.status === status && <CheckCircle2 className="h-4 w-4" />}
-                    </button>
-                  )
+                  (status) => {
+                    const isTerminal = app.status === 'Hired' || app.status === 'Rejected';
+                    const currentStatusIdx = statusFlow.indexOf(app.status);
+                    const isBackwardStage = status !== 'Rejected' && currentStatusIdx >= 0 && statusFlow.indexOf(status) < currentStatusIdx;
+                    const isDisabled = updating || app.status === status || isTerminal || isBackwardStage;
+
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => handleUpdateStatus(status)}
+                        disabled={isDisabled}
+                        title={
+                          isTerminal
+                            ? `Status is finalized as ${app.status}`
+                            : isBackwardStage
+                            ? `Cannot revert backwards to ${status}`
+                            : `Update status to ${status}`
+                        }
+                        className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                          app.status === status
+                            ? 'border-primary bg-primary/5 text-primary font-semibold'
+                            : isDisabled
+                            ? 'border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed'
+                            : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground'
+                        }`}
+                      >
+                        <span>{status}</span>
+                        {app.status === status && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
+                      </button>
+                    );
+                  }
                 )
               )}
             </CardContent>
@@ -566,39 +610,95 @@ export default function ApplicationDetailsPage({
 
           {interviews.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base font-semibold">Scheduled Interviews</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {interviews.map((iv) => (
-                  <div key={iv._id} className="rounded-lg border border-border p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm">{iv.title}</span>
-                      <Badge variant={iv.status === 'Completed' ? 'default' : iv.status === 'Cancelled' ? 'destructive' : 'outline'}>
-                        {iv.status}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      <p className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> {new Date(iv.date).toLocaleString()}
-                      </p>
-                      <p className="flex items-center gap-1">
-                        <Video className="h-3 w-3" /> {iv.type} {iv.link && <a href={iv.link} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">(Join Meet)</a>}
-                      </p>
-                      {iv.notes && <p className="mt-1 bg-muted/50 p-1.5 rounded">{iv.notes}</p>}
-                    </div>
-                    {iv.status === 'Scheduled' && (
-                      <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-                        <Button size="sm" variant="outline" className="text-success hover:text-success hover:bg-success/5 flex-1" onClick={() => handleUpdateInterviewStatus(iv._id, 'Completed')}>
-                          Complete
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/5 flex-1" onClick={() => handleUpdateInterviewStatus(iv._id, 'Cancelled')}>
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
+              <CardHeader className="pb-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <Calendar className="h-4.5 w-4.5 text-primary" />
+                    Scheduled Interviews ({filteredInterviews.length})
+                  </CardTitle>
+                  <span className="text-[11px] text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded-full border border-border/50">
+                    Latest first
+                  </span>
+                </div>
+                
+                {/* Dropdown Filters */}
+                <div className="flex items-center gap-2 pt-2 border-t border-border/60">
+                  <div className="flex-1">
+                    <Select value={interviewStatusFilter} onValueChange={setInterviewStatusFilter}>
+                      <SelectTrigger className="h-8 text-xs bg-background">
+                        <SelectValue placeholder="Status: All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="Scheduled">Scheduled</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="Cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                ))}
+                  <div className="flex-1">
+                    <Select value={interviewTypeFilter} onValueChange={setInterviewTypeFilter}>
+                      <SelectTrigger className="h-8 text-xs bg-background">
+                        <SelectValue placeholder="Type: All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="Video Call">Video Call</SelectItem>
+                        <SelectItem value="Onsite">Onsite</SelectItem>
+                        <SelectItem value="Phone">Phone</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-1">
+                {filteredInterviews.length > 0 ? (
+                  <div className="max-h-[360px] overflow-y-auto pr-1 space-y-3">
+                    {filteredInterviews.map((iv) => (
+                      <div key={iv._id} className="rounded-lg border border-border p-3 space-y-2 bg-card hover:bg-accent/20 transition-colors">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-sm text-foreground flex items-center gap-1.5 truncate">
+                            <Video className="h-3.5 w-3.5 text-primary shrink-0" />
+                            {iv.title}
+                          </span>
+                          <Badge variant={iv.status === 'Completed' ? 'default' : iv.status === 'Cancelled' ? 'destructive' : 'outline'} className="shrink-0">
+                            {iv.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                          <p className="flex items-center gap-1.5 font-medium text-foreground/80">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> 
+                            {new Date(iv.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                          </p>
+                          <p className="flex items-center gap-1.5">
+                            <span className="font-medium text-muted-foreground">Type:</span> {iv.type}
+                            {iv.link && (
+                              <a href={iv.link} target="_blank" rel="noopener noreferrer" className="ml-1 text-primary hover:underline font-medium inline-flex items-center gap-0.5">
+                                (Join Link <ExternalLink className="h-3 w-3" />)
+                              </a>
+                            )}
+                          </p>
+                          {iv.notes && <p className="mt-1 bg-muted/60 p-2 rounded text-xs border border-border/50 text-foreground/90">{iv.notes}</p>}
+                        </div>
+                        {iv.status === 'Scheduled' && (
+                          <div className="flex gap-2 mt-2 pt-2 border-t border-border">
+                            <Button size="sm" variant="outline" className="text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white flex-1 h-7 text-xs" onClick={() => handleUpdateInterviewStatus(iv._id, 'Completed')}>
+                              Complete
+                            </Button>
+                            <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 flex-1 h-7 text-xs" onClick={() => setCancelInterviewTarget(iv)}>
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-xs text-muted-foreground">
+                    No interviews match the selected filter.
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -715,6 +815,52 @@ export default function ApplicationDetailsPage({
         onStatusChange={(appId, newStatus) => handleUpdateStatus(newStatus as ApplicationStatus)}
         onScheduleInterview={() => setScheduleDialogOpen(true)}
       />
+
+      {/* Cancel Interview Confirmation Dialog */}
+      <Dialog open={!!cancelInterviewTarget} onOpenChange={(open) => { if (!open) setCancelInterviewTarget(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirm Interview Cancellation
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-sm text-muted-foreground">
+            <p>
+              Are you sure you want to cancel the scheduled interview round <span className="font-semibold text-foreground">&quot;{cancelInterviewTarget?.title}&quot;</span>?
+            </p>
+            {cancelInterviewTarget && (
+              <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs space-y-1">
+                <p><span className="font-medium text-foreground">Date & Time:</span> {new Date(cancelInterviewTarget.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                <p><span className="font-medium text-foreground">Type:</span> {cancelInterviewTarget.type}</p>
+                {cancelInterviewTarget.link && (
+                  <p><span className="font-medium text-foreground">Link/Location:</span> {cancelInterviewTarget.link}</p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              This will update the interview status to <span className="font-semibold text-destructive">Cancelled</span>.
+            </p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setCancelInterviewTarget(null)}>
+              Keep Interview
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (cancelInterviewTarget) {
+                  const targetId = cancelInterviewTarget._id;
+                  setCancelInterviewTarget(null);
+                  await handleUpdateInterviewStatus(targetId, 'Cancelled');
+                }
+              }}
+            >
+              Yes, Cancel Interview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

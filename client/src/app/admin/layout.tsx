@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import RoleGuard from '@/components/auth/RoleGuard';
+import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
+import RoleGuard from '@/features/auth/components/RoleGuard';
 import { AdminShell } from '@/components/admin/admin-shell';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

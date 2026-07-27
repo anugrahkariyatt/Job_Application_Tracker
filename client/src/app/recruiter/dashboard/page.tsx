@@ -8,10 +8,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
-  ComposedChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -19,19 +15,17 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/StatCard";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { StatusChip } from "@/lib/status";
 import { JobCard } from "@/components/shared/JobCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Briefcase,
-  FileEdit,
   Users,
   User,
-  UserPlus,
   CalendarCheck,
   Award,
   PlusCircle,
@@ -40,21 +34,13 @@ import {
   TrendingUp,
   Activity,
   Bell,
-  Loader2,
-  ChevronRight,
+  Video,
+  ExternalLink,
+  Clock,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import axiosInstance from "@/lib/axios";
 import { useAppSelector } from "@/store/hooks";
-
-const iconMap: Record<string, LucideIcon> = {
-  UserPlus,
-  CalendarCheck,
-  Briefcase,
-  UserCheck: Award,
-  Award,
-};
 
 export default function DashboardPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -96,20 +82,16 @@ export default function DashboardPage() {
           <Skeleton className="h-10 w-32" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {[...Array(6)].map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
             <Card key={i} className="p-4 space-y-3">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-8 w-12" />
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-12" />
-              </div>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2 p-6 space-y-4">
             <Skeleton className="h-6 w-36" />
             <Skeleton className="h-48 w-full" />
@@ -129,16 +111,16 @@ export default function DashboardPage() {
         <div className="rounded-full bg-primary/10 p-4 text-primary">
           <Building2 className="h-12 w-12" />
         </div>
-        <h2 className="text-2xl font-bold tracking-tight">Setup Your Company</h2>
-        <p className="text-muted-foreground text-sm">
-          Welcome {user?.name}! Before accessing your recruiter dashboard, you need to set up a company profile so candidates can see who they are applying to.
+        <h2 className="text-2xl font-extrabold tracking-tight">Setup Your Company Profile</h2>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          Welcome <span className="font-semibold text-foreground">{user?.name}</span>! Set up your company profile to start posting jobs and reviewing candidate applications.
         </p>
-        <Link
-          href="/recruiter/company/edit"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 font-medium text-primary-foreground hover:bg-primary-hover shadow-lg"
-        >
-          Create Company Profile
-        </Link>
+        <Button asChild size="lg" className="font-bold">
+          <Link href="/recruiter/company/edit">
+            Create Company Profile
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
       </div>
     );
   }
@@ -146,9 +128,9 @@ export default function DashboardPage() {
   if (errorMsg) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center p-6 text-center space-y-3 max-w-md mx-auto">
-        <p className="text-destructive font-medium">{errorMsg}</p>
+        <p className="text-destructive font-medium text-sm">{errorMsg}</p>
         <Button onClick={() => window.location.reload()} variant="outline">
-          Retry
+          Retry Loading
         </Button>
       </div>
     );
@@ -162,175 +144,383 @@ export default function DashboardPage() {
     recentApplications,
     recentNotifications,
     recentJobs,
-    jobsOverTime,
+    upcomingInterviews,
   } = data || {};
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description={`Welcome back, ${user?.name || "Recruiter"}. Here's what's happening at ${company?.name || "your company"}.`}
-        breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Dashboard' }]}
-        icon={TrendingUp}
-        actions={
-          <Link
-            href="/recruiter/jobs/new"
-            className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Post a Job
-          </Link>
-        }
-      />
+      {/* Welcome Greeting Banner */}
+      <Card className="border-border/60 shadow-sm bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden">
+        <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm shrink-0">
+              {company?.logo ? (
+                <AvatarImage src={company.logo} alt={company?.name} />
+              ) : (
+                <AvatarFallback className="font-bold text-base bg-primary/10 text-primary">
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "RC"}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                Welcome, {user?.name || "Recruiter"}!
+              </h2>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground font-medium">
+                Managing recruitment & applications for <span className="font-semibold text-foreground">{company?.name || "your company"}</span>
+              </p>
+            </div>
+          </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <Button variant="outline" size="sm" asChild className="font-medium">
+              <Link href="/recruiter/company">
+                <Building2 className="h-4 w-4 mr-1.5 text-primary" />
+                Company Profile
+              </Link>
+            </Button>
+            <Button size="sm" asChild className="font-semibold gap-1.5 shadow-sm">
+              <Link href="/recruiter/jobs/new">
+                <PlusCircle className="h-4 w-4" />
+                Post New Job
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Streamlined Stat Metric Summary Bar (4 High-Value Cards) */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Active Jobs"
+          label="Active Job Openings"
           value={stats?.activeJobs || 0}
           delta={stats?.activeJobsDelta}
           icon={Briefcase}
         />
         <StatCard
-          label="Draft Jobs"
-          value={stats?.draftJobs || 0}
-          delta={stats?.draftJobsDelta}
-          icon={FileEdit}
-          iconClassName="bg-muted text-muted-foreground"
-        />
-        <StatCard
-          label="Total Applications"
+          label="Total Candidate Applications"
           value={stats?.totalApplications || 0}
           delta={stats?.totalApplicationsDelta}
           icon={Users}
         />
         <StatCard
-          label="New Applications"
-          value={stats?.newApplications || 0}
-          delta={stats?.newApplicationsDelta}
-          icon={UserPlus}
-        />
-        <StatCard
-          label="Interviews"
+          label="Interviews Scheduled"
           value={stats?.interviewsScheduled || 0}
           delta={stats?.interviewsScheduledDelta}
           icon={CalendarCheck}
         />
         <StatCard
-          label="Hired"
+          label="Candidates Hired"
           value={stats?.hiredCandidates || 0}
           delta={stats?.hiredCandidatesDelta}
           icon={Award}
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left column: Job feed + analytics */}
-        <div className="space-y-4 lg:col-span-2">
+      {/* Main Split Layout: Left (2/3) & Right (1/3) */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Column (2/3 width on desktop, 2nd on mobile) */}
+        <div className="space-y-6 lg:col-span-2 order-2 lg:order-1">
+          {/* 1. Recent Applicants Table */}
           <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Briefcase className="h-4.5 w-4.5 text-primary" />
-                Recent Job Postings
-              </CardTitle>
-              <Link
-                href="/recruiter/jobs"
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-              >
-                View all jobs <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Users className="h-4.5 w-4.5 text-primary" />
+                  Recent Applicants
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Latest candidate submissions for your open positions
+                </CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
+                <Link href="/recruiter/applicants">
+                  View All
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                </Link>
+              </Button>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {recentJobs && recentJobs.length > 0 ? (
-                recentJobs.map((job: any) => (
-                  <JobCard
-                    key={job._id}
-                    job={job}
-                    showStats={true}
-                    companyLogo={company?.logo}
-                    companyName={company?.name}
-                  />
-                ))
+            <CardContent>
+              {recentApplications && recentApplications.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {recentApplications.slice(0, 4).map((app: any) => (
+                    <Link
+                      key={app.id}
+                      href={`/recruiter/applicants/${app.id}`}
+                      className="rounded-xl border border-border/60 bg-card p-3.5 block hover:border-primary/40 transition-all shadow-xs"
+                    >
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-10 w-10 shrink-0 border border-border/50">
+                          <AvatarImage src={app.photo} alt={app.name} />
+                          <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                            {app.name ? app.name.charAt(0).toUpperCase() : "C"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="truncate text-xs sm:text-sm font-semibold text-foreground">
+                            {app.name}
+                          </h4>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {app.headline || "Candidate Profile"}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-muted-foreground">
+                            Applied: <span className="font-medium text-foreground">{app.jobTitle}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
+                        <span className="text-xs text-muted-foreground">
+                          {app.appliedDate}
+                        </span>
+                        <StatusChip status={app.status} />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               ) : (
-                <div className="col-span-2 flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-sm">
-                  <p>No job postings yet.</p>
-                  <Link href="/recruiter/jobs/new" className="text-primary hover:underline font-medium mt-1">
-                    Post your first job now!
-                  </Link>
+                <div className="py-8 text-center text-xs sm:text-sm text-muted-foreground">
+                  No job applications have been submitted to your company yet.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 2. Active Job Postings */}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Briefcase className="h-4.5 w-4.5 text-primary" />
+                  Active Job Postings
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Your open job listings & active applicants
+                </CardDescription>
+              </div>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
+                <Link href="/recruiter/jobs">View All</Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {recentJobs && recentJobs.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {recentJobs.slice(0, 4).map((job: any) => (
+                    <JobCard
+                      key={job._id}
+                      job={job}
+                      showStats={true}
+                      companyLogo={company?.logo}
+                      companyName={company?.name}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-xs sm:text-sm space-y-2">
+                  <p>No active job postings found.</p>
+                  <Button size="sm" asChild>
+                    <Link href="/recruiter/jobs/new">Post First Job</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 3. Applications per Job Chart */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Applications Distribution per Job</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {applicationsPerJob && applicationsPerJob.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={applicationsPerJob} margin={{ left: -16, right: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Bar dataKey="applications" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-[180px] items-center justify-center text-xs sm:text-sm text-muted-foreground">
+                  No job applicant distribution statistics available yet.
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Activity className="h-4.5 w-4.5 text-primary" />
-                Recent Activity
-              </CardTitle>
+        {/* Right Column (1/3 width on desktop, 1st on mobile so Upcoming Interviews appears at top) */}
+        <div className="space-y-6 lg:col-span-1 order-1 lg:order-2">
+          {/* 1. Upcoming Scheduled Interviews (Top Priority) */}
+          <Card className="border-primary/20 bg-gradient-to-b from-primary/5 via-card to-card">
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <CalendarCheck className="h-4.5 w-4.5 text-primary" />
+                  Upcoming Interviews
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Scheduled candidate video rounds & meetings
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recentApplications && recentApplications.length > 0 ? (
-                recentApplications.map((app: any) => (
-                  <div key={app.id} className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <User className="h-4 w-4" />
+              {upcomingInterviews && upcomingInterviews.length > 0 ? (
+                upcomingInterviews.map((iv: any) => {
+                  const dateObj = new Date(iv.date);
+                  const formattedTime = dateObj.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                  const formattedDate = dateObj.toLocaleDateString([], {
+                    month: "short",
+                    day: "numeric",
+                  });
+
+                  return (
+                    <div
+                      key={iv.id}
+                      className="flex items-start gap-3 p-3 rounded-xl border border-border/60 bg-card hover:border-primary/40 transition-all shadow-xs"
+                    >
+                      <Avatar className="h-9 w-9 shrink-0 border border-border/50 rounded-lg">
+                        <AvatarImage src={iv.candidatePhoto} alt={iv.candidateName} className="rounded-lg object-cover" />
+                        <AvatarFallback className="rounded-lg text-xs font-semibold bg-primary/10 text-primary">
+                          {iv.candidateName ? iv.candidateName.slice(0, 2).toUpperCase() : "C"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                            {iv.candidateName}
+                          </p>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            {iv.type || "Video"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          {iv.title} • <span className="font-medium text-foreground">{iv.jobTitle}</span>
+                        </p>
+                        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-border/40">
+                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-primary" />
+                            {formattedDate}, {formattedTime}
+                          </span>
+                          {iv.link && (
+                            <a
+                              href={iv.link.startsWith("http") ? iv.link : `https://${iv.link}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                            >
+                              <Video className="h-3.5 w-3.5" /> Join Call <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
-                        New application from <span className="font-semibold">{app.name}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Applied for {app.jobTitle}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground/70">
-                        {app.appliedDate}
-                      </p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <div className="py-4 text-center text-sm text-muted-foreground">
-                  No recent candidate activity yet.
+                <div className="py-6 text-center text-xs sm:text-sm text-muted-foreground">
+                  No upcoming interviews scheduled yet.
                 </div>
               )}
             </CardContent>
           </Card>
 
+          {/* 2. Candidate Pipeline Status */}
           <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Candidate Status Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {statusDistribution && statusDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={220}>
+                  <PieChart>
+                    <Pie
+                      data={statusDistribution}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={75}
+                      paddingAngle={2}
+                    >
+                      {statusDistribution.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--popover))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: "11px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-[180px] items-center justify-center text-xs sm:text-sm text-muted-foreground">
+                  No candidate status data yet.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 3. Notifications & Alerts */}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Bell className="h-4.5 w-4.5 text-primary" />
                 Notifications
               </CardTitle>
-              <Link
-                href="/recruiter/notifications"
-                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-              >
-                View all <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
+                <Link href="/recruiter/notifications">All</Link>
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-1">
+            <CardContent className="space-y-3">
               {recentNotifications && recentNotifications.length > 0 ? (
-                recentNotifications.map((n: any) => (
+                recentNotifications.slice(0, 5).map((n: any) => (
                   <div
                     key={n.id || n._id}
-                    className="flex items-start gap-3 rounded-md p-2.5 hover:bg-accent transition-colors"
+                    className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-muted/40 transition-colors"
                   >
-                    <div
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.isRead ? "bg-muted-foreground/30" : "bg-primary"}`}
+                    <span
+                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.isRead ? "bg-muted-foreground/30" : "bg-primary"
+                        }`}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground leading-snug">
                         {n.title}
                       </p>
-                      <p className="text-xs text-muted-foreground">{n.message}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                        {n.message}
+                      </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-4 text-center text-sm text-muted-foreground">
+                <div className="py-6 text-center text-xs sm:text-sm text-muted-foreground">
                   No notifications yet.
                 </div>
               )}
@@ -338,256 +528,6 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Applications per Job
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {applicationsPerJob && applicationsPerJob.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart
-                  data={applicationsPerJob}
-                  margin={{ left: -16, right: 8 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{
-                      fontSize: 10,
-                      fill: "hsl(var(--muted-foreground))",
-                    }}
-                    tickLine={false}
-                    axisLine={false}
-                    angle={-15}
-                    height={50}
-                    textAnchor="end"
-                  />
-                  <YAxis
-                    tick={{
-                      fontSize: 11,
-                      fill: "hsl(var(--muted-foreground))",
-                    }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Bar
-                    dataKey="applications"
-                    fill="hsl(var(--chart-1))"
-                    radius={[4, 4, 0, 0]}
-                    barSize={28}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-[240px] flex-col items-center justify-center text-center p-4">
-                <p className="text-sm text-muted-foreground">No applications statistics yet.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Status Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {statusDistribution && statusDistribution.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
-                <PieChart>
-                  <Pie
-                    data={statusDistribution}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={85}
-                    paddingAngle={2}
-                  >
-                    {statusDistribution.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend
-                    iconType="circle"
-                    wrapperStyle={{ fontSize: "11px" }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-[240px] flex-col items-center justify-center text-center p-4">
-                <p className="text-sm text-muted-foreground">No applications received yet.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Jobs Posted Over Time
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart
-                data={jobsOverTime}
-                margin={{ left: -16, right: 8 }}
-              >
-                <defs>
-                  <linearGradient id="colorJobs" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="hsl(var(--chart-1))"
-                      stopOpacity={0.2}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="hsl(var(--chart-1))"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="hsl(var(--border))"
-                  vertical={false}
-                />
-                <XAxis
-                  dataKey="name"
-                  tick={{
-                    fontSize: 10,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  tick={{
-                    fontSize: 11,
-                    fill: "hsl(var(--muted-foreground))",
-                  }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--popover))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="jobs"
-                  stroke="hsl(var(--chart-1))"
-                  fillOpacity={1}
-                  fill="url(#colorJobs)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <Users className="h-4.5 w-4.5 text-primary" />
-            Recent Applications
-          </CardTitle>
-          <Link
-            href="/recruiter/applicants"
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            View all applicants <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {recentApplications && recentApplications.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {recentApplications.map((app: any) => (
-                <Link
-                  key={app.id}
-                  href={`/recruiter/applicants/${app.id}`}
-                  className="job-card-hover rounded-lg border border-border bg-card p-4 block"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="relative h-12 w-12 shrink-0">
-                      {app.photo ? (
-                        <Image
-                          src={app.photo}
-                          alt={app.name}
-                          width={48}
-                          height={48}
-                          className="h-12 w-12 rounded-full object-cover ring-2 ring-border"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center ring-2 ring-border text-muted-foreground font-semibold">
-                          {app.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-semibold text-foreground">
-                        {app.name}
-                      </h3>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {app.headline}
-                      </p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        Applied for:{" "}
-                        <span className="font-medium text-foreground">
-                          {app.jobTitle}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
-                    <span className="text-xs text-muted-foreground">
-                      {app.appliedDate}
-                    </span>
-                    <StatusChip status={app.status} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="py-8 text-center text-sm text-muted-foreground">
-              No job applications have been submitted to your company yet.
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

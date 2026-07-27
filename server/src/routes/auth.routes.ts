@@ -17,6 +17,7 @@ import {
   deleteAccount,
   resendVerificationEmail,
   updateProfileController,
+  googleLogin,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 
@@ -24,6 +25,7 @@ const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
+router.post("/google", googleLogin);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
 router.post("/verify-password", authenticate, verifyPassword);
@@ -39,18 +41,5 @@ router.put("/preferences", authenticate, updatePreferences);
 router.post("/deactivate", authenticate, deactivateAccount);
 router.delete("/delete-account", authenticate, deleteAccount);
 
-
-router.get("/test-n8n", async (req, res) => {
-  const response = await axios.post(
-    "http://localhost:5678/webhook/send-email",
-    {
-      type: "verification",
-      email: "your-email@gmail.com",
-      verificationLink: "https://google.com",
-    }
-  );
-
-  res.json(response.data);
-});
 
 export default router;

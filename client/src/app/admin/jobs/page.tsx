@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
@@ -105,7 +106,11 @@ export default function JobsPage() {
     {
       key: 'title',
       header: 'Job Title',
-      cell: (j) => <span className="text-sm font-medium">{j.title}</span>,
+      cell: (j) => (
+        <Link href={`/admin/jobs/${j.id}`} className="text-sm font-medium text-foreground hover:text-primary hover:underline">
+          {j.title}
+        </Link>
+      ),
     },
     { key: 'company', header: 'Company', cell: (j) => <span className="text-sm">{j.company}</span> },
     { key: 'type', header: 'Type', cell: (j) => <span className="text-sm">{j.type}</span> },
@@ -145,6 +150,7 @@ export default function JobsPage() {
         getRowId={(j) => j.id}
         serverSide={true}
         loading={loading}
+        onRowClick={(j) => router.push(`/admin/jobs/${j.id}`)}
         onServerParamsChange={(p) => fetchJobs(p)}
         filters={[
           { key: 'type', placeholder: 'Type', options: typeOptions },

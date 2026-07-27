@@ -136,12 +136,12 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -150,10 +150,10 @@ export default function AdminDashboard() {
                     background: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "13px",
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />
+                <Legend wrapperStyle={{ fontSize: '12px', marginTop: '10px' }} />
                 <Bar name="Users" dataKey="Users" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
                 <Bar name="Companies" dataKey="Companies" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -177,12 +177,12 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                   tickLine={false}
                   axisLine={false}
                 />
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
                     background: "hsl(var(--popover))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "13px",
                   }}
                 />
                 <Area
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                     <TableRow key={c._id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold text-white bg-blue-600">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-semibold bg-primary/10 text-primary">
                             {c.companyName.slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex flex-col">

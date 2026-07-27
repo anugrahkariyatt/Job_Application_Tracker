@@ -4,7 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   registerCompanySchema,
   updateCompanySchema,
-} from "../validations/company.validations.js";
+} from "../validations/company.validation.js";
 import {
   createCompanyService,
   getMyCompanyDetails,
@@ -18,6 +18,7 @@ import Job from "../models/job.model.js";
 import Application from "../models/application.model.js";
 import Notification from "../models/notification.model.js";
 import Company from "../models/company.model.js";
+import Interview from "../models/interview.model.js";
 export const createCompany = async (
   req: Request,
   res: Response,
@@ -138,7 +139,6 @@ export const getRecruiterDashboardStats = async (
 
     const jobs = await Job.find({ companyId: company._id });
     const activeJobs = jobs.filter(j => j.status === "Open").length;
-    const draftJobs = jobs.filter(j => j.status === "Draft").length;
 
     const jobIds = jobs.map(j => j._id);
     const applications = await Application.find({ jobId: { $in: jobIds } })
@@ -149,16 +149,9 @@ export const getRecruiterDashboardStats = async (
           select: "name email"
         }
       })
-      .populate("jobId", "title");
+      .populate("jobId", "title skills location employmentType experienceLevel");
 
     const totalApplications = applications.length;
-
-    // Calculate new applications (Applied in the last 7 days)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const newApplications = applications.filter(
-      app => app.createdAt >= sevenDaysAgo
-    ).length;
 
     const interviewsScheduled = applications.filter(
       app => app.status === "Interview"
@@ -168,14 +161,12 @@ export const getRecruiterDashboardStats = async (
       app => app.status === "Hired"
     ).length;
 
-    // Define date ranges for comparison
+    // Define 30-day & 60-day date ranges for monthly delta comparisons
     const now = new Date();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(now.getDate() - 30);
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(now.getDate() - 60);
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(now.getDate() - 14);
 
     const calculateDelta = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -187,20 +178,10 @@ export const getRecruiterDashboardStats = async (
     const activeJobsLastMonth = jobs.filter(j => j.status === "Open" && j.createdAt >= sixtyDaysAgo && j.createdAt < thirtyDaysAgo).length;
     const activeJobsDelta = calculateDelta(activeJobsThisMonth, activeJobsLastMonth);
 
-    // Calculate Draft Jobs Delta (vs last month)
-    const draftJobsThisMonth = jobs.filter(j => j.status === "Draft" && j.createdAt >= thirtyDaysAgo).length;
-    const draftJobsLastMonth = jobs.filter(j => j.status === "Draft" && j.createdAt >= sixtyDaysAgo && j.createdAt < thirtyDaysAgo).length;
-    const draftJobsDelta = calculateDelta(draftJobsThisMonth, draftJobsLastMonth);
-
     // Calculate Total Applications Delta (vs last month)
     const totalAppsThisMonth = applications.filter(app => app.createdAt >= thirtyDaysAgo).length;
     const totalAppsLastMonth = applications.filter(app => app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
     const totalApplicationsDelta = calculateDelta(totalAppsThisMonth, totalAppsLastMonth);
-
-    // Calculate New Applications Delta (last 7 days vs previous 7 days)
-    const newAppsThisPeriod = applications.filter(app => app.createdAt >= sevenDaysAgo).length;
-    const newAppsLastPeriod = applications.filter(app => app.createdAt >= fourteenDaysAgo && app.createdAt < sevenDaysAgo).length;
-    const newApplicationsDelta = calculateDelta(newAppsThisPeriod, newAppsLastPeriod);
 
     // Calculate Interviews Delta (vs last month)
     const interviewsThisMonth = applications.filter(app => app.status === "Interview" && app.createdAt >= thirtyDaysAgo).length;
@@ -212,45 +193,7 @@ export const getRecruiterDashboardStats = async (
     const hiredLastMonth = applications.filter(app => app.status === "Hired" && app.createdAt >= sixtyDaysAgo && app.createdAt < thirtyDaysAgo).length;
     const hiredCandidatesDelta = calculateDelta(hiredThisMonth, hiredLastMonth);
 
-    // Calculate jobs posted over time (last 6 months cumulative)
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const jobsByMonthMap = new Map<string, number>();
-    const trackedMonths: string[] = [];
-    const cutoffDate = new Date();
-    cutoffDate.setMonth(cutoffDate.getMonth() - 5);
-    cutoffDate.setDate(1);
-    cutoffDate.setHours(0, 0, 0, 0);
-
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const monthName = monthNames[d.getMonth()];
-      jobsByMonthMap.set(monthName, 0);
-      trackedMonths.push(monthName);
-    }
-
-    let priorJobsCount = 0;
-    jobs.forEach(j => {
-      const jobDate = new Date(j.createdAt);
-      if (jobDate < cutoffDate) {
-        priorJobsCount++;
-      } else {
-        const monthName = monthNames[jobDate.getMonth()];
-        if (jobsByMonthMap.has(monthName)) {
-          jobsByMonthMap.set(monthName, jobsByMonthMap.get(monthName)! + 1);
-        }
-      }
-    });
-
-    let runningTotal = priorJobsCount;
-    const jobsOverTime = trackedMonths.map(monthName => {
-      runningTotal += jobsByMonthMap.get(monthName) || 0;
-      return {
-        name: monthName,
-        jobs: runningTotal,
-      };
-    });
-    // Applications per job
+    // Applications per job distribution
     const appsPerJobMap = new Map<string, number>();
     jobs.forEach(j => {
       if (j.status === "Open") {
@@ -305,10 +248,43 @@ export const getRecruiterDashboardStats = async (
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, 4);
 
-    // Recent notifications (limit 3)
+    // Recent notifications (limit 5)
     const recentNotifications = await Notification.find({ userId: req.user!.id })
       .sort({ createdAt: -1 })
-      .limit(3);
+      .limit(5);
+
+    // Upcoming scheduled interviews (limit 4)
+    const rawInterviews = await Interview.find({
+      companyId: company._id,
+      status: "Scheduled",
+      date: { $gte: new Date() }
+    })
+      .sort({ date: 1 })
+      .limit(4)
+      .populate("jobId", "title")
+      .populate({
+        path: "candidateId",
+        select: "profileImage userId",
+        populate: { path: "userId", select: "name email" }
+      });
+
+    const upcomingInterviews = rawInterviews.map((iv: any) => {
+      const candidate = iv.candidateId as any;
+      const candidateUser = candidate?.userId;
+      return {
+        id: iv._id,
+        candidateName: candidateUser?.name || "Candidate",
+        candidateEmail: candidateUser?.email || "",
+        candidatePhoto: candidate?.profileImage || "",
+        jobTitle: (iv.jobId as any)?.title || "Position",
+        date: iv.date,
+        type: iv.type,
+        title: iv.title,
+        link: iv.link,
+        notes: iv.notes,
+        status: iv.status,
+      };
+    });
 
     return res.status(200).json({
       success: true,
@@ -320,12 +296,8 @@ export const getRecruiterDashboardStats = async (
         stats: {
           activeJobs,
           activeJobsDelta,
-          draftJobs,
-          draftJobsDelta,
           totalApplications,
           totalApplicationsDelta,
-          newApplications,
-          newApplicationsDelta,
           interviewsScheduled,
           interviewsScheduledDelta,
           hiredCandidates,
@@ -336,7 +308,7 @@ export const getRecruiterDashboardStats = async (
         recentApplications,
         recentNotifications,
         recentJobs,
-        jobsOverTime,
+        upcomingInterviews,
       }
     });
   } catch (error) {
@@ -367,7 +339,7 @@ export const getAllCompaniesPublicController = async (
   next: NextFunction,
 ) => {
   try {
-    const { search, industry, location } = req.query;
+    const { search, industry, location, page, limit } = req.query;
     const filter: any = { isActive: { $ne: false }, verified: true };
 
     if (search) {
@@ -379,7 +351,7 @@ export const getAllCompaniesPublicController = async (
       ];
     }
 
-    if (industry && industry !== "all") {
+    if (industry && industry !== "All" && industry !== "all") {
       filter.industry = industry;
     }
 
@@ -388,11 +360,27 @@ export const getAllCompaniesPublicController = async (
       filter.headquarters = regex;
     }
 
-    const companies = await Company.find(filter).sort({ companyName: 1 });
+    const pageNum = page ? Math.max(1, Number(page)) : 1;
+    const limitNum = limit ? Math.max(1, Number(limit)) : 9;
+    const skip = (pageNum - 1) * limitNum;
+
+    const totalCount = await Company.countDocuments(filter);
+    const companies = await Company.find(filter)
+      .sort({ companyName: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    const totalPages = Math.ceil(totalCount / limitNum);
 
     return res.status(200).json({
       success: true,
       data: companies,
+      pagination: {
+        totalCount,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+      },
     });
   } catch (error) {
     next(error);

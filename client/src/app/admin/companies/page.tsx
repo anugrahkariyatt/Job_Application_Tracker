@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import axiosInstance from '@/lib/axios';
@@ -144,7 +145,9 @@ export default function CompaniesPage() {
           </Avatar>
           <div className="min-w-0">
             <div className="flex items-center gap-1">
-              <p className="truncate text-sm font-medium">{c.name}</p>
+              <Link href={`/admin/companies/${c.id}`} className="truncate text-sm font-medium hover:text-primary hover:underline">
+                {c.name}
+              </Link>
               {c.verified && <ShieldCheck className="h-4 w-4 text-emerald-600 fill-emerald-100" />}
             </div>
             <p className="truncate text-xs text-muted-foreground">{c.website}</p>
@@ -195,6 +198,7 @@ export default function CompaniesPage() {
         getRowId={(c) => c.id}
         serverSide={true}
         loading={loading}
+        onRowClick={(c) => router.push(`/admin/companies/${c.id}`)}
         onServerParamsChange={(p) => fetchCompanies(p)}
         filters={[{ key: 'status', placeholder: 'Status', options: statusOptions }]}
       />

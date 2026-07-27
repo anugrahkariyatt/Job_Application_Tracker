@@ -184,99 +184,111 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Details Area */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Company Profile Header Card */}
-          <Card className="overflow-hidden">
-          <div className="h-24 w-full bg-muted border-b relative overflow-hidden">
-            {company.coverImage && (
-              <img src={company.coverImage} className="w-full h-full object-cover opacity-20" alt="Cover" />
-            )}
-          </div>
-          <CardContent className="relative pt-10 pb-6 px-6">
-            {/* Profile Logo positioning */}
-            <div className="absolute -top-10 left-6 border-2 border-border rounded-xl overflow-hidden bg-background h-20 w-20 shadow-sm">
-              <Avatar className="h-full w-full rounded-none">
-                <AvatarImage src={company.logo} />
-                <AvatarFallback className="bg-primary/8 text-xl font-bold text-primary rounded-none">
-                  {company.companyName.slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+        {/* Main Company Profile Card (2/3 width) */}
+        <Card className="lg:col-span-2 overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="h-28 w-full bg-muted/40 border-b relative overflow-hidden">
+              {company.coverImage && (
+                <img src={company.coverImage} className="w-full h-full object-cover opacity-25" alt="Cover" />
+              )}
             </div>
+            <CardContent className="relative pt-12 pb-6 px-6 space-y-6">
+              {/* Profile Logo */}
+              <div className="absolute -top-10 left-6 border-2 border-background rounded-xl overflow-hidden bg-card h-20 w-20 shadow-sm">
+                <Avatar className="h-full w-full rounded-none">
+                  <AvatarImage src={company.logo} />
+                  <AvatarFallback className="bg-primary/10 text-xl font-bold text-primary rounded-none">
+                    {company.companyName.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
 
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold flex items-center gap-2">
+                  <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
                     {company.companyName}
                     {company.verified && <CheckCircle className="h-5 w-5 fill-primary text-primary-foreground" />}
                   </h2>
-                  <p className="text-sm text-muted-foreground">{company.industry}</p>
+                  <p className="text-xs font-semibold text-primary mt-0.5">{company.industry}</p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge tone={company.verified ? 'success' : 'warning'}>
                     {company.verified ? 'Verified' : 'Pending Review'}
                   </StatusBadge>
                   <StatusBadge tone={company.isActive ? 'primary' : 'neutral'}>
                     {company.isActive ? 'Active' : 'Deactivated'}
                   </StatusBadge>
+                  <div className="px-2.5 py-0.5 rounded-full border border-border bg-muted/40 text-xs font-semibold text-muted-foreground">
+                    {company.jobsPosted || 0} Jobs Posted
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-2 text-sm text-muted-foreground pt-1 sm:grid-cols-2">
+              <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2 pt-2 border-t border-border/50">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 shrink-0" />
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span>{company.headquarters || 'Location not specified'}</span>
                 </div>
                 {company.website && (
                   <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 shrink-0" />
-                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5 truncate">
+                    <Globe className="h-3.5 w-3.5 shrink-0" />
+                    <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 truncate font-medium">
                       {company.website} <ExternalLink className="h-3 w-3 shrink-0" />
                     </a>
                   </div>
                 )}
               </div>
-            </div>
-          </CardContent>
-          </Card>
 
-          {/* Description Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">About Company</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                {company.description || 'No description provided by the recruiter.'}
-              </p>
+              <div className="space-y-1.5 pt-2 border-t border-border/50">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">About Company</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {company.description || 'No description provided by the recruiter.'}
+                </p>
+              </div>
             </CardContent>
-          </Card>
-        </div>
+          </div>
+        </Card>
 
-        {/* Sidebar Actions & Stats */}
-        <div className="space-y-6">
-          {/* Admin Approval Control Panel */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold flex items-center gap-1.5">
-                <Building className="h-4 w-4" />
-                Administrative Actions
-              </CardTitle>
-              <CardDescription>Verify accounts and set access permissions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Verify approval toggle */}
+        {/* Sidebar Card: Recruiter Info & Administrative Actions (1/3 width) */}
+        <Card className="p-6 flex flex-col justify-between space-y-6">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-primary" />
+                Recruiter Profile
+              </h3>
+              <div className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-muted/20">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                    {ownerInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-semibold truncate text-foreground">{company.ownerId?.name || 'Recruiter'}</h4>
+                  <p className="text-xs text-muted-foreground truncate">{company.ownerId?.email}</p>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Building className="h-3.5 w-3.5 text-primary" />
+                Administrative Controls
+              </h3>
+
               <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-xs">
                   <span className="text-muted-foreground">Verification Approval</span>
-                  <span className="font-semibold">{company.verified ? 'Approved' : 'Pending'}</span>
+                  <span className="font-semibold text-foreground">{company.verified ? 'Approved' : 'Pending'}</span>
                 </div>
                 <Button
                   onClick={handleToggleVerification}
                   variant={company.verified ? 'outline' : 'default'}
-                  className="w-full flex items-center gap-2"
+                  size="sm"
+                  className="w-full flex items-center justify-center gap-2"
                   disabled={updatingVerify}
                 >
                   {company.verified ? (
@@ -286,25 +298,23 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="h-4 w-4 text-white" />
-                      Approve & Verify Company
+                      <ShieldCheck className="h-4 w-4" />
+                      Approve & Verify
                     </>
                   )}
                 </Button>
               </div>
 
-              <Separator />
-
-              {/* Status active/inactive toggle */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Account Status</span>
-                  <span className="font-semibold">{company.isActive ? 'Active' : 'Disabled'}</span>
+              <div className="space-y-2 pt-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Account Access Status</span>
+                  <span className="font-semibold text-foreground">{company.isActive ? 'Active' : 'Disabled'}</span>
                 </div>
                 <Button
                   onClick={handleToggleStatus}
                   variant={company.isActive ? 'outline' : 'secondary'}
-                  className="w-full flex items-center gap-2"
+                  size="sm"
+                  className="w-full flex items-center justify-center gap-2"
                   disabled={updatingStatus}
                 >
                   {company.isActive ? (
@@ -320,47 +330,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                   )}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recruiter Owner profile card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold flex items-center gap-1.5">
-                <User className="h-4 w-4 text-primary" />
-                Recruiter Profile
-              </CardTitle>
-              <CardDescription>Primary owner of this company</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                    {ownerInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-bold truncate">{company.ownerId?.name || 'Deleted Recruiter'}</h4>
-                  <p className="text-xs text-muted-foreground truncate">{company.ownerId?.email}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Statistics Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold flex items-center gap-1.5">
-                <Briefcase className="h-4 w-4 text-primary" />
-                Active Postings
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center py-6">
-              <p className="text-4xl font-extrabold text-primary">{company.jobsPosted}</p>
-              <p className="text-xs text-muted-foreground mt-2">Active jobs posted by this company on the platform.</p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Delete Confirmation Dialog */}

@@ -7,7 +7,7 @@ import {
   updateCandidateController,
   updateProfileImageController,
   updateResumeController,
-} from "../controllers/candidate.conrtoller.js";
+} from "../controllers/candidate.controller.js";
 import { upload } from "../middleware/upload.middleware.js";
 
 const router = Router();

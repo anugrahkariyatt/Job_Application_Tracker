@@ -2,6 +2,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Upload, Save, X, Loader2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import axiosInstance from '@/lib/axios';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const optionalUrlSchema = z.preprocess((val) => {
   if (typeof val !== "string" || !val.trim()) return undefined;
@@ -49,7 +61,7 @@ const companyProfileSchema = z.object({
     .optional()
     .or(z.literal("")),
   foundedYear: z.preprocess(
-    (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+    (val) => (val === "" || val === undefined || val === null || isNaN(Number(val)) ? undefined : Number(val)),
     z
       .number()
       .int("Founded year must be an integer")
@@ -73,22 +85,10 @@ const companyProfileSchema = z.object({
   twitter: optionalUrlSchema,
   facebook: optionalUrlSchema,
 });
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Upload, Save, X, Loader2, AlertCircle } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import axiosInstance from '@/lib/axios';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditCompanyPage() {
   const router = useRouter();
-  
+
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -184,6 +184,11 @@ export default function EditCompanyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (noCompany) {
+      toast.error('Please save your Company Name and Industry first before uploading a logo.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('logo', file);
 
@@ -195,7 +200,6 @@ export default function EditCompanyPage() {
       if (response.data?.success) {
         setCompanyLogo(response.data.data.logo);
         toast.success('Logo uploaded successfully!');
-        setNoCompany(false);
       }
     } catch (err: any) {
       console.error('Logo upload error:', err);
@@ -210,6 +214,11 @@ export default function EditCompanyPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (noCompany) {
+      toast.error('Please save your Company Name and Industry first before uploading a cover image.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('coverImage', file);
 
@@ -221,7 +230,6 @@ export default function EditCompanyPage() {
       if (response.data?.success) {
         setCompanyCover(response.data.data.coverImage);
         toast.success('Cover image uploaded successfully!');
-        setNoCompany(false);
       }
     } catch (err: any) {
       console.error('Cover upload error:', err);
@@ -234,15 +242,16 @@ export default function EditCompanyPage() {
 
   const handleSave = async () => {
     setFieldErrors({});
+
     // Validate with Zod
     const validation = companyProfileSchema.safeParse({
       ...form,
-      foundedYear: form.foundedYear ? Number(form.foundedYear) : undefined,
+      foundedYear: form.foundedYear && !isNaN(Number(form.foundedYear)) ? Number(form.foundedYear) : undefined,
     });
 
     if (!validation.success) {
       const fe = validation.error.flatten().fieldErrors;
-      setFieldErrors({
+      const newErrors: FormErrors = {
         companyName: fe.companyName?.[0],
         industry: fe.industry?.[0],
         companySize: fe.companySize?.[0],
@@ -256,37 +265,43 @@ export default function EditCompanyPage() {
         twitter: fe.twitter?.[0],
         facebook: fe.facebook?.[0],
         description: fe.description?.[0],
-      });
+      };
+      setFieldErrors(newErrors);
+
+      const firstErr = Object.values(newErrors).find(Boolean);
+      toast.error(firstErr ? `Validation Error: ${firstErr}` : "Please check the form for errors.");
       return;
     }
 
-    // Sanitize empty strings for URL fields to satisfy Zod validation
+    // Build payload
     const payload: any = {
       companyName: validation.data.companyName,
       industry: validation.data.industry,
     };
 
-    if (validation.data.companySize) payload.companySize = validation.data.companySize;
-    if (validation.data.website) payload.website = validation.data.website;
-    if (validation.data.email) payload.email = validation.data.email;
-    if (validation.data.phone) payload.phone = validation.data.phone;
-    if (validation.data.description) payload.description = validation.data.description;
+    if (form.companySize) payload.companySize = form.companySize;
+    if (form.website) payload.website = form.website;
+    if (form.email) payload.email = form.email;
+    if (form.phone) payload.phone = form.phone;
+    if (form.description) payload.description = form.description;
     if (validation.data.foundedYear) payload.foundedYear = validation.data.foundedYear;
-    if (validation.data.headquarters) payload.headquarters = validation.data.headquarters;
-    if (validation.data.address) payload.address = validation.data.address;
-    if (validation.data.linkedin) payload.linkedin = validation.data.linkedin;
-    if (validation.data.twitter) payload.twitter = validation.data.twitter;
-    if (validation.data.facebook) payload.facebook = validation.data.facebook;
+    if (form.headquarters) payload.headquarters = form.headquarters;
+    if (form.address) payload.address = form.address;
+    if (form.linkedin) payload.linkedin = form.linkedin;
+    if (form.twitter) payload.twitter = form.twitter;
+    if (form.facebook) payload.facebook = form.facebook;
 
     try {
       setSaving(true);
       let response;
       if (noCompany) {
-        // Create company profile
-        response = await axiosInstance.post('/api/company', {
-          companyName: form.companyName,
-          industry: form.industry,
+        // Create company profile first
+        await axiosInstance.post('/api/company', {
+          companyName: payload.companyName,
+          industry: payload.industry,
         });
+        // Update full profile details
+        response = await axiosInstance.patch('/api/company', payload);
       } else {
         // Update company profile
         response = await axiosInstance.patch('/api/company', payload);
@@ -300,9 +315,10 @@ export default function EditCompanyPage() {
       console.error('Error saving company profile:', err);
       const errors = err.response?.data?.errors?.fieldErrors;
       if (errors) {
-        Object.keys(errors).forEach((key) => {
-          toast.error(`${key}: ${errors[key].join(', ')}`);
-        });
+        const errMsgs = Object.entries(errors)
+          .map(([k, v]: [string, any]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+          .join(', ');
+        toast.error(errMsgs || 'Validation failed');
       } else {
         toast.error(err.response?.data?.message || 'Failed to save company profile.');
       }
@@ -327,7 +343,7 @@ export default function EditCompanyPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-12">
       <PageHeader
         title={noCompany ? 'Setup Company Profile' : 'Edit Company Profile'}
         description="Update your company's information and branding."
@@ -337,43 +353,29 @@ export default function EditCompanyPage() {
           { label: 'Edit' },
         ]}
         actions={
-          <>
-            <Link href="/recruiter/company">
-              <Button variant="outline" size="sm">
-                <X className="mr-1.5 h-4 w-4" />
-                Cancel
-              </Button>
-            </Link>
-            <Button size="sm" onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <>
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-1.5 h-4 w-4" />
-                  Save Changes
-                </>
-              )}
+          <Link href="/recruiter/company">
+            <Button variant="outline" size="sm">
+              <X className="mr-1.5 h-4 w-4" />
+              Cancel
             </Button>
-          </>
+          </Link>
         }
       />
 
       {noCompany && (
-        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-primary">
+        <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-primary">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-semibold">Profile Setup Required</p>
             <p className="text-primary/90 mt-0.5">
-              Enter your Company Name and Industry, and click **Save Changes** below to initialize your company profile. Once saved, you can upload your Logo and Cover Image.
+              Fill out your company details below and click <strong>Save Changes</strong> to create your official company profile.
             </p>
           </div>
         </div>
       )}
 
-      <Card className={noCompany ? 'opacity-60 pointer-events-none' : ''}>
+      {/* BRANDING CARD */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Branding</CardTitle>
         </CardHeader>
@@ -389,7 +391,7 @@ export default function EditCompanyPage() {
             />
             <div
               onClick={() => !coverUploading && coverInputRef.current?.click()}
-              className="relative h-36 w-full overflow-hidden rounded-lg border-2 border-dashed border-border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+              className="relative h-36 w-full overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
             >
               {companyCover ? (
                 <img
@@ -407,13 +409,14 @@ export default function EditCompanyPage() {
                   <>
                     <Upload className="h-5 w-5 text-muted-foreground" />
                     <p className="text-xs font-medium text-muted-foreground">
-                      Click to upload a new cover image
+                      Click to upload cover image
                     </p>
                   </>
                 )}
               </div>
             </div>
           </div>
+
           <div>
             <Label className="mb-2 block">Company Logo</Label>
             <input
@@ -431,7 +434,7 @@ export default function EditCompanyPage() {
                   className="h-16 w-16 rounded-xl border border-border object-cover"
                 />
               ) : (
-                <div className="h-16 w-16 rounded-xl border border-border bg-muted flex items-center justify-center text-muted-foreground font-semibold text-lg">
+                <div className="h-16 w-16 rounded-xl border border-border bg-muted flex items-center justify-center text-muted-foreground font-semibold text-sm">
                   Logo
                 </div>
               )}
@@ -453,6 +456,7 @@ export default function EditCompanyPage() {
         </CardContent>
       </Card>
 
+      {/* BASIC INFORMATION CARD */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Basic Information</CardTitle>
@@ -478,7 +482,7 @@ export default function EditCompanyPage() {
               placeholder="e.g. 10-50 employees"
               value={form.companySize}
               onChange={(v) => handleChange('companySize', v)}
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.companySize}
             />
             <FormField
@@ -486,7 +490,7 @@ export default function EditCompanyPage() {
               placeholder="e.g. 2016"
               value={form.foundedYear}
               onChange={(v) => handleChange('foundedYear', v)}
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.foundedYear}
             />
             <FormField
@@ -494,7 +498,7 @@ export default function EditCompanyPage() {
               placeholder="https://example.com"
               value={form.website}
               onChange={(v) => handleChange('website', v)}
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.website}
             />
             <FormField
@@ -503,7 +507,7 @@ export default function EditCompanyPage() {
               value={form.email}
               onChange={(v) => handleChange('email', v)}
               type="email"
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.email}
             />
             <FormField
@@ -511,7 +515,7 @@ export default function EditCompanyPage() {
               placeholder="+1 (555) 019-2834"
               value={form.phone}
               onChange={(v) => handleChange('phone', v)}
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.phone}
             />
             <FormField
@@ -519,7 +523,7 @@ export default function EditCompanyPage() {
               placeholder="e.g. San Francisco, CA"
               value={form.headquarters}
               onChange={(v) => handleChange('headquarters', v)}
-              disabled={saving || noCompany}
+              disabled={saving}
               error={fieldErrors.headquarters}
             />
           </div>
@@ -529,13 +533,14 @@ export default function EditCompanyPage() {
               value={form.address}
               onChange={(e) => handleChange('address', e.target.value)}
               rows={2}
-              disabled={saving || noCompany}
+              disabled={saving}
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className={noCompany ? 'opacity-60 pointer-events-none' : ''}>
+      {/* DESCRIPTION CARD */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Description</CardTitle>
         </CardHeader>
@@ -545,18 +550,17 @@ export default function EditCompanyPage() {
             onChange={(e) => handleChange('description', e.target.value)}
             rows={5}
             disabled={saving}
+            placeholder="Tell candidates what makes your company unique..."
             className={fieldErrors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}
           />
           {fieldErrors.description && (
             <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{fieldErrors.description}</p>
           )}
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            Tell candidates what makes your company unique.
-          </p>
         </CardContent>
       </Card>
 
-      <Card className={noCompany ? 'opacity-60 pointer-events-none' : ''}>
+      {/* SOCIAL LINKS CARD */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Social Links</CardTitle>
         </CardHeader>
@@ -590,19 +594,22 @@ export default function EditCompanyPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-end gap-2">
+      {/* ACTION BAR */}
+      <div className="flex items-center justify-end gap-3 pt-2">
         <Link href="/recruiter/company">
-          <Button variant="outline">Cancel</Button>
+          <Button variant="outline" type="button">
+            Cancel
+          </Button>
         </Link>
-        <Button onClick={handleSave} disabled={saving}>
+        <Button type="button" onClick={handleSave} disabled={saving} className="px-6">
           {saving ? (
             <>
-              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
-              <Save className="mr-1.5 h-4 w-4" />
+              <Save className="mr-2 h-4 w-4" />
               Save Changes
             </>
           )}

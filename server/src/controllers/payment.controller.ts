@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { sendPaymentSuccessEmail } from "../services/mail.service.js";
+import { createNotification } from "../services/notification.service.js";
 import { getClientUrl } from "../utils/clientUrl.util.js";
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "sk_test_placeholder";
@@ -155,15 +156,29 @@ export const verifyStripeSessionController = async (
     await user.save();
 
     try {
+      const isRecruiter = user.role === "recruiter";
+      const planTitle = isRecruiter ? "Recruiter PRO" : "Candidate PRO";
+      const amount = isRecruiter ? "$29.99" : "$9.99";
+      const expiresAt = user.subscriptionExpiresAt.toLocaleDateString();
+
+      // Trigger n8n payment success email
       await sendPaymentSuccessEmail({
         email: user.email,
         userName: user.name,
-        planName: "PRO",
-        amount: user.role === "recruiter" ? "$29.99" : "$9.99",
-        expiresAt: user.subscriptionExpiresAt.toLocaleDateString(),
+        planName: planTitle,
+        amount,
+        expiresAt,
       });
+
+      // Push In-App Notification
+      await createNotification(
+        user._id.toString(),
+        `Payment Successful - ${planTitle} Activated! 🎉`,
+        `Thank you for upgrading! Your payment of ${amount} for ${planTitle} subscription was processed successfully. Valid until ${expiresAt}. All PRO features are now unlocked!`,
+        "SYSTEM",
+      );
     } catch (n8nErr) {
-      console.error("[PAYMENT CONTROLLER ERROR] Failed to send payment email:", n8nErr);
+      console.error("[PAYMENT CONTROLLER ERROR] Failed to send payment email/notification:", n8nErr);
     }
 
     return res.status(200).json({
@@ -191,20 +206,34 @@ export const handlePaymentSuccessController = async (
       throw new AppError("User not found", 404);
     }
 
-    user.subscriptionPlan = plan;
+    user.subscriptionPlan = "pro";
     user.subscriptionExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await user.save();
 
     try {
+      const isRecruiter = user.role === "recruiter" || plan.includes("recruiter");
+      const planTitle = isRecruiter ? "Recruiter PRO" : "Candidate PRO";
+      const amount = isRecruiter ? "$29.99" : "$9.99";
+      const expiresAt = user.subscriptionExpiresAt.toLocaleDateString();
+
+      // Trigger n8n payment success email
       await sendPaymentSuccessEmail({
         email: user.email,
         userName: user.name,
-        planName: plan.toUpperCase(),
-        amount: plan === "recruiter-pro" ? "$29.99" : "$9.99",
-        expiresAt: user.subscriptionExpiresAt.toLocaleDateString(),
+        planName: planTitle,
+        amount,
+        expiresAt,
       });
+
+      // Push In-App Notification
+      await createNotification(
+        user._id.toString(),
+        `Payment Successful - ${planTitle} Activated! 🎉`,
+        `Thank you for upgrading! Your payment of ${amount} for ${planTitle} subscription was processed successfully. Valid until ${expiresAt}. All PRO features are now unlocked!`,
+        "SYSTEM",
+      );
     } catch (n8nErr) {
-      console.error("[PAYMENT CONTROLLER ERROR] Failed to send n8n payment email:", n8nErr);
+      console.error("[PAYMENT CONTROLLER ERROR] Failed to send n8n payment email/notification:", n8nErr);
     }
 
     return res.status(200).json({

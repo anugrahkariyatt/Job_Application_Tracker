@@ -23,24 +23,24 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-card p-4 shadow-sm',
+        'rounded-xl border border-border bg-card p-4.5 shadow-xs',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">{label}</p>
           <p className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {value}
           </p>
         </div>
         <div
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary',
+            'flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary',
             iconClassName
           )}
         >
-          <Icon className="h-4.5 w-4.5" />
+          <Icon className="h-5 w-5" />
         </div>
       </div>
       {delta !== undefined && (

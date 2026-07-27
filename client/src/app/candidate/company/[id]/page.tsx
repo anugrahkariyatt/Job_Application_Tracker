@@ -13,6 +13,10 @@ import {
   Loader2,
   Bell,
   BellOff,
+  CheckCircle2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +35,7 @@ import {
 import { JobCard } from '@/components/candidate/job-card';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
-import { mapJobToFrontend } from '@/lib/candidate-mappers';
+import { mapJobToFrontend, getCompanySlug } from '@/lib/candidate-mappers';
 
 export default function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = React.use(params);
@@ -45,38 +49,69 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
   const [subId, setSubId] = React.useState<string | null>(null);
   const [subscribing, setSubscribing] = React.useState(false);
   const [savedJobIds, setSavedJobIds] = React.useState<string[]>([]);
+  
+  const JOBS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalJobsCount, setTotalJobsCount] = React.useState(0);
+  const [totalPagesCount, setTotalPagesCount] = React.useState(1);
+  const [jobsLoading, setJobsLoading] = React.useState(false);
+
+  const fetchCompanyJobs = async (companyId: string, page: number) => {
+    try {
+      setJobsLoading(true);
+      const jobsRes = await axiosInstance.get('/api/jobs', {
+        params: { companyId, page, limit: JOBS_PER_PAGE }
+      });
+      if (jobsRes.data?.success && Array.isArray(jobsRes.data.data)) {
+        const mappedJobs = jobsRes.data.data.map(mapJobToFrontend);
+        setJobs(mappedJobs);
+        if (jobsRes.data.pagination) {
+          setTotalJobsCount(jobsRes.data.pagination.total);
+          setTotalPagesCount(jobsRes.data.pagination.totalPages || 1);
+        }
+      }
+    } catch (err) {
+      console.error('Fetch company jobs error:', err);
+    } finally {
+      setJobsLoading(false);
+    }
+  };
 
   const fetchCompanyDetails = async () => {
     try {
       setLoading(true);
-      
-      // Fetch company by ID
+
+      // Fetch company by ID or Slug
       const companyRes = await axiosInstance.get(`/api/company/${id}`);
       if (companyRes.data?.success && companyRes.data.data) {
-        setCompany(companyRes.data.data);
+        const compData = companyRes.data.data;
+        setCompany(compData);
+
+        const realCompId = compData._id || id;
+        const realSlug = compData.slug || getCompanySlug(compData);
+
+        if (realSlug && typeof window !== 'undefined' && id !== realSlug) {
+          window.history.replaceState(null, '', `/candidate/company/${realSlug}`);
+        }
+
+        // Fetch company's active jobs from backend with server-side pagination
+        await fetchCompanyJobs(realCompId, currentPage);
+
+        // Fetch active subscriptions to check follow status
+        const subsRes = await axiosInstance.get('/api/subscriptions');
+        if (subsRes.data?.success && Array.isArray(subsRes.data.data)) {
+          const found = subsRes.data.data.find(
+            (sub: any) => (sub.companyId?._id || sub.companyId) === realCompId
+          );
+          if (found) {
+            setIsSubscribed(true);
+            setSubId(found._id);
+          }
+        }
       } else {
         toast.error('Company not found.');
         router.push('/candidate/jobs');
         return;
-      }
-
-      // Fetch company's active jobs
-      const jobsRes = await axiosInstance.get('/api/jobs', { params: { companyId: id } });
-      if (jobsRes.data?.success && Array.isArray(jobsRes.data.data)) {
-        const mappedJobs = jobsRes.data.data.map(mapJobToFrontend);
-        setJobs(mappedJobs);
-      }
-
-      // Fetch active subscriptions to check follow status
-      const subsRes = await axiosInstance.get('/api/subscriptions');
-      if (subsRes.data?.success && Array.isArray(subsRes.data.data)) {
-        const found = subsRes.data.data.find(
-          (sub: any) => (sub.companyId?._id || sub.companyId) === id
-        );
-        if (found) {
-          setIsSubscribed(true);
-          setSubId(found._id);
-        }
       }
     } catch (err: any) {
       console.error('Fetch company details error:', err);
@@ -87,16 +122,22 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    const targetCompId = company?._id || id;
+    fetchCompanyJobs(targetCompId, newPage);
+  };
+
   React.useEffect(() => {
     fetchCompanyDetails();
-    
+
     // Load bookmark saves
     const saved = localStorage.getItem('savedJobs');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         setSavedJobIds(parsed.map((j: any) => j.id));
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [id]);
 
@@ -132,9 +173,9 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
     if (saved) {
       try {
         currentSaved = JSON.parse(saved);
-      } catch (e) {}
+      } catch (e) { }
     }
-    
+
     const isSaved = currentSaved.some(j => j.id === jobId);
     if (isSaved) {
       currentSaved = currentSaved.filter(j => j.id !== jobId);
@@ -203,168 +244,229 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild><Link href="/candidate/jobs">Find Jobs</Link></BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{company.companyName}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <Button variant="ghost" size="sm" asChild className="w-fit">
-        <Link href="/candidate/jobs"><ArrowLeft className="mr-2 h-4 w-4" />Back to Jobs</Link>
+        <Link href="/candidate/companies">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Companies
+        </Link>
       </Button>
 
-      {/* Cover / Header Section */}
-      <Card className="overflow-hidden border border-border">
-        <div className="h-40 bg-gradient-to-r from-primary/10 via-primary/5 to-background relative">
-          {company.coverImage && (
+      {/* Single Unified Company Profile Card */}
+      <Card className="overflow-hidden border border-border/70 shadow-xs rounded-2xl bg-card space-y-6">
+        {/* Cover Banner */}
+        <div className="h-44 sm:h-52 bg-gradient-to-r from-primary/10 via-primary/5 to-muted relative overflow-hidden">
+          {company.coverImage ? (
             <img
               src={company.coverImage}
               alt={`${company.companyName} Cover`}
-              className="absolute inset-0 h-full w-full object-cover opacity-80"
+              className="h-full w-full object-cover"
             />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-background flex items-center justify-center">
+              <Building2 className="h-20 w-20 text-primary/20" />
+            </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
-        <CardContent className="p-6 relative">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end -mt-16 sm:-mt-20">
-            <Avatar className="h-24 w-24 rounded-2xl border-4 border-card shadow-sm shrink-0">
-              <AvatarImage src={company.logo} alt={company.companyName} />
-              <AvatarFallback className="rounded-2xl text-2xl bg-secondary text-secondary-foreground font-semibold">
-                {company.companyName.slice(0, 2).toUpperCase()}
+
+        {/* Profile Content Body */}
+        <CardContent className="p-6 pt-0 space-y-6">
+          {/* Logo & Action Buttons */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-14 sm:-mt-16">
+            <Avatar className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-4 border-card bg-background shadow-md shrink-0">
+              <AvatarImage src={company.logo} alt={company.companyName} className="object-cover" />
+              <AvatarFallback className="rounded-2xl text-2xl font-black bg-primary/10 text-primary">
+                {company.companyName ? company.companyName.slice(0, 2).toUpperCase() : 'CO'}
               </AvatarFallback>
             </Avatar>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">{company.companyName}</h1>
-                <Badge variant="outline" className="font-normal border-primary/20 bg-primary/5 text-primary">
-                  {company.industry || 'Technology'}
-                </Badge>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">{company.tagline || 'Verified Employer'}</p>
-            </div>
 
-            <Button
-              variant={isSubscribed ? "outline" : "default"}
-              onClick={handleToggleSubscribe}
-              disabled={subscribing}
-              className="mt-2 sm:mt-0 gap-2 shadow-sm shrink-0"
-            >
-              {subscribing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isSubscribed ? (
-                <>
-                  <BellOff className="h-4 w-4" />
-                  Unfollow
-                </>
-              ) : (
-                <>
-                  <Bell className="h-4 w-4" />
-                  Follow
-                </>
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              {company.website && (
+                <Button variant="outline" size="sm" className="rounded-xl font-medium text-xs h-10 px-4 border-border/70" asChild>
+                  <a
+                    href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                    Website
+                  </a>
+                </Button>
               )}
-            </Button>
+
+              <Button
+                variant={isSubscribed ? 'outline' : 'default'}
+                size="sm"
+                onClick={handleToggleSubscribe}
+                disabled={subscribing}
+                className="rounded-xl font-semibold text-xs h-10 px-5 gap-2 shadow-xs"
+              >
+                {subscribing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSubscribed ? (
+                  <>
+                    <BellOff className="h-4 w-4" />
+                    Unfollow
+                  </>
+                ) : (
+                  <>
+                    <Bell className="h-4 w-4" />
+                    Follow Updates
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Company Title & Badges */}
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+                {company.companyName}
+              </h1>
+              <Badge variant="secondary" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border border-border/60 bg-muted/50 text-muted-foreground">
+                <CheckCircle2 className="mr-1 h-3.5 w-3.5 text-primary" />
+                Verified Employer
+              </Badge>
+              {company.industry && (
+                <Badge variant="outline" className="font-semibold text-xs px-2.5 py-0.5 rounded-full border-primary/20 bg-primary/5 text-primary">
+                  {company.industry}
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* About Company */}
+          <div className="space-y-2">
+            <h3 className="text-base font-bold text-foreground">About {company.companyName}</h3>
+            <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+              {company.description || 'No description provided by the company.'}
+            </p>
+          </div>
+
+          {/* Company Overview Stats Bar */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-base font-bold text-foreground">Company Overview</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-muted/40 border border-border/50">
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                  <MapPin className="h-3.5 w-3.5 text-primary" /> Headquarters
+                </span>
+                <p className="text-sm font-semibold text-foreground truncate">{company.headquarters || 'Not specified'}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                  <Globe className="h-3.5 w-3.5 text-primary" /> Website
+                </span>
+                {company.website ? (
+                  <a
+                    href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-primary hover:underline truncate block"
+                  >
+                    {company.website.replace(/^https?:\/\//, '')}
+                  </a>
+                ) : (
+                  <p className="text-sm font-semibold text-foreground">Not specified</p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                  <Users className="h-3.5 w-3.5 text-primary" /> Company Size
+                </span>
+                <p className="text-sm font-semibold text-foreground truncate">{company.employees || 'Not specified'}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
+                  <Building2 className="h-3.5 w-3.5 text-primary" /> Industry
+                </span>
+                <p className="text-sm font-semibold text-foreground truncate">{company.industry || 'Not specified'}</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Main Grid Layout */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Left column - details */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* About Company */}
-          <Card className="border border-border">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">About Company</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                {company.description || 'No description provided by the company.'}
-              </p>
-            </CardContent>
-          </Card>
+      {/* Full Width Open Positions Section with Backend Pagination */}
+      <div className="space-y-4 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h2 className="text-lg font-bold tracking-tight">Open Positions ({totalJobsCount})</h2>
+          {totalJobsCount > 0 && (
+            <span className="text-xs text-muted-foreground font-medium">
+              Showing {Math.min((currentPage - 1) * JOBS_PER_PAGE + 1, totalJobsCount)}–{Math.min(currentPage * JOBS_PER_PAGE, totalJobsCount)} of {totalJobsCount} jobs
+            </span>
+          )}
+        </div>
 
-          {/* Active Job Openings */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold tracking-tight">Open Positions ({jobs.length})</h2>
-            {jobs.length === 0 ? (
-              <Card className="p-8 text-center border border-dashed text-sm text-muted-foreground">
-                <Briefcase className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
-                This company has no active job postings at the moment.
-              </Card>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onApply={handleApply}
-                    saved={savedJobIds.includes(job.id)}
-                    onToggleSave={handleToggleSave}
-                  />
-                ))}
+        {jobsLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-44 w-full rounded-2xl" />
+            ))}
+          </div>
+        ) : jobs.length === 0 ? (
+          <Card className="p-8 text-center border border-dashed text-sm text-muted-foreground">
+            <Briefcase className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
+            This company has no active job postings at the moment.
+          </Card>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {jobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onApply={handleApply}
+                  saved={savedJobIds.includes(job.id)}
+                  onToggleSave={handleToggleSave}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPagesCount > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                  disabled={currentPage === 1 || jobsLoading}
+                  className="h-9 px-3 text-xs font-medium"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPagesCount }, (_, i) => i + 1).map((pageNum) => (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={jobsLoading}
+                      className="h-9 w-9 p-0 text-xs font-semibold"
+                    >
+                      {pageNum}
+                    </Button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(Math.min(currentPage + 1, totalPagesCount))}
+                  disabled={currentPage === totalPagesCount || jobsLoading}
+                  className="h-9 px-3 text-xs font-medium"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Right column - overview info */}
-        <div className="space-y-6">
-          <Card className="border border-border">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">Overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Headquarters</p>
-                  <p className="font-medium text-foreground">{company.headquarters || 'Not specified'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Website</p>
-                  {company.website ? (
-                    <a
-                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {company.website}
-                    </a>
-                  ) : (
-                    <p className="font-medium text-foreground">Not specified</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Company Size</p>
-                  <p className="font-medium text-foreground">{company.employees || 'Not specified'}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Industry</p>
-                  <p className="font-medium text-foreground">{company.industry || 'Not specified'}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

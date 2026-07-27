@@ -15,7 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,7 @@ export function JobCard({
   onDelete,
 }: JobCardProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const jobId = job._id || job.id;
 
   const isRecruiter = pathname.startsWith('/recruiter');
@@ -65,6 +66,14 @@ export function JobCard({
     detailsLink = `/admin/jobs/${jobId}`;
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('a, button, [role="button"], [data-radix-collection-item]')) {
+      return;
+    }
+    router.push(detailsLink);
+  };
+
   const logo = companyLogo || (job.companyId as any)?.logo;
   const name = companyName || (job.companyId as any)?.companyName || 'Company';
 
@@ -78,8 +87,9 @@ export function JobCard({
 
   return (
     <div
+      onClick={handleCardClick}
       className={cn(
-        'group rounded-lg border border-border bg-card p-4 relative flex flex-col justify-between transition-shadow hover:shadow-md',
+        'group rounded-lg border border-border bg-card p-4 relative flex flex-col justify-between transition-all hover:shadow-md hover:border-primary/40 cursor-pointer',
         className
       )}
     >

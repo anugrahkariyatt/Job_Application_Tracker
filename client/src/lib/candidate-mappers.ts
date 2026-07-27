@@ -3,7 +3,7 @@ import { type Job, type Application, type NotificationItem, type TimelineEvent }
 export const mapJobToFrontend = (dbJob: any): Job => {
   if (!dbJob) return {} as Job;
   const companyInfo = dbJob.companyId || {};
-  
+
   // Format salary
   let salaryStr = 'Not specified';
   if (dbJob.salaryMin !== undefined && dbJob.salaryMax !== undefined) {
@@ -49,7 +49,7 @@ export const mapApplicationToFrontend = (dbApp: any): Application => {
 
 export const mapNotificationToFrontend = (dbNotif: any): NotificationItem => {
   if (!dbNotif) return {} as NotificationItem;
-  
+
   // Map notification type
   let type: NotificationItem['type'] = 'application';
   if (dbNotif.type === 'job_alert' || dbNotif.type === 'jobAlert') type = 'job_alert';

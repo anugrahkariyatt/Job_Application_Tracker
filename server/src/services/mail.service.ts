@@ -131,13 +131,30 @@ export const sendPasswordResetEmail = async ({
   resetLink,
 }: PasswordResetEmailOptions): Promise<void> => {
   try {
-    await n8nClient.post("/send-email", {
+    console.log("========== FORGOT PASSWORD ==========");
+    console.log("Recipient:", to);
+    console.log("Reset Link:", resetLink);
+    console.log("Webhook:", process.env.N8N_WEBHOOK_URL);
+
+    const response = await n8nClient.post("/send-email", {
       type: "forgot-password",
       email: to,
       resetLink,
     });
-  } catch (error) {
-    throw new AppError("Unable to send verification email", 500);
+
+    console.log("Status:", response.status);
+    console.log("Response:", response.data);
+    console.log("====================================");
+  } catch (error: any) {
+    console.log("========== N8N ERROR ==========");
+    console.log("Message:", error.message);
+    console.log("URL:", error.config?.baseURL + error.config?.url);
+    console.log("Payload:", error.config?.data);
+    console.log("Status:", error.response?.status);
+    console.log("Response:", error.response?.data);
+    console.log("===============================");
+
+    throw new AppError("Unable to send password reset email", 500);
   }
 };
 
@@ -169,30 +186,32 @@ export const sendInterviewEmail = async (
   }
 };
 
-interface AIScreeningPayload {
-  applicationId: string;
+interface InterviewCancelledEmailPayload {
+  email: string;
   candidateName: string;
-  candidateEmail: string;
-  candidateSkills: string[];
-  candidateExperienceSummary?: string;
   jobTitle: string;
-  jobDescription: string;
-  jobRequiredSkills: string[];
+  companyName: string;
+  interviewTitle: string;
+  dateTime: string;
+  cancelledBy: string;
 }
 
-export const triggerCandidateAIScreening = async (
-  payload: AIScreeningPayload,
-): Promise<{ aiMatchScore?: number; aiStrengths?: string[]; aiSummary?: string } | null> => {
+export const sendInterviewCancelledEmail = async (
+  payload: InterviewCancelledEmailPayload,
+): Promise<void> => {
   try {
-    console.log("[N8N SERVICE] Triggering AI Candidate Screening for application:", payload.applicationId);
-    const response = await n8nClient.post("/ai-screen-candidate", payload);
-    console.log("[N8N SERVICE] AI Screening n8n response success:", response.status);
-    return response.data;
+    console.log("[MAIL SERVICE] Sending Interview Cancelled email via n8n to:", payload.email, "for round:", payload.interviewTitle);
+    const response = await n8nClient.post("/send-email", {
+      type: "interview-cancelled",
+      ...payload,
+    });
+    console.log("[MAIL SERVICE] n8n Interview Cancelled email response success:", response.status);
   } catch (error: any) {
-    console.error("[N8N SERVICE ERROR] AI Screening n8n webhook failed:", error?.response?.data || error?.message || error);
-    return null;
+    console.error("[MAIL SERVICE ERROR] Failed to send Interview Cancelled email via n8n:", error?.response?.data || error?.message || error);
   }
 };
+
+
 
 interface PaymentSuccessEmailPayload {
   email: string;

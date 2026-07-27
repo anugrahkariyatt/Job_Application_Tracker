@@ -132,7 +132,7 @@ export default function CompanyProfilePage() {
     <div className="space-y-6">
       <PageHeader
         title="Company Profile"
-        description="Your company's public profile page — like a LinkedIn company page."
+        description="Your company's official public profile page."
         breadcrumbs={[{ label: 'Dashboard', href: '/recruiter/dashboard' }, { label: 'Company Profile' }]}
         actions={
           <>

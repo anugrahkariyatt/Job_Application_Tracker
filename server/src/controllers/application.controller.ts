@@ -19,6 +19,9 @@ import Company from "../models/company.model.js";
 import Application from "../models/application.model.js";
 import User from "../models/user.model.js";
 import Candidate from "../models/candidate.model.js";
+import Skill from "../models/skill.model.js";
+import Experience from "../models/experience.model.js";
+import { calculateRealSkillMatch } from "../utils/skillMatcher.js";
 
 export const applyForJobController = async (
   req: Request,
@@ -243,10 +246,41 @@ export const getRecruiterApplicationsController = async (
           select: "name email",
         },
       })
-      .populate("jobId", "title")
+      .populate("jobId", "title skills location employmentType experienceLevel requirements")
       .sort({ createdAt: -1 })
       .skip(skipNum)
       .limit(limitNum);
+
+    const candidateIds = applications
+      .map((app) => app.candidateId?._id)
+      .filter(Boolean);
+
+    const [skillsList, expList] = await Promise.all([
+      Skill.find({ candidateId: { $in: candidateIds } }),
+      Experience.find({ candidateId: { $in: candidateIds } }),
+    ]);
+
+    const enrichedApplications = applications.map((app) => {
+      const appObj = app.toObject();
+      if (appObj.candidateId && appObj.candidateId._id) {
+        const candIdStr = appObj.candidateId._id.toString();
+        const candSkills = skillsList
+          .filter((s) => s.candidateId.toString() === candIdStr)
+          .map((s) => s.name);
+        const candExp = expList.filter(
+          (e) => e.candidateId.toString() === candIdStr
+        );
+
+        appObj.candidateId.skills = candSkills;
+        appObj.candidateId.experience = candExp;
+
+        const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
+        appObj.aiMatchScore = match.score;
+        appObj.aiStrengths = match.strengths;
+        appObj.aiSummary = match.summary;
+      }
+      return appObj;
+    });
 
     // Calculate statistics for recruiter's company applications
     const baseCompanyQuery = { jobId: { $in: jobIds } };
@@ -263,7 +297,7 @@ export const getRecruiterApplicationsController = async (
       success: true,
       message: "Applications fetched successfully",
       data: {
-        applications,
+        applications: enrichedApplications,
         totalCount,
         stats,
       },
@@ -311,10 +345,27 @@ export const getApplicationByIdController = async (
       });
     }
 
+    const appObj = application.toObject();
+    if (appObj.candidateId && appObj.candidateId._id) {
+      const candIdStr = appObj.candidateId._id.toString();
+      const [skillsList, expList] = await Promise.all([
+        Skill.find({ candidateId: candIdStr }),
+        Experience.find({ candidateId: candIdStr }),
+      ]);
+
+      appObj.candidateId.skills = skillsList.map((s) => s.name);
+      appObj.candidateId.experience = expList;
+
+      const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
+      appObj.aiMatchScore = match.score;
+      appObj.aiStrengths = match.strengths;
+      appObj.aiSummary = match.summary;
+    }
+
     return res.status(200).json({
       success: true,
       message: "Application fetched successfully",
-      data: application,
+      data: appObj,
     });
   } catch (error) {
     next(error);

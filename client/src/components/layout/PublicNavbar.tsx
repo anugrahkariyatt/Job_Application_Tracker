@@ -28,26 +28,7 @@ const PublicNavbar = () => {
           </span>
         </Link>
 
-        {/* Navigation Links */}
-        <ul className="hidden items-center gap-8 md:flex">
-          {[
-            { label: "Candidate", href: "/register/candidate" },
-            { label: "Company", href: "/register/recruiter" },
-            { label: "About", href: "/about" },
-            { label: "Contact", href: "/contact" },
-          ].map((link) => (
-            <li key={link.label}>
-              <Link
-                href={link.href}
-                className="relative py-2 font-medium text-text-secondary transition-colors hover:text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-primary after:transition-all hover:after:w-full"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
 
-        {/* CTA Buttons */}
         <div className="hidden items-center gap-4 md:flex">
           <Link
             href="/login"

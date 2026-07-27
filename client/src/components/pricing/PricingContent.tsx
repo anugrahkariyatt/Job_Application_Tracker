@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface PricingContentProps {
   defaultRole?: "candidate" | "recruiter";
@@ -29,18 +30,24 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
   const [userRole, setUserRole] = useState<"candidate" | "recruiter">(initialRole);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
+  const verifiedRef = React.useRef(false);
+
   useEffect(() => {
     const success = searchParams.get("success");
     const sessionId = searchParams.get("session_id");
 
-    if (success === "true" && currentUser && currentUser.subscriptionPlan !== "pro") {
+    if (success === "true" && currentUser && !verifiedRef.current) {
+      verifiedRef.current = true;
       const handleStripeReturn = async () => {
         try {
           const endpoint = sessionId ? "/api/payments/verify-session" : "/api/payments/success";
           const res = await axiosInstance.post(endpoint, { sessionId, plan: "pro" });
           if (res.data?.success) {
             dispatch(setUser({ ...currentUser, subscriptionPlan: "pro" }));
-            toast.success("Successfully upgraded to PRO via Stripe!");
+            toast.success("Successfully upgraded to PRO!");
+            if (typeof window !== "undefined") {
+              window.history.replaceState(null, "", window.location.pathname);
+            }
           }
         } catch (err: any) {
           console.error("[STRIPE VERIFY ERROR]", err);
@@ -91,20 +98,19 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
   };
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8">
+    <div className="py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-10rem)] flex flex-col justify-center">
       {/* Header Section */}
-      <div className="max-w-3xl mx-auto text-center mb-12">
-
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-4">
+      <div className="max-w-3xl mx-auto text-center mb-10 space-y-3">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
           Simple, Transparent Pricing
         </h1>
-        <p className="text-muted-foreground text-base max-w-xl mx-auto">
+        <p className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
           Choose the right plan to supercharge your career or hire top tech talent with AI-powered automations.
         </p>
 
         {/* Role Toggle Switch */}
         {showToggle && (
-          <div className="mt-8 inline-flex p-1 bg-muted/60 border border-border rounded-xl">
+          <div className="pt-4 inline-flex p-1 bg-muted/60 border border-border/70 rounded-xl">
             <button
               onClick={() => setUserRole("candidate")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-all ${userRole === "candidate"
@@ -130,21 +136,21 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
       </div>
 
       {/* Pricing Cards */}
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-stretch">
+      <div className="max-w-4xl mx-auto w-full grid md:grid-cols-2 gap-6 items-stretch pt-4">
         {/* FREE TIER CARD */}
-        <Card className="flex flex-col justify-between border-border bg-card shadow-sm hover:shadow-md transition-all">
+        <Card className="flex flex-col justify-between border-border/70 bg-card shadow-xs hover:shadow-md transition-all rounded-2xl p-2">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl font-bold">Starter Free</CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               {userRole === "candidate"
                 ? "Essential job tracking & application features"
                 : "For small teams and standard job postings"}
             </CardDescription>
             <div className="pt-4">
-              <span className="text-4xl font-extrabold text-foreground">$0</span>
-              <span className="text-muted-foreground text-sm"> / forever</span>
+              <span className="text-4xl font-black text-foreground">$0</span>
+              <span className="text-muted-foreground text-xs font-medium"> / forever</span>
             </div>
           </CardHeader>
 
@@ -153,71 +159,77 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
               {userRole === "candidate" ? (
                 <>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Subscribe up to 10 companies</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Standard job search & application tracking</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Daily email job updates</span>
                   </li>
                 </>
               ) : (
                 <>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Post up to 3 active jobs</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Standard applicant management dashboard</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4 h-4 text-primary shrink-0" />
                     <span>Direct candidate email notifications</span>
                   </li>
                 </>
               )}
             </ul>
 
-            <Button variant="outline" className="w-full mt-6" asChild>
+            <Button variant="outline" className="w-full mt-6 h-11 font-semibold rounded-xl" asChild>
               <Link href="/register">Get Started Free</Link>
             </Button>
           </CardContent>
         </Card>
 
         {/* PRO TIER CARD */}
-        <Card className={`relative flex flex-col justify-between bg-card shadow-lg ${currentUser?.subscriptionPlan === "pro"
-          ? "border-2 border-emerald-500 shadow-emerald-500/10"
-          : "border-2 border-primary"
+        <Card className={`relative flex flex-col justify-between transition-all duration-300 rounded-2xl p-2 ${currentUser?.subscriptionPlan === "pro"
+          ? "border-2 border-primary bg-primary/[0.03] shadow-md"
+          : "border-2 border-primary/80 bg-card shadow-md hover:shadow-lg"
           }`}>
-          <div className={`absolute -top-3 right-6 text-xs font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-sm ${currentUser?.subscriptionPlan === "pro"
-            ? "bg-emerald-500 text-white"
-            : "bg-primary text-primary-foreground"
-            }`}>
-            {currentUser?.subscriptionPlan === "pro" ? "Your Active Plan" : "Most Popular"}
-          </div>
-
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-xl font-bold">
-                {userRole === "candidate" ? "Candidate Pro" : "Recruiter Pro"}
-              </CardTitle>
-              <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  {userRole === "candidate" ? "Candidate Pro" : "Recruiter Pro"}
+                </CardTitle>
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 font-semibold">
+                  PRO
+                </Badge>
+              </div>
+              {currentUser?.subscriptionPlan === "pro" ? (
+                <Badge className="text-[10px] px-2.5 py-0.5 font-semibold">
+                  Active Plan
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] px-2.5 py-0.5 font-semibold text-primary border-primary/30 bg-primary/5">
+                  Most Popular
+                </Badge>
+              )}
             </div>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm font-medium">
               {userRole === "candidate"
-                ? "Unlimited company subscriptions & instant alerts"
-                : "Unlimited job postings & n8n AI candidate screening"}
+                ? "Unlimited company subscriptions & instant job alerts"
+                : "Unlimited job postings & AI candidate screening"}
             </CardDescription>
             <div className="pt-4">
-              <span className="text-4xl font-extrabold text-foreground">
+              <span className="text-4xl sm:text-5xl font-black text-foreground">
                 {userRole === "candidate" ? "$9.99" : "$29.99"}
               </span>
-              <span className="text-muted-foreground text-sm"> / month</span>
+              <span className="text-muted-foreground text-xs sm:text-sm font-medium"> / month</span>
             </div>
           </CardHeader>
 
@@ -226,38 +238,38 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
               {userRole === "candidate" ? (
                 <>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span><strong>Unlimited</strong> company subscriptions</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span><strong>Instant Job Alerts</strong> via Email & n8n</span>
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
+                    <span><strong>Instant Job Alerts</strong> via Email</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span>Priority application status notifications</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span>Verified Pro candidate badge</span>
                   </li>
                 </>
               ) : (
                 <>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span><strong>Unlimited</strong> active job postings</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span><strong>n8n AI Candidate Screening</strong> & match scores</span>
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
+                    <span><strong>AI Candidate Screening</strong> & match scores</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span>Top-of-search featured job placement</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    <Check className="w-4.5 h-4.5 text-primary shrink-0" />
                     <span>Automated interview round scheduling</span>
                   </li>
                 </>
@@ -267,14 +279,14 @@ export function PricingContent({ defaultRole = "candidate", showToggle = true }:
             {currentUser?.subscriptionPlan === "pro" ? (
               <Button
                 disabled
-                className="w-full mt-6 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-600 text-white font-bold opacity-100 cursor-default"
+                className="w-full mt-6 flex items-center justify-center gap-2 bg-primary/20 text-primary border border-primary/30 font-bold opacity-100 cursor-default h-11 rounded-xl"
               >
                 <Check className="w-4 h-4 stroke-[3]" />
                 <span>Active Pro Plan</span>
               </Button>
             ) : (
               <Button
-                className="w-full mt-6 flex items-center gap-2"
+                className="w-full mt-6 flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold shadow-sm hover:bg-primary/90 transition-all h-11 rounded-xl"
                 onClick={() => handleSubscribe(userRole === "candidate" ? "candidate-pro" : "recruiter-pro")}
                 disabled={loadingPlan !== null}
               >

@@ -48,6 +48,7 @@ interface DataTableProps<T> {
   serverSide?: boolean;
   onServerParamsChange?: (params: { search: string; filters: Record<string, string>; page: number }) => void;
   serverTotalItems?: number;
+  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T>({
@@ -65,6 +66,7 @@ export function DataTable<T>({
   serverSide = false,
   onServerParamsChange,
   serverTotalItems,
+  onRowClick,
 }: DataTableProps<T>) {
   const [query, setQuery] = useState('');
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
@@ -168,7 +170,15 @@ export function DataTable<T>({
               </TableRow>
             ) : (
               paged.map((row) => (
-                <TableRow key={getRowId(row)}>
+                <TableRow
+                  key={getRowId(row)}
+                  className={onRowClick ? 'cursor-pointer hover:bg-accent/60 transition-colors' : ''}
+                  onClick={(e) => {
+                    if (onRowClick && !(e.target as HTMLElement).closest('button, a, select, [role="menuitem"], [role="option"]')) {
+                      onRowClick(row);
+                    }
+                  }}
+                >
                   {columns.map((c) => (
                     <TableCell key={c.key} className={c.className}>
                       {c.cell(row)}

@@ -1,11 +1,17 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
+export enum AuthProvider {
+  LOCAL = "local",
+  GOOGLE = "google",
+}
 export interface IUser extends Document {
   _id: Types.ObjectId;
   name: string;
   email: string;
   password: string;
   role: "candidate" | "recruiter" | "admin";
+  provider: AuthProvider;
+  googleId?: string;
+  avatar?: string;
   isVerified: boolean;
   isActive: boolean;
   subscriptionPlan: "free" | "pro";
@@ -31,12 +37,22 @@ const userSchema = new Schema(
       unique: true,
     },
     password: {
-      type: String,
-      required: true,
+      type: String
     },
     role: {
       type: String,
       enum: ["candidate", "recruiter", "admin"],
+    },
+    provider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    googleId: {
+      type: String,
+    },
+    avatar: {
+      type: String,
     },
     isVerified: {
       type: Boolean,
