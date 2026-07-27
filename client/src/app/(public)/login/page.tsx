@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
@@ -24,16 +24,14 @@ type FormErrors = {
 };
 
 export default function LoginPage() {
-
-
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
 
   const [role, setRole] = useState<"candidate" | "recruiter">("candidate");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -70,6 +68,13 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || "Invalid email or password.";
+
+      // If user is unverified, directly navigate to verify-email page so they can resend/verify
+      if (error.response?.status === 403 && errorMsg.includes("verify your email")) {
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -203,9 +208,7 @@ export default function LoginPage() {
           </div>
 
           {/* OAuth Google Button */}
-          {/* OAuth Google Button Wrapper */}
           <div className="w-full flex justify-center min-h-[44px]">
-            <div className="w-full max-w-[360px] overflow-hidden rounded-xl flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleLogin}
                 onError={() => toast.error("Google login failed")}
@@ -215,7 +218,6 @@ export default function LoginPage() {
                 size="large"
                 text="continue_with"
               />
-            </div>
           </div>
 
           {/* Divider */}
@@ -298,19 +300,7 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="remember"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary accent-primary cursor-pointer"
-              />
-              <label htmlFor="remember" className="text-xs text-muted-foreground cursor-pointer select-none">
-                Keep me logged in on this device
-              </label>
-            </div>
+
 
             {/* Submit Button */}
             <button

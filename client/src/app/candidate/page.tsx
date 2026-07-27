@@ -331,7 +331,15 @@ export default function DashboardPage() {
       }
     } catch (err: any) {
       console.error("Apply job error:", err);
-      toast.error(err.response?.data?.message || "Failed to apply for job.");
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || "Failed to apply for job.";
+
+      if (status === 404 && (msg.includes("profile not found") || msg.includes("Candidate profile"))) {
+        toast.error("Please create your candidate profile before applying.");
+        router.push("/candidate/profile");
+      } else {
+        toast.error(msg);
+      }
     }
   };
 
@@ -364,46 +372,6 @@ export default function DashboardPage() {
     );
   }
 
-  if (profileMissing) {
-    return (
-      <div className="space-y-6">
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-8 text-center space-y-6 max-w-xl mx-auto">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <User className="h-8 w-8" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-extrabold tracking-tight">
-                Create Candidate Profile
-              </h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Welcome to Nuvora,{" "}
-                <span className="font-semibold text-foreground">
-                  {user?.name}
-                </span>
-                ! Before you can search and apply to jobs, you need to create
-                your candidate profile. Tell employers about your skills and
-                experience!
-              </p>
-            </div>
-            <div className="flex justify-center pt-2">
-              <Button
-                asChild
-                size="lg"
-                className="w-full sm:w-auto font-semibold"
-              >
-                <Link href="/candidate/profile">
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const stats = {
     applicationsSent: applications.length,
     underReview: applications.filter((a) => a.status === "Under Review").length,
@@ -420,6 +388,32 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {profileMissing && (
+        <Card className="border-primary/30 bg-primary/10 shadow-sm">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 text-center sm:text-left">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <User className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-foreground">
+                  Create Your Candidate Profile
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Complete your profile to stand out to recruiters and get matched with top tech jobs.
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="font-semibold shrink-0">
+              <Link href="/candidate/profile">
+                Create Candidate Profile
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Streamlined Hero Header Banner */}
       <Card className="border-border/60 shadow-sm bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden">
         <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6">

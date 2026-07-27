@@ -253,7 +253,15 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 }
               } catch (err: any) {
                 console.error('Apply job error:', err);
-                toast.error(err.response?.data?.message || 'Failed to submit application.');
+                const status = err.response?.status;
+                const msg = err.response?.data?.message || 'Failed to submit application.';
+                
+                if (status === 404 && (msg.includes('profile not found') || msg.includes('Candidate profile'))) {
+                  toast.error('Please create your candidate profile before applying.');
+                  router.push('/candidate/profile');
+                } else {
+                  toast.error(msg);
+                }
               } finally {
                 setApplying(false);
               }

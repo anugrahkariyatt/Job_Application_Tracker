@@ -66,8 +66,8 @@ export default function CandidateRegisterPage() {
       });
 
       if (response.success && response.user) {
-        toast.success("Candidate account created successfully!");
-        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+        toast.success("Account created! Please check your email to verify before logging in.");
+        router.push(`/login?email=${encodeURIComponent(email)}`);
       } else {
         toast.error(response.message || "Registration failed");
       }

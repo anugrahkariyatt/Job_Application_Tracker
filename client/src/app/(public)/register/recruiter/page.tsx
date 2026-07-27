@@ -55,9 +55,8 @@ export default function RecruiterRegisterPage() {
       const response = await register({ name, email, password, role: "recruiter" });
 
       if (response.success && response.user) {
-        dispatch(setUser(response.user));
-        toast.success("Recruiter account created successfully!");
-        router.push("/recruiter/dashboard");
+        toast.success("Account created! Please check your email to verify before logging in.");
+        router.push(`/login?email=${encodeURIComponent(email)}`);
       } else {
         toast.error(response.message || "Registration failed");
       }
