@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Search, SlidersHorizontal, LayoutGrid, List, X, Loader2, Briefcase } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,7 @@ const sortOptions = [
 ];
 
 export default function FindJobsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParam = searchParams.get('search') || '';
 
@@ -175,7 +176,15 @@ export default function FindJobsPage() {
       }
     } catch (err: any) {
       console.error('Apply job error:', err);
-      toast.error(err.response?.data?.message || 'Failed to submit application.');
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || 'Failed to submit application.';
+
+      if (status === 404 && (msg.includes('profile not found') || msg.includes('Candidate profile'))) {
+        toast.error('Please create your candidate profile before applying.');
+        router.push('/candidate/profile');
+      } else {
+        toast.error(msg);
+      }
     }
   };
 
