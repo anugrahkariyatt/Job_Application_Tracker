@@ -41,10 +41,18 @@ export const sendApplicationStatusEmail = async (
     console.log("[MAIL SERVICE SUCCESS] n8n responded with status:", response.status, "data:", JSON.stringify(response.data || {}));
   } catch (error: any) {
     console.error("========== N8N EMAIL ERROR DEBUG ==========");
-    console.error("Response Status:", error?.response?.status);
-    console.error("Response Data:", JSON.stringify(error?.response?.data || {}, null, 2));
-    console.error("Error Message:", error?.message);
-    console.error("Target URL:", `${error?.config?.baseURL || ""}${error?.config?.url || ""}`);
+    console.error("[ENV] N8N_WEBHOOK_URL:", process.env.N8N_WEBHOOK_URL || "NOT SET");
+    console.error("[ERROR] Code:", error?.code);                          // e.g. ECONNREFUSED, ETIMEDOUT, ENOTFOUND
+    console.error("[ERROR] Message:", error?.message);
+    console.error("[ERROR] Stack:", error?.stack);
+    console.error("[HTTP] Response Status:", error?.response?.status);
+    console.error("[HTTP] Response Data:", JSON.stringify(error?.response?.data || {}, null, 2));
+    console.error("[HTTP] Response Headers:", JSON.stringify(error?.response?.headers || {}, null, 2));
+    console.error("[REQUEST] Base URL:", error?.config?.baseURL);
+    console.error("[REQUEST] Path:", error?.config?.url);
+    console.error("[REQUEST] Full URL:", `${error?.config?.baseURL || ""}${error?.config?.url || ""}`);
+    console.error("[REQUEST] Method:", error?.config?.method);
+    console.error("[REQUEST] Payload:", error?.config?.data);
     console.error("==========================================");
   }
 };
