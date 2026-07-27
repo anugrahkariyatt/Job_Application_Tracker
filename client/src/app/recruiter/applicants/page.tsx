@@ -8,7 +8,6 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Pagination } from '@/components/shared/Pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
-import { calculateRealSkillMatch } from '@/lib/skillMatcher';
 import {
   Users,
   Search,
@@ -248,15 +247,13 @@ export default function ApplicantsPage() {
             const jobTitle = app.jobId?.title || 'Unknown Job';
             const companyName = company?.companyName || 'Company';
 
-            const skillMatchData = calculateRealSkillMatch(candidate, app.jobId);
-            const score = app.aiMatchScore ?? skillMatchData.score;
-
+            const score = app.aiScreening?.score ?? app.aiMatchScore ?? null;
             const badgeStyle =
-              score >= 80
+              score !== null && score >= 80
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                : score >= 60
-                ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
-                : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20';
+                : score !== null && score >= 60
+                  ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20'
+                  : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20';
 
             return (
               <Card
@@ -297,20 +294,6 @@ export default function ApplicantsPage() {
                           <MapPin className="h-3 w-3" /> {candidate.location || 'Not specified'}
                         </span>
                       </div>
-                      <div
-                        className={`mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors cursor-pointer ${badgeStyle}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedApplicantForAI(app);
-                          setIsAIModalOpen(true);
-                        }}
-                      >
-                        <span>
-                          {isPro
-                            ? `Skill Match: ${score}%`
-                            : 'Skill Match: PRO 🔒'}
-                        </span>
-                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -321,6 +304,7 @@ export default function ApplicantsPage() {
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem
                           onClick={() => {
+                            console.log(`[APPLICANTS LIST] View AI Assessment clicked for App ID: ${app._id}`);
                             setSelectedApplicantForAI(app);
                             setIsAIModalOpen(true);
                           }}
@@ -428,6 +412,7 @@ export default function ApplicantsPage() {
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
         applicant={selectedApplicantForAI}
+        applicationId={selectedApplicantForAI?._id || ''}
         onStatusChange={(appId, newStatus) => handleUpdateStatus(appId, newStatus as ApplicationStatus)}
       />
     </div>

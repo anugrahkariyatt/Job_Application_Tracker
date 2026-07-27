@@ -52,7 +52,6 @@ import Link from 'next/link';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { AIAssessmentModal } from '@/components/recruiter/AIAssessmentModal';
-import { calculateRealSkillMatch } from '@/lib/skillMatcher';
 import { useAppSelector } from '@/store/hooks';
 
 type ApplicationStatus = 'Applied' | 'Under Review' | 'Shortlisted' | 'Interview' | 'Rejected' | 'Hired';
@@ -120,7 +119,7 @@ export default function ApplicationDetailsPage({
       const response = await axiosInstance.get(`/api/application/${id}`);
       if (response.data?.success) {
         setApp(response.data.data);
-        
+
         // Setup initial local notes mockup so the layout is still rich and functional
         setNotes([
           {
@@ -171,7 +170,7 @@ export default function ApplicationDetailsPage({
       if (response.data?.success) {
         toast.success(`Application status updated to ${status}.`);
         setApp((prev: any) => ({ ...prev, status }));
-        
+
         // Append update history to local notes
         setNotes((prev) => [
           ...prev,
@@ -208,7 +207,7 @@ export default function ApplicationDetailsPage({
     try {
       setUpdating(true);
       const datetime = new Date(`${interviewForm.date}T${interviewForm.time}`);
-      
+
       const payload = {
         applicationId: id,
         title: interviewForm.title,
@@ -346,12 +345,17 @@ export default function ApplicationDetailsPage({
                   variant={isPro ? "default" : "outline"}
                   size="sm"
                   className={isPro ? "bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" : "border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1.5 font-bold"}
-                  onClick={() => setIsAIModalOpen(true)}
+                  onClick={() => {
+                    console.log(`[APPLICANT DETAILS] AI Screening button clicked for Application ID: ${id}`);
+                    setIsAIModalOpen(true);
+                  }}
                 >
                   <Award className="h-4 w-4" />
                   {isPro
-                    ? `Skill Assessment (${app.aiMatchScore ?? calculateRealSkillMatch(candidate, app.jobId).score}%)`
-                    : "Unlock AI Skill Assessment 🔒"}
+                    ? app.aiScreening?.score != null
+                      ? `AI Screening (${app.aiScreening.score}%)`
+                      : "AI Screening"
+                    : "Unlock AI Screening "}
                 </Button>
                 {candidate.resumeUrl && (
                   <a href={candidate.resumeUrl} target="_blank" rel="noopener noreferrer">
@@ -587,16 +591,15 @@ export default function ApplicationDetailsPage({
                           isTerminal
                             ? `Status is finalized as ${app.status}`
                             : isBackwardStage
-                            ? `Cannot revert backwards to ${status}`
-                            : `Update status to ${status}`
+                              ? `Cannot revert backwards to ${status}`
+                              : `Update status to ${status}`
                         }
-                        className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                          app.status === status
-                            ? 'border-primary bg-primary/5 text-primary font-semibold'
-                            : isDisabled
+                        className={`flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm font-medium transition-colors ${app.status === status
+                          ? 'border-primary bg-primary/5 text-primary font-semibold'
+                          : isDisabled
                             ? 'border-border/40 text-muted-foreground/40 bg-muted/20 cursor-not-allowed'
                             : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground'
-                        }`}
+                          }`}
                       >
                         <span>{status}</span>
                         {app.status === status && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
@@ -620,7 +623,7 @@ export default function ApplicationDetailsPage({
                     Latest first
                   </span>
                 </div>
-                
+
                 {/* Dropdown Filters */}
                 <div className="flex items-center gap-2 pt-2 border-t border-border/60">
                   <div className="flex-1">
@@ -668,7 +671,7 @@ export default function ApplicationDetailsPage({
                         </div>
                         <div className="text-xs text-muted-foreground space-y-1">
                           <p className="flex items-center gap-1.5 font-medium text-foreground/80">
-                            <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" /> 
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                             {new Date(iv.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                           </p>
                           <p className="flex items-center gap-1.5">
@@ -812,6 +815,10 @@ export default function ApplicationDetailsPage({
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
         applicant={app}
+        applicationId={id}
+        onScreeningComplete={(screening) =>
+          setApp((prev: any) => ({ ...prev, aiScreening: screening }))
+        }
         onStatusChange={(appId, newStatus) => handleUpdateStatus(newStatus as ApplicationStatus)}
         onScheduleInterview={() => setScheduleDialogOpen(true)}
       />

@@ -418,3 +418,25 @@ export const getAllJobsController = async (
     next(error);
   }
 };
+
+import { getCandidateJobAIMatch } from "../services/job.service.js";
+
+export const getCandidateJobAIMatchController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    console.log(`[API CALL] GET /api/jobs/${req.params.jobId}/ai-match (Candidate ID: ${req.user!.id})`);
+    const result = await getCandidateJobAIMatch(req.user!.id, req.params.jobId as string);
+
+    return res.status(200).json({
+      success: true,
+      message: "AI job match generated successfully.",
+      data: result,
+    });
+  } catch (error) {
+    console.error("[API ERROR] Candidate AI job match failed:", error);
+    next(error);
+  }
+};

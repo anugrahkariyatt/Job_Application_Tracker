@@ -1,13 +1,28 @@
 import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
+export interface IAIScreening {
+  score: number;
+  strengths: string[];
+  missingSkills: string[];
+  summary: string;
+  generatedAt: Date;
+}
+
 export interface IApplication extends Document {
   candidateId: Types.ObjectId;
   jobId: Types.ObjectId;
   companyId: Types.ObjectId;
-  status: "Applied" | "Under Review" | "Shortlisted" | "Interview" | "Rejected" | "Hired";
-  aiMatchScore?: number;
-  aiStrengths?: string[];
-  aiSummary?: string;
+
+  status:
+  | "Applied"
+  | "Under Review"
+  | "Shortlisted"
+  | "Interview"
+  | "Rejected"
+  | "Hired";
+
+  aiScreening?: IAIScreening;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,19 +54,31 @@ const applicationSchema = new Schema<IApplication>(
       required: true,
     },
 
-    aiMatchScore: {
-      type: Number,
-      min: 0,
-      max: 100,
-    },
+    aiScreening: {
+      score: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
 
-    aiStrengths: {
-      type: [String],
-      default: [],
-    },
+      strengths: {
+        type: [String],
+        default: [],
+      },
 
-    aiSummary: {
-      type: String,
+      missingSkills: {
+        type: [String],
+        default: [],
+      },
+
+      summary: {
+        type: String,
+        default: "",
+      },
+
+      generatedAt: {
+        type: Date,
+      },
     },
   },
   {

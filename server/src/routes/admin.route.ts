@@ -96,4 +96,7 @@ router.get(
   getCompanyByIdController,
 );
 
+
+
+
 export default router;

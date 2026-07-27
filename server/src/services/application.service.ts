@@ -10,7 +10,10 @@ import {
   sendApplicationStatusEmail,
   sendApplicationSubmittedEmail,
 } from "./mail.service.js";
-
+import { getRecruiterAIMatch } from "./gemini.service.js";
+import Skill from "../models/skill.model.js";
+import Experience from "../models/experience.model.js";
+import Education from "../models/education.model.js";
 export const applyForJob = async (userId: string, jobId: string) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -311,4 +314,116 @@ export const updateApplicationStatus = async (
   }
 
   return application;
+};
+
+
+export const getApplicationAIScreening = async (
+  userId: string,
+  applicationId: string,
+) => {
+  console.log(`[AI SCREENING SERVICE] Fetching AI screening for Application ID: ${applicationId}`);
+
+  const company = await CompanyProfile.findOne({ ownerId: userId });
+
+  if (!company) {
+    throw new AppError("Company not found", 404);
+  }
+
+  const application = await Application.findById(applicationId);
+
+  if (!application) {
+    throw new AppError("Application not found", 404);
+  }
+
+  if (application.companyId.toString() !== company._id.toString()) {
+    throw new AppError("You are not authorized to access this application", 403);
+  }
+
+  if (application.aiScreening?.generatedAt) {
+    console.log(`[AI SCREENING SERVICE] Returning cached aiScreening report from database for App ID: ${applicationId} (Score: ${application.aiScreening.score}%)`);
+    return application.aiScreening;
+  }
+
+  console.log(`[AI SCREENING SERVICE] No cached report found. Gathering candidate & job data for Gemini AI...`);
+
+  const candidate = await Candidate.findById(application.candidateId);
+
+  if (!candidate) {
+    throw new AppError("Candidate profile not found", 404);
+  }
+
+  const user = await User.findById(candidate.userId);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const job = await Job.findById(application.jobId);
+
+  if (!job) {
+    throw new AppError("Job not found", 404);
+  }
+
+  const skills = await Skill.find({
+    candidateId: candidate._id,
+  }).select("name");
+
+  const experiences = await Experience.find({
+    candidateId: candidate._id,
+  });
+
+  const educations = await Education.find({
+    candidateId: candidate._id,
+  });
+
+  const candidateData = {
+    fullName: user.name,
+    headline: candidate.headline || "",
+    summary: candidate.bio || "",
+
+    skills: skills.map((skill) => skill.name),
+
+    experience: experiences.map(
+      (exp) =>
+        `${exp.jobTitle} at ${exp.companyName}. ${exp.description || ""}`,
+    ),
+
+    education: educations.map(
+      (edu) =>
+        `${edu.degree} in ${edu.fieldOfStudy || ""} from ${edu.institution}`,
+    ),
+
+    resumeUrl: candidate.resumeUrl || "",
+  };
+
+  const jobData = {
+    title: job.title,
+    description: job.description || "",
+
+    requiredSkills: Array.isArray(job.skills) ? job.skills : [],
+
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [job.responsibilities || ""],
+
+    qualifications: Array.isArray(job.requirements) ? job.requirements : [job.requirements || ""],
+
+    location: job.location || "",
+
+    employmentType: job.employmentType || "",
+  };
+
+  console.log(`[AI SCREENING SERVICE] Invoking getRecruiterAIMatch via Gemini API...`);
+  const aiResult = await getRecruiterAIMatch(
+    candidateData,
+    jobData,
+  );
+
+  application.aiScreening = {
+    ...aiResult,
+    generatedAt: new Date(),
+  };
+
+  await application.save();
+  console.log(`[AI SCREENING SERVICE SUCCESS] Saved new Gemini screening report to database for App ID: ${applicationId}`);
+
+  return application.aiScreening;
 };

@@ -9,6 +9,7 @@ import {
   updateApplicationStatusController,
   getRecruiterApplicationsController,
   getApplicationByIdController,
+  applicationAIScreening,
 } from "../controllers/application.controller.js";
 import { updateApplicationStatus } from "../services/application.service.js";
 
@@ -57,6 +58,13 @@ router.patch(
   authenticate,
   authorize("recruiter"),
   updateApplicationStatusController,
+);
+
+router.get(
+  "/:applicationId/ai-screening",
+  authenticate,
+  authorize("recruiter"),
+  applicationAIScreening,
 );
 
 export default router;

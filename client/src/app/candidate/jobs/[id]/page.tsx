@@ -14,28 +14,21 @@ import {
   CheckCircle2,
   Building2,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
 import { relativeTime } from '@/lib/candidate-data';
 import { cn } from '@/lib/utils';
 import axiosInstance from '@/lib/axios';
 import { toast } from 'sonner';
 import { mapJobToFrontend } from '@/lib/candidate-mappers';
 import { ShareThisButtons } from '@/components/shared/ShareThisButtons';
+import { CandidateAIMatchModal } from '@/components/candidate/CandidateAIMatchModal';
 
 
 export default function JobDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,6 +42,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [applying, setApplying] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [interview, setInterview] = React.useState<any>(null);
+  const [aiMatchOpen, setAiMatchOpen] = React.useState(false);
 
   const fetchJobDetails = async () => {
     try {
@@ -272,6 +266,13 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 'Apply Now'
               )}
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => setAiMatchOpen(true)}
+              className="font-medium h-10  "
+            >
+              AI Match
+            </Button>
             <Button variant="outline" onClick={handleToggleSave} className="font-medium h-10">
               <Bookmark className={cn('mr-2 h-4 w-4', saved && 'fill-primary text-primary')} />
               {saved ? 'Saved' : 'Save'}
@@ -352,6 +353,16 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
       </Card>
+
+      {/* Candidate AI Match Modal */}
+      {aiMatchOpen && (
+        <CandidateAIMatchModal
+          open={aiMatchOpen}
+          onOpenChange={setAiMatchOpen}
+          jobId={id}
+          jobTitle={job.title}
+        />
+      )}
     </div>
   );
 }

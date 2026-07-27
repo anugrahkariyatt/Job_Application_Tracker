@@ -9,6 +9,7 @@ import {
   updateJobController,
   updateJobStatusController,
   getAllJobsController,
+  getCandidateJobAIMatchController,
 } from "../controllers/job.controller.js";
 
 const router = Router();
@@ -45,6 +46,13 @@ router.patch(
   authenticate,
   authorize("recruiter"),
   updateJobStatusController,
+);
+
+router.get(
+  "/:jobId/ai-match",
+  authenticate,
+  authorize("candidate"),
+  getCandidateJobAIMatchController,
 );
 
 export default router;

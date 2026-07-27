@@ -192,3 +192,54 @@ export const updateJobStatus = async (
 
   return job;
 };
+
+import Candidate from "../models/candidate.model.js";
+import Skill from "../models/skill.model.js";
+import Experience from "../models/experience.model.js";
+import Education from "../models/education.model.js";
+import { getCandidateAIMatch } from "./gemini.service.js";
+
+export const getCandidateJobAIMatch = async (userId: string, jobId: string) => {
+  const candidate = await Candidate.findOne({ userId });
+  if (!candidate) {
+    throw new AppError("Candidate profile not found", 404);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const job = await Job.findById(jobId);
+  if (!job) {
+    throw new AppError("Job not found", 404);
+  }
+
+  const skills = await Skill.find({ candidateId: candidate._id }).select("name");
+  const experiences = await Experience.find({ candidateId: candidate._id });
+  const educations = await Education.find({ candidateId: candidate._id });
+
+  const candidateData = {
+    fullName: user.name,
+    headline: candidate.headline || "",
+    summary: candidate.bio || "",
+    skills: skills.map((s) => s.name),
+    experience: experiences.map((exp) => `${exp.jobTitle} at ${exp.companyName}. ${exp.description || ""}`),
+    education: educations.map((edu) => `${edu.degree} in ${edu.fieldOfStudy || ""} from ${edu.institution}`),
+    resumeUrl: candidate.resumeUrl || "",
+  };
+
+  const jobData = {
+    title: job.title,
+    description: job.description || "",
+    requiredSkills: Array.isArray(job.skills) ? job.skills : [],
+    responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [job.responsibilities || ""],
+    qualifications: Array.isArray(job.requirements) ? job.requirements : [job.requirements || ""],
+    location: job.location || "",
+    employmentType: job.employmentType || "",
+  };
+
+  console.log(`[CANDIDATE AI MATCH SERVICE] Running Gemini AI match for Candidate "${user.name}" against Job "${job.title}"...`);
+  const aiResult = await getCandidateAIMatch(candidateData, jobData);
+  return aiResult;
+};

@@ -21,7 +21,6 @@ import User from "../models/user.model.js";
 import Candidate from "../models/candidate.model.js";
 import Skill from "../models/skill.model.js";
 import Experience from "../models/experience.model.js";
-import { calculateRealSkillMatch } from "../utils/skillMatcher.js";
 
 export const applyForJobController = async (
   req: Request,
@@ -274,10 +273,15 @@ export const getRecruiterApplicationsController = async (
         (appObj.candidateId as any).skills = candSkills;
         (appObj.candidateId as any).experience = candExp;
 
-        const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
-        appObj.aiMatchScore = match.score;
-        appObj.aiStrengths = match.strengths;
-        appObj.aiSummary = match.summary;
+        if (appObj.aiScreening) {
+          (appObj as any).aiMatchScore = appObj.aiScreening.score;
+          (appObj as any).aiStrengths = appObj.aiScreening.strengths;
+          (appObj as any).aiSummary = appObj.aiScreening.summary;
+        } else {
+          (appObj as any).aiMatchScore = null;
+          (appObj as any).aiStrengths = [];
+          (appObj as any).aiSummary = "";
+        }
       }
       return appObj;
     });
@@ -356,10 +360,15 @@ export const getApplicationByIdController = async (
       (appObj.candidateId as any).skills = skillsList.map((s) => s.name);
       (appObj.candidateId as any).experience = expList;
 
-      const match = calculateRealSkillMatch(appObj.candidateId, appObj.jobId);
-      appObj.aiMatchScore = match.score;
-      appObj.aiStrengths = match.strengths;
-      appObj.aiSummary = match.summary;
+      if (appObj.aiScreening) {
+        (appObj as any).aiMatchScore = appObj.aiScreening.score;
+        (appObj as any).aiStrengths = appObj.aiScreening.strengths;
+        (appObj as any).aiSummary = appObj.aiScreening.summary;
+      } else {
+        (appObj as any).aiMatchScore = null;
+        (appObj as any).aiStrengths = [];
+        (appObj as any).aiSummary = "";
+      }
     }
 
     return res.status(200).json({
@@ -368,6 +377,34 @@ export const getApplicationByIdController = async (
       data: appObj,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+
+import { getApplicationAIScreening } from "../services/application.service.js";
+
+export const applicationAIScreening = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+  
+    const result = await getApplicationAIScreening(
+      req.user!.id,
+      req.params.applicationId as string,
+    );
+
+
+    res.status(200).json({
+      success: true,
+      message: "AI screening completed successfully.",
+      data: result,
+    });
+  } catch (error) {
+    console.error(`[API RESPONSE ERROR] AI Screening failed for App ID ${req.params.applicationId}:`, error);
+
     next(error);
   }
 };
