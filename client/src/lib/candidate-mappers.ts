@@ -19,7 +19,14 @@ export const mapJobToFrontend = (dbJob: any): Job => {
   let salaryStr = 'Not specified';
   if (dbJob.salaryMin !== undefined && dbJob.salaryMax !== undefined) {
     const currencySym = dbJob.currency === 'EUR' ? '€' : dbJob.currency === 'GBP' ? '£' : dbJob.currency === 'INR' ? '₹' : '$';
-    salaryStr = `${currencySym}${(dbJob.salaryMin / 1000).toFixed(0)}k - ${currencySym}${(dbJob.salaryMax / 1000).toFixed(0)}k`;
+    const formatValue = (val: number) => {
+      if (val >= 100000) return `${(val / 1000).toFixed(0)}k`;
+      if (val >= 1000) return `${val.toLocaleString()}`;
+      return `${val}`;
+    };
+    const minStr = formatValue(dbJob.salaryMin);
+    const maxStr = formatValue(dbJob.salaryMax);
+    salaryStr = `${currencySym}${minStr} - ${maxStr}`;
   }
 
   return {

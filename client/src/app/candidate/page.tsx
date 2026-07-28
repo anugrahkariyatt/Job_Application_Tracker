@@ -44,6 +44,13 @@ import {
 import { StatCard } from "@/components/candidate/stat-card";
 import { JobCard } from "@/components/candidate/job-card";
 import { StatusBadge } from "@/components/candidate/status-badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/store/hooks";
 import axiosInstance from "@/lib/axios";
@@ -172,8 +179,49 @@ export default function DashboardPage() {
   const [recommendations, setRecommendations] = useState<Job[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [sortOrder, setSortOrder] = useState<string>("newest");
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
+
+  const handleFilterChange = async (newStatus: string, newType: string, newSort: string) => {
+    setStatusFilter(newStatus);
+    setTypeFilter(newType);
+    setSortOrder(newSort);
+    try {
+      const params: any = { sort: newSort };
+      if (newStatus !== "all") params.status = newStatus;
+      if (newType !== "all") params.type = newType;
+
+      const response = await axiosInstance.get("/api/interviews", { params });
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        const mapped = response.data.data.map((iv: any) => {
+          const dateObj = new Date(iv.date);
+          return {
+            id: iv._id,
+            jobTitle: iv.jobId?.title || "Position",
+            company: iv.companyId?.companyName || "Company",
+            companyLogo: iv.companyId?.logo || "",
+            date: dateObj.toISOString(),
+            time: dateObj.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            format: iv.type === "Video Call" ? "Video" : (iv.type || "Video"),
+            type: iv.type || "Video Call",
+            round: iv.title,
+            link: iv.link,
+            notes: iv.notes,
+            status: iv.status || "Scheduled",
+          };
+        });
+        setUpcomingInterviews(mapped);
+      }
+    } catch (err) {
+      console.error("Error fetching filtered interviews:", err);
+    }
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("savedJobs");
@@ -263,7 +311,6 @@ export default function DashboardPage() {
           Array.isArray(interviewRes.value.data.data)
         ) {
           const mappedInterviews = interviewRes.value.data.data
-            .filter((iv: any) => iv.status === "Scheduled")
             .map((iv: any) => {
               const dateObj = new Date(iv.date);
               return {
@@ -276,13 +323,18 @@ export default function DashboardPage() {
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
-                format: iv.type === "Video Call" ? "Video" : iv.type,
+                format: iv.type === "Video Call" ? "Video" : (iv.type || "Video"),
+                type: iv.type || "Video Call",
                 round: iv.title,
                 link: iv.link,
                 notes: iv.notes,
-                status: iv.status,
+                status: iv.status || "Scheduled",
               };
-            });
+            })
+            .sort(
+              (a: any, b: any) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
           setUpcomingInterviews(mappedInterviews);
         }
 
@@ -576,57 +628,124 @@ export default function DashboardPage() {
 
         {/* Right Column (1/3 width on desktop, 1st on mobile so Upcoming Interviews appears at top) */}
         <div className="space-y-6 lg:col-span-1 order-1 lg:order-2">
-          {/* 1. Upcoming Interviews */}
+          {/* 1. Upcoming & Recent Interviews */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Upcoming Interviews</CardTitle>
+            <CardHeader className="pb-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold">Upcoming Interviews</CardTitle>
+                <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+                  {upcomingInterviews.length} {upcomingInterviews.length === 1 ? "interview" : "interviews"}
+                </Badge>
+              </div>
+
+              {/* Backend Filter & Sort Dropdowns */}
+              <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                <Select value={statusFilter} onValueChange={(val) => handleFilterChange(val, typeFilter, sortOrder)}>
+                  <SelectTrigger className="h-7 text-[11px] px-2 bg-muted/30 border-border/60">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Scheduled">Scheduled</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={typeFilter} onValueChange={(val) => handleFilterChange(statusFilter, val, sortOrder)}>
+                  <SelectTrigger className="h-7 text-[11px] px-2 bg-muted/30 border-border/60">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Video Call">Video Call</SelectItem>
+                    <SelectItem value="Onsite">Onsite</SelectItem>
+                    <SelectItem value="Phone">Phone</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={sortOrder} onValueChange={(val) => handleFilterChange(statusFilter, typeFilter, val)}>
+                  <SelectTrigger className="h-7 text-[11px] px-2 bg-muted/30 border-border/60">
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="pt-0">
               {upcomingInterviews.length === 0 ? (
                 <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">
-                  No upcoming interviews scheduled yet.
+                  No interviews found matching criteria.
                 </div>
               ) : (
-                upcomingInterviews.map((iv) => (
-                  <div key={iv.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-                    <Avatar className="h-9 w-9 rounded-lg shrink-0">
-                      <AvatarImage src={iv.companyLogo} alt={iv.company} />
-                      <AvatarFallback className="rounded-lg text-xs font-semibold">
-                        {iv.company.slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{iv.jobTitle}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {iv.company} · {iv.round}
-                      </p>
-                      <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5 text-primary" />
-                        {formatDate(iv.date)} at {iv.time}
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="secondary" className="font-medium text-[11px]">
-                          {iv.format}
-                        </Badge>
-                        {iv.link && (
-                          <a
-                            href={iv.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-semibold"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" /> Join Meet
-                          </a>
+                <div className="max-h-[380px] overflow-y-auto pr-1 space-y-3 scrollbar-thin">
+                  {upcomingInterviews.map((iv) => (
+                    <div
+                      key={iv.id}
+                      className={cn(
+                        "flex items-start gap-3 p-3 rounded-lg border transition-all",
+                        iv.status === "Cancelled"
+                          ? "bg-red-500/5 border-red-200/60 dark:border-red-900/40"
+                          : "bg-muted/20 border-border/50"
+                      )}
+                    >
+                      <Avatar className="h-9 w-9 rounded-lg shrink-0 border border-border/40">
+                        <AvatarImage src={iv.companyLogo} alt={iv.company} className="object-cover h-full w-full rounded-lg" />
+                        <AvatarFallback className="rounded-lg text-xs font-semibold bg-primary/10 text-primary">
+                          {iv.company ? iv.company.slice(0, 2).toUpperCase() : "CO"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs sm:text-sm font-semibold text-foreground truncate">{iv.jobTitle}</p>
+                          {iv.status === "Cancelled" ? (
+                            <Badge className="font-semibold text-[10px] px-1.5 py-0 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 shrink-0">
+                              Cancelled
+                            </Badge>
+                          ) : iv.status === "Completed" ? (
+                            <Badge className="font-semibold text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 shrink-0">
+                              Completed
+                            </Badge>
+                          ) : (
+                            <Badge className="font-semibold text-[10px] px-1.5 py-0 bg-primary/10 text-primary border border-primary/20 shrink-0">
+                              Scheduled
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {iv.company} · {iv.round}
+                        </p>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
+                          {formatDate(iv.date)} at {iv.time}
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="font-medium text-[11px]">
+                            {iv.format}
+                          </Badge>
+                          {iv.status !== "Cancelled" && iv.link && (
+                            <a
+                              href={iv.link.startsWith("http") ? iv.link : `https://${iv.link}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-semibold"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" /> Join Meet
+                            </a>
+                          )}
+                        </div>
+                        {iv.notes && (
+                          <p className="mt-2 text-xs text-muted-foreground bg-background/60 p-2 rounded border border-border/40">
+                            {iv.notes}
+                          </p>
                         )}
                       </div>
-                      {iv.notes && (
-                        <p className="mt-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded border border-border/40">
-                          {iv.notes}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

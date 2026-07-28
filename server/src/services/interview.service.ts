@@ -218,28 +218,58 @@ export const updateInterviewStatus = async (
 export const getMyInterviews = async (
   userId: string,
   role: "candidate" | "recruiter" | "admin",
+  query: { status?: string; type?: string; sort?: string } = {}
 ) => {
+  const filter: any = {};
+
   if (role === "candidate") {
     const candidate = await Candidate.findOne({ userId });
     if (!candidate) {
       return [];
     }
-    return await Interview.find({ candidateId: candidate._id })
-      .populate("jobId", "title location jobType")
-      .populate("companyId", "companyName logo industry")
-      .sort({ createdAt: -1, date: -1 });
+    filter.candidateId = candidate._id;
   } else if (role === "recruiter") {
     const company = await Company.findOne({ ownerId: userId });
     if (!company) {
       return [];
     }
-    return await Interview.find({ companyId: company._id })
+    filter.companyId = company._id;
+  } else if (role !== "admin") {
+    return [];
+  }
+
+  if (query.status && query.status !== "all" && query.status !== "All") {
+    filter.status = query.status;
+  }
+
+  if (query.type && query.type !== "all" && query.type !== "All") {
+    if (query.type === "Video") {
+      filter.type = "Video Call";
+    } else {
+      filter.type = query.type;
+    }
+  }
+
+  let sortOptions: any = { date: -1, createdAt: -1 };
+  if (query.sort === "oldest") {
+    sortOptions = { date: 1, createdAt: 1 };
+  } else if (query.sort === "newest" || !query.sort) {
+    sortOptions = { date: -1, createdAt: -1 };
+  }
+
+  if (role === "candidate") {
+    return await Interview.find(filter)
+      .populate("jobId", "title location jobType")
+      .populate("companyId", "companyName logo industry")
+      .sort(sortOptions);
+  } else if (role === "recruiter") {
+    return await Interview.find(filter)
       .populate("jobId", "title location jobType")
       .populate({
         path: "candidateId",
         populate: { path: "userId", select: "name email" },
       })
-      .sort({ createdAt: -1, date: -1 });
+      .sort(sortOptions);
   }
   return [];
 };

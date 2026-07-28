@@ -154,13 +154,14 @@ export default function DashboardPage() {
         <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-6">
           <div className="flex items-center gap-4">
             <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm shrink-0">
-              {company?.logo ? (
-                <AvatarImage src={company.logo} alt={company?.name} />
-              ) : (
-                <AvatarFallback className="font-bold text-base bg-primary/10 text-primary">
-                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "RC"}
-                </AvatarFallback>
-              )}
+              <AvatarImage
+                src={company?.logo}
+                alt={company?.name || company?.companyName || "Company Logo"}
+                className="object-cover h-full w-full"
+              />
+              <AvatarFallback className="font-bold text-base bg-primary/10 text-primary">
+                {(company?.name || company?.companyName || user?.name || "RC").slice(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">

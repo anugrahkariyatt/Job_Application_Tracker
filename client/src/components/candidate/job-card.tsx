@@ -122,7 +122,9 @@ export function JobCard({ job, saved, applied, onToggleSave, onApply, view = 'gr
           )}
           {job.salary && (
             <span className="inline-flex items-center gap-1 font-medium text-foreground">
-              <DollarSign className="h-3.5 w-3.5 text-muted-foreground/70" />
+              {!job.salary.startsWith('$') && !job.salary.startsWith('€') && !job.salary.startsWith('£') && !job.salary.startsWith('₹') && (
+                <DollarSign className="h-3.5 w-3.5 text-muted-foreground/70" />
+              )}
               {job.salary}
             </span>
           )}

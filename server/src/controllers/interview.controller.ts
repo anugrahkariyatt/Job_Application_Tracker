@@ -99,7 +99,16 @@ export const getMyInterviewsController = async (
   next: NextFunction,
 ) => {
   try {
-    const result = await getMyInterviews(req.user!.id, req.user!.role as any);
+    const { status, type, sort } = req.query;
+    const result = await getMyInterviews(
+      req.user!.id,
+      req.user!.role as any,
+      {
+        status: status as string,
+        type: type as string,
+        sort: sort as string,
+      }
+    );
 
     return res.status(200).json({
       success: true,
