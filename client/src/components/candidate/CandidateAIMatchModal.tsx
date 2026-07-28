@@ -50,7 +50,7 @@ export function CandidateAIMatchModal({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-
+    console.log("CandidateAIMatchModal rendered");
     const fetchMatch = async () => {
       setLoading(true);
       setError(null);
@@ -65,7 +65,7 @@ export function CandidateAIMatchModal({
           console.error("[CANDIDATE AI MATCH] Error:", err);
           setError(
             err?.response?.data?.message ||
-              "Failed to generate AI match. Please try again."
+            "Failed to generate AI match. Please try again."
           );
         }
       } finally {
@@ -155,13 +155,12 @@ export function CandidateAIMatchModal({
                 </div>
                 <Badge
                   variant="outline"
-                  className={`px-3 py-1 text-xs font-semibold ${
-                    matchScore >= 80
+                  className={`px-3 py-1 text-xs font-semibold ${matchScore >= 80
                       ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
                       : matchScore >= 60
                         ? "bg-amber-500/10 text-amber-600 border-amber-500/30"
                         : "bg-rose-500/10 text-rose-600 border-rose-500/30"
-                  }`}
+                    }`}
                 >
                   {matchScore >= 80
                     ? "High Match — Strong Fit"

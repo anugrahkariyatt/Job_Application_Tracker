@@ -609,15 +609,6 @@ export default function EditProfilePage() {
 
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Edit Profile</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" disabled={saving} asChild>
-            <Link href="/candidate/profile">Cancel</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Save Changes
-          </Button>
-        </div>
       </div>
 
       {/* Avatar + Basic Information */}

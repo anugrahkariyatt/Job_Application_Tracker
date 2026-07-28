@@ -303,17 +303,21 @@ export default function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              {recentJobs && recentJobs.length > 0 ? (
+
+              {recentJobs?.filter((job: any) => job.status === "Open").length > 0 ? (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {recentJobs.slice(0, 4).map((job: any) => (
-                    <JobCard
-                      key={job._id}
-                      job={job}
-                      showStats={true}
-                      companyLogo={company?.logo}
-                      companyName={company?.name}
-                    />
-                  ))}
+                  {recentJobs
+                    .filter((job: any) => job.status === "Open")
+                    .slice(0, 4)
+                    .map((job: any) => (
+                      <JobCard
+                        key={job._id}
+                        job={job}
+                        showStats={true}
+                        companyLogo={company?.logo}
+                        companyName={company?.name}
+                      />
+                    ))}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground text-xs sm:text-sm space-y-2">

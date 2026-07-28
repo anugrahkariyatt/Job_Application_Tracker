@@ -9,12 +9,10 @@ import {
   DollarSign,
   Clock,
   Bookmark,
-  Share2,
   ArrowLeft,
   CheckCircle2,
   Building2,
   Loader2,
-  Sparkles,
 } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -226,10 +224,10 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 <p className="text-sm font-medium text-muted-foreground">{job.company} · {job.industry || 'Tech'}</p>
               )}
               <div className="pt-2 flex flex-wrap gap-x-5 gap-y-2 text-xs sm:text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4 text-primary" />{job.location} {job.workMode ? `(${job.workMode})` : (job.remote ? '(Remote)' : '(Onsite)')}</span>
-                <span className="flex items-center gap-1.5 font-medium"><Briefcase className="h-4 w-4 text-primary" />{job.employmentType}</span>
-                <span className="flex items-center gap-1.5 font-semibold text-foreground"><DollarSign className="h-4 w-4 text-primary" />{job.salary}</span>
-                <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-muted-foreground" />Posted {relativeTime(job.postedDate)}</span>
+                <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4" />{job.location} {job.workMode ? `(${job.workMode})` : (job.remote ? '(Remote)' : '(Onsite)')}</span>
+                <span className="flex items-center gap-1.5 font-medium">{job.employmentType}</span>
+                <span className="flex items-center gap-1.5 font-semibold text-foreground">{job.salary}</span>
+                <span className="flex items-center gap-1.5">Posted {relativeTime(job.postedDate)}</span>
               </div>
               {job.skills.length > 0 && (
                 <div className="pt-2 flex flex-wrap gap-1.5">

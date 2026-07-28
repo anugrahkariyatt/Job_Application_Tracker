@@ -592,38 +592,6 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-
-          {/* 2. Latest Job Recommendations */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">
-                  Latest Job Recommendations
-                </h2>
-                <p className="text-xs text-muted-foreground">Tailored opportunities for your skills</p>
-              </div>
-              <Button variant="ghost" size="sm" className="text-xs font-semibold text-primary hover:text-primary/80" asChild>
-                <Link href="/candidate/jobs">View All</Link>
-              </Button>
-            </div>
-            {recommendations.length === 0 ? (
-              <div className="text-center py-8 border rounded-xl bg-card text-muted-foreground text-xs sm:text-sm">
-                No recommended jobs available at this time.
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {recommendations.slice(0, 4).map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onApply={handleApplyJob}
-                    saved={savedJobIds.includes(job.id)}
-                    onToggleSave={handleToggleSave}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Right Column (1/3 width on desktop, 1st on mobile so Upcoming Interviews appears at top) */}
@@ -688,7 +656,7 @@ export default function DashboardPage() {
                       className={cn(
                         "flex items-start gap-3 p-3 rounded-lg border transition-all",
                         iv.status === "Cancelled"
-                          ? "bg-red-500/5 border-red-200/60 dark:border-red-900/40"
+                          ? " border-red-200/60 dark:border-red-900/40"
                           : "bg-muted/20 border-border/50"
                       )}
                     >
@@ -745,56 +713,6 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 2. Application Activity Timeline */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">Application Activity</CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">
-                Recent activity on your applications
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {timeline.length === 0 ? (
-                <div className="text-center py-6 text-xs sm:text-sm text-muted-foreground">
-                  No recent application activity.
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {timeline.map((event, idx) => {
-                    const config =
-                      timelineIconMap[event.type] || timelineIconMap.applied;
-                    return (
-                      <div key={event.id} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                          <div
-                            className={cn(
-                              "flex h-7 w-7 items-center justify-center rounded-full shrink-0",
-                              config.className,
-                            )}
-                          >
-                            <config.icon className="h-3.5 w-3.5" />
-                          </div>
-                          {idx < timeline.length - 1 && (
-                            <div className="w-px flex-1 bg-border/60" />
-                          )}
-                        </div>
-                        <div className="pb-5">
-                          <p className="text-xs sm:text-sm font-semibold text-foreground">{event.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {event.description}
-                          </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {relativeTime(event.time)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               )}
             </CardContent>
