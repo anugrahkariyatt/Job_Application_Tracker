@@ -1,25 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail } from 'lucide-react';
-import React, { useState } from 'react';
-import { toast } from 'sonner';
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      toast.success(`Thank you for subscribing, ${email}!`);
-      setEmail('');
-    }
-  };
-
   return (
     <footer className="border-t border-border/60 bg-card/60 py-12 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3">
           {/* Brand Info */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-3">
@@ -93,35 +80,6 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-              Stay Updated
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Get job alerts and updates delivered to your inbox.
-            </p>
-            <form onSubmit={handleSubscribe} className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@email.com"
-                  required
-                  className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded-lg bg-primary py-2.5 text-xs font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90"
-              >
-                Subscribe
-              </button>
-            </form>
           </div>
         </div>
 

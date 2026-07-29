@@ -74,10 +74,10 @@ export function Navbar() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user?._id || user?.id) {
       fetchHeaderData();
     }
-  }, [user]);
+  }, [user?._id, user?.id]);
 
   const handleSignOut = async () => {
     try {

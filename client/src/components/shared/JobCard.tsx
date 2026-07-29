@@ -12,6 +12,7 @@ import {
   MoreHorizontal,
   Ban,
   CheckCircle,
+  Pencil,
   Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -137,6 +138,13 @@ export function JobCard({
                         <Eye className="mr-2 h-4 w-4" /> View Details
                       </Link>
                     </DropdownMenuItem>
+                    {isRecruiter && (
+                      <DropdownMenuItem asChild>
+                        <Link href={`/recruiter/jobs/${jobId}/edit`}>
+                          <Pencil className="mr-2 h-4 w-4" /> Edit Job
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     {job.status === 'Open' ? (
                       <DropdownMenuItem onClick={() => onClose?.(jobId)}>

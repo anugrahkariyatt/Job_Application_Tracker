@@ -76,11 +76,11 @@ export function Navbar() {
         // Silent catch
       }
     };
-    if (user) {
+    if (user?._id || user?.id) {
       fetchCandidateImg();
       fetchUnreadNotifications();
     }
-  }, [user]);
+  }, [user?._id, user?.id]);
 
   const handleLogout = async () => {
     try {
