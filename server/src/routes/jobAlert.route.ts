@@ -6,9 +6,12 @@ import {
   deleteJobAlertController,
   getMyJobAlertsController,
   updateJobAlertController,
+  processScheduledJobAlertsController,
 } from "../controllers/jobAlert.controller.js";
 
 const router = Router();
+
+router.post("/process-scheduled", processScheduledJobAlertsController);
 
 router.post(
   "/",

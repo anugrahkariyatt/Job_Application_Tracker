@@ -1,10 +1,11 @@
 import Candidate from "../models/candidate.model.js";
 import Company from "../models/company.model.js";
 import JobAlert from "../models/jobAlert.model.js";
+import Job from "../models/job.model.js";
 import User from "../models/user.model.js";
 import { AppError } from "../utils/AppError.js";
 import { createNotification } from "./notification.service.js";
-import { sendJobAlertEmail } from "./mail.service.js";
+import { sendJobAlertEmail, JobSummary } from "./mail.service.js";
 
 const MAX_JOB_ALERTS = 10;
 
@@ -14,6 +15,7 @@ export const createJobAlert = async (
   location: string,
   employmentType: "Full-time" | "Part-time" | "Contract" | "Internship",
   remote: boolean,
+  frequency: "Daily" | "Weekly" | "Monthly" = "Daily",
 ) => {
   const candidate = await Candidate.findOne({ userId });
 
@@ -38,6 +40,7 @@ export const createJobAlert = async (
     location,
     employmentType,
     remote,
+    frequency,
   });
 
   return jobAlert;
@@ -47,7 +50,7 @@ export const getMyJobAlerts = async (userId: string) => {
   const candidate = await Candidate.findOne({ userId });
 
   if (!candidate) {
-    throw new AppError("Candidate profile not found", 404);
+    return [];
   }
 
   const jobAlerts = await JobAlert.find({
@@ -65,6 +68,7 @@ export const updateJobAlert = async (
     location?: string;
     employmentType?: "Full-time" | "Part-time" | "Contract" | "Internship";
     remote?: boolean;
+    frequency?: "Daily" | "Weekly" | "Monthly";
     isActive?: boolean;
   },
 ) => {
@@ -80,18 +84,11 @@ export const updateJobAlert = async (
     throw new AppError("Job alert not found", 404);
   }
 
-  if (jobAlert.candidateId.toString() !== candidate._id.toString()) {
+  if (!jobAlert.candidateId.equals(candidate._id)) {
     throw new AppError("You are not authorized to update this job alert", 403);
   }
-
-  if (data.keywords !== undefined) jobAlert.keywords = data.keywords;
-  if (data.location !== undefined) jobAlert.location = data.location;
-  if (data.employmentType !== undefined) jobAlert.employmentType = data.employmentType;
-  if (data.remote !== undefined) jobAlert.remote = data.remote;
-  if (data.isActive !== undefined) jobAlert.isActive = data.isActive;
-
+  jobAlert.set(data);
   await jobAlert.save();
-
   return jobAlert;
 };
 
@@ -128,12 +125,60 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
     }
 
 
-    const activeAlerts = await JobAlert.find({ isActive: true }).populate({
+    const jobEmploymentType = job.employmentType;
+    const isJobRemote = !!job.remote;
+    const rawJobLocation = (job.location || "").trim();
+    const jobLocation = rawJobLocation.toLowerCase();
+
+    // Build targeted MongoDB query to fetch only potentially matching alerts
+    const filterQuery: any = { isActive: true };
+
+    // 1. Filter by Employment Type
+    if (jobEmploymentType) {
+      filterQuery.employmentType = jobEmploymentType;
+    }
+
+    // 2. Filter by Remote setting (if job is not remote, exclude alerts demanding remote)
+    if (!isJobRemote && !jobLocation.includes("remote")) {
+      filterQuery.remote = false;
+    }
+
+    // 3. Filter by Location
+    if (rawJobLocation) {
+      const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const locationTokens = rawJobLocation
+        .split(/[\s,]+/)
+        .map((t: string) => t.trim())
+        .filter((t: string) => t.length > 1);
+
+      const locationConditions: any[] = [
+        { location: "" },
+        { location: { $exists: false } },
+        { location: null },
+        { location: /^any$/i },
+        { location: /^all$/i },
+      ];
+
+      locationConditions.push({ location: new RegExp(escapeRegex(rawJobLocation), "i") });
+      for (const token of locationTokens) {
+        locationConditions.push({ location: new RegExp(escapeRegex(token), "i") });
+      }
+
+      if (isJobRemote || jobLocation.includes("remote")) {
+        locationConditions.push({ location: /^remote$/i });
+      }
+
+      filterQuery.$or = locationConditions;
+    }
+
+    console.log("[JOB ALERT SERVICE] Targeted MongoDB query filter:", JSON.stringify(filterQuery));
+
+    const activeAlerts = await JobAlert.find(filterQuery).populate({
       path: "candidateId",
       populate: { path: "userId", select: "name email preferences" },
     });
 
-    console.log(`[JOB ALERT SERVICE] Found ${activeAlerts?.length || 0} active job alerts in DB`);
+    console.log(`[JOB ALERT SERVICE] Found ${activeAlerts?.length || 0} candidate job alerts matching MongoDB filter`);
 
     if (!activeAlerts || activeAlerts.length === 0) {
       return notifiedUserIds;
@@ -152,9 +197,7 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
     const jobTitle = job.title || "";
     const jobDescription = job.description || "";
     const jobSkills = Array.isArray(job.skills) ? job.skills.map((s: string) => s.toLowerCase()) : [];
-    const jobLocation = (job.location || "").toLowerCase();
-    const jobEmploymentType = job.employmentType;
-    const isJobRemote = !!job.remote;
+
 
     for (const alert of activeAlerts) {
       const candidate = alert.candidateId as any;
@@ -253,6 +296,7 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
           await sendJobAlertEmail({
             email: user.email,
             candidateName: user.name || "Candidate",
+            type: "job-alert",
             jobTitle: jobTitle,
             companyName: companyName,
             location: job.location || "Remote",
@@ -270,5 +314,196 @@ export const processJobAlertsForNewJob = async (job: any): Promise<Set<string>> 
   }
   return notifiedUserIds;
 };
+
+export const processScheduledJobAlerts = async (
+  targetFrequency?: "Daily" | "Weekly" | "Monthly" | "All"
+) => {
+  const stats = {
+    processedAlerts: 0,
+    matchedAlerts: 0,
+    emailsSent: 0,
+    frequency: targetFrequency || "All",
+  };
+
+  try {
+    console.log(
+      `[JOB ALERT SERVICE] Starting n8n scheduled job alert run (Frequency: ${
+        targetFrequency || "All"
+      })`
+    );
+
+    const filterQuery: any = { isActive: true };
+    if (targetFrequency && targetFrequency !== "All") {
+      filterQuery.frequency = targetFrequency;
+    }
+
+    const activeAlerts = await JobAlert.find(filterQuery).populate({
+      path: "candidateId",
+      populate: { path: "userId", select: "name email preferences" },
+    });
+
+    if (!activeAlerts || activeAlerts.length === 0) {
+      console.log(
+        "[JOB ALERT SERVICE] No active job alerts found for frequency:",
+        targetFrequency || "All"
+      );
+      return stats;
+    }
+
+    stats.processedAlerts = activeAlerts.length;
+
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    for (const alert of activeAlerts) {
+      const candidate = alert.candidateId as any;
+      if (!candidate) continue;
+
+      let user = candidate.userId as any;
+      if (!user || typeof user !== "object" || !user.email) {
+        if (candidate.userId) {
+          user = await User.findById(candidate.userId).select(
+            "name email preferences"
+          );
+        }
+      }
+
+      if (!user || !user.email || !user._id) continue;
+
+      let lookbackDate = oneDayAgo;
+      if (alert.frequency === "Weekly") {
+        lookbackDate = oneWeekAgo;
+      } else if (alert.frequency === "Monthly") {
+        lookbackDate = oneMonthAgo;
+      }
+
+      const jobQuery: any = {
+        status: "Open",
+        createdAt: { $gte: lookbackDate },
+      };
+
+      if (alert.employmentType) {
+        jobQuery.employmentType = alert.employmentType;
+      }
+
+      if (alert.remote) {
+        jobQuery.remote = true;
+      }
+
+      const matchingJobsList = await Job.find(jobQuery).populate(
+        "companyId",
+        "companyName"
+      );
+
+      const matchedJobs = matchingJobsList.filter((job: any) => {
+        const jobTitle = (job.title || "").toLowerCase();
+        const jobDesc = (job.description || "").toLowerCase();
+        const jobLoc = (job.location || "").toLowerCase();
+        const jobSkills = Array.isArray(job.skills)
+          ? job.skills.map((s: string) => s.toLowerCase())
+          : [];
+
+        if (alert.location && alert.location.trim() !== "") {
+          const alertLoc = alert.location.trim().toLowerCase();
+          if (alertLoc !== "any" && alertLoc !== "all") {
+            if (alertLoc === "remote") {
+              if (!job.remote && !jobLoc.includes("remote")) return false;
+            } else if (
+              !jobLoc.includes(alertLoc) &&
+              !alertLoc.includes(jobLoc)
+            ) {
+              return false;
+            }
+          }
+        }
+
+        const validKeywords = Array.isArray(alert.keywords)
+          ? alert.keywords
+              .map((k: string) => k.toLowerCase().trim())
+              .filter(Boolean)
+          : [];
+
+        if (validKeywords.length > 0) {
+          const hasKeywordMatch = validKeywords.some(
+            (kw: string) =>
+              jobTitle.includes(kw) ||
+              jobDesc.includes(kw) ||
+              jobSkills.some((s: string) => s.includes(kw))
+          );
+          if (!hasKeywordMatch) return false;
+        }
+
+        return true;
+      });
+
+      if (matchedJobs.length > 0) {
+        stats.matchedAlerts++;
+
+        const jobsPayload: JobSummary[] = matchedJobs.map((j: any) => {
+          const cName = (j.companyId as any)?.companyName || "Company";
+          const salaryStr =
+            j.salaryMin && j.salaryMax
+              ? `${j.currency || "$"}${j.salaryMin.toLocaleString()} - ${j.currency || "$"}${j.salaryMax.toLocaleString()}`
+              : undefined;
+
+          return {
+            jobId: j._id.toString(),
+            title: j.title || "Job Opening",
+            companyName: cName,
+            location: j.location || (j.remote ? "Remote" : "Onsite"),
+            employmentType: j.employmentType || "Full-time",
+            workplaceType: j.workMode || (j.remote ? "Remote" : "Onsite"),
+            experienceLevel: j.experienceLevel,
+            salary: salaryStr,
+          };
+        });
+
+        const topJob = jobsPayload[0];
+
+        try {
+          await createNotification(
+            user._id.toString(),
+            `${alert.frequency} Job Digest: ${matchedJobs.length} match(es)`,
+            `Found ${matchedJobs.length} job(s) matching your ${alert.frequency} alert: ${topJob.title} at ${topJob.companyName}`,
+            "JOB_ALERT"
+          );
+        } catch (notifErr) {
+          console.error(
+            "[JOB ALERT SERVICE ERROR] Failed to create in-app notification:",
+            notifErr
+          );
+        }
+
+        const userPrefs = user.preferences || { jobExpiring: true };
+        if (userPrefs.jobExpiring !== false) {
+          await sendJobAlertEmail({
+            email: user.email,
+            candidateName: user.name || "Candidate",
+            type: "scheduled-job-alert",
+            frequency: alert.frequency || "Daily",
+            totalJobs: jobsPayload.length,
+            jobs: jobsPayload,
+          });
+          stats.emailsSent++;
+        }
+      }
+    }
+
+    console.log(
+      "[JOB ALERT SERVICE SUCCESS] n8n scheduled job alert run finished:",
+      JSON.stringify(stats)
+    );
+  } catch (error) {
+    console.error(
+      "[JOB ALERT SERVICE ERROR] n8n scheduled job alert run failed:",
+      error
+    );
+  }
+
+  return stats;
+};
+
 
 

@@ -15,6 +15,7 @@ export const createJobAlertSchema = z.object({
   ]),
 
   remote: z.boolean(),
+  frequency: z.enum(["Daily", "Weekly", "Monthly"]).optional(),
 });
 
 export const updateJobAlertSchema = z.object({
@@ -33,6 +34,7 @@ export const updateJobAlertSchema = z.object({
   ]).optional(),
 
   remote: z.boolean().optional(),
+  frequency: z.enum(["Daily", "Weekly", "Monthly"]).optional(),
   isActive: z.boolean().optional(),
 });
 

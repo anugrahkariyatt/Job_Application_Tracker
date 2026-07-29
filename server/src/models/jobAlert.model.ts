@@ -6,6 +6,7 @@ export interface IJobAlert extends Document {
   location: string;
   employmentType: "Full-time" | "Part-time" | "Contract" | "Internship";
   remote: boolean;
+  frequency: "Daily" | "Weekly" | "Monthly";
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +41,12 @@ const jobAlertSchema = new Schema<IJobAlert>(
       default: false,
     },
 
+    frequency: {
+      type: String,
+      enum: ["Daily", "Weekly", "Monthly"],
+      default: "Daily",
+    },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -49,6 +56,9 @@ const jobAlertSchema = new Schema<IJobAlert>(
     timestamps: true,
   },
 );
+
+jobAlertSchema.index({ isActive: 1, employmentType: 1, remote: 1 });
+
 
 const JobAlert: Model<IJobAlert> = mongoose.model<IJobAlert>(
   "JobAlert",

@@ -10,6 +10,7 @@ import {
   deleteJobAlert,
   getMyJobAlerts,
   updateJobAlert,
+  processScheduledJobAlerts,
 } from "../services/jobAlert.service.js";
 
 export const createJobAlertController = async (
@@ -33,6 +34,7 @@ export const createJobAlertController = async (
       validation.data.location,
       validation.data.employmentType,
       validation.data.remote,
+      validation.data.frequency,
     );
 
     return res.status(201).json({
@@ -128,3 +130,42 @@ export const deleteJobAlertController = async (
     next(error);
   }
 };
+
+export const processScheduledJobAlertsController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const cronSecret = process.env.CRON_SECRET || process.env.N8N_CRON_SECRET;
+    if (cronSecret) {
+      const providedSecret =
+        req.headers["x-cron-secret"] || req.headers["x-n8n-secret"];
+
+      if (providedSecret !== cronSecret) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized: Invalid x-cron-secret header",
+        });
+      }
+    }
+
+    const frequency = (req.query.frequency || req.body?.frequency) as
+      | "Daily"
+      | "Weekly"
+      | "Monthly"
+      | "All"
+      | undefined;
+
+    const stats = await processScheduledJobAlerts(frequency);
+
+    return res.status(200).json({
+      success: true,
+      message: "Scheduled job alerts processed successfully",
+      stats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
