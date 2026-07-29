@@ -61,7 +61,7 @@ export const getMySubscriptions = async (userId: string) => {
   const candidate = await Candidate.findOne({ userId });
 
   if (!candidate) {
-    throw new AppError("Candidate profile not found", 404);
+    return [];
   }
 
   const subscriptions = await Subscription.find({
@@ -108,7 +108,7 @@ export const notifyCompanySubscribers = async (
   try {
     console.log("[SUBSCRIPTION SERVICE] Notifying subscribers for company:", job.companyId, "job:", job.title);
 
-    // Ensure User model is referenced (important for Mongoose population)
+    // Ensure User  is referenced (important for Mongoose population)
     if (!User) {
       console.warn("[SUBSCRIPTION SERVICE] User model undefined");
     }
