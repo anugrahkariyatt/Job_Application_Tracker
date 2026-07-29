@@ -71,6 +71,25 @@ export const sendApplicationSubmittedEmail = async (
     console.error("[MAIL SERVICE ERROR] Failed to send application submitted email via n8n:", error?.response?.data || error?.message || error);
   }
 };
+export interface ContactEmailPayload {
+  name: string;
+  email: string;
+  role?: string;
+  subject?: string;
+  message: string;
+}
+
+export const sendContactFormEmail = async (payload: ContactEmailPayload): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "contact-form-submitted",
+      ...payload,
+    });
+  } catch (error: any) {
+    console.error("[MAIL SERVICE ERROR] Failed to send contact form email via n8n:", error?.response?.data || error?.message || error);
+  }
+};
+
 export const sendVerificationEmail = async ({
   to,
   verificationLink,
@@ -294,6 +313,27 @@ export const sendPaymentSuccessEmail = async (
     console.log("[MAIL SERVICE] n8n Payment Receipt email response success:", response.status);
   } catch (error: any) {
     console.error("[MAIL SERVICE ERROR] Failed to send Payment Receipt email via n8n:", error?.response?.data || error?.message || error);
+  }
+};
+
+interface CompanyRegistrationAdminAlertPayload {
+  adminEmail: string;
+  adminName: string;
+  companyName: string;
+  industry: string;
+  registeredAt: string;
+}
+
+export const sendCompanyRegistrationAdminAlert = async (
+  payload: CompanyRegistrationAdminAlertPayload,
+): Promise<void> => {
+  try {
+    await n8nClient.post("/send-email", {
+      type: "new-company-registered",
+      ...payload,
+    });
+  } catch (error: any) {
+    console.error("[MAIL SERVICE ERROR] Failed to trigger n8n Company Registration Admin alert:", error?.response?.data || error?.message || error);
   }
 };
 

@@ -23,16 +23,30 @@ import axiosInstance from '@/lib/axios';
 import { z } from 'zod';
 
 const createJobFormSchema = z.object({
-  title: z.string().trim().min(1, 'Job title is required'),
+  title: z
+    .string()
+    .trim()
+    .min(3, 'Job title must be at least 3 characters')
+    .max(100, 'Job title cannot exceed 100 characters')
+    .regex(/^[a-zA-Z0-9\s&.,'/-]+$/, 'Job title contains invalid characters'),
   description: z.string().trim().min(20, 'Job description must be at least 20 characters'),
   requirements: z.string().trim().min(10, 'Requirements must be at least 10 characters'),
   responsibilities: z.string().trim().min(10, 'Responsibilities must be at least 10 characters'),
   skills: z.array(z.string()).min(1, 'At least one skill is required'),
-  location: z.string().trim().min(1, 'Location is required'),
+  location: z
+    .string()
+    .trim()
+    .min(2, 'Location is required')
+    .max(100, 'Location cannot exceed 100 characters')
+    .regex(/^[a-zA-Z0-9\s&.,'/-]+$/, 'Location contains invalid characters'),
   salaryMin: z.string().min(1, 'Minimum salary is required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a positive number'),
   salaryMax: z.string().min(1, 'Maximum salary is required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a positive number'),
-  vacancies: z.string().min(1, 'Vacancies is required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a positive number'),
-  applicationDeadline: z.string().min(1, 'Application deadline is required').refine(val => !isNaN(Date.parse(val)), 'Invalid date format'),
+  vacancies: z.string().min(1, 'Vacancies is required').refine(val => !isNaN(Number(val)) && Number(val) > 0, 'Must be a positive integer'),
+  applicationDeadline: z
+    .string()
+    .min(1, 'Application deadline is required')
+    .refine(val => !isNaN(Date.parse(val)), 'Invalid date format')
+    .refine(val => new Date(val) >= new Date(new Date().setHours(0, 0, 0, 0)), 'Application deadline cannot be in the past'),
 }).refine(data => Number(data.salaryMax) >= Number(data.salaryMin), {
   message: 'Maximum salary cannot be less than minimum salary',
   path: ['salaryMax'],
@@ -83,11 +97,6 @@ export default function CreateJobPage() {
         router.push('/recruiter/company/edit');
       });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
     const savedPrefs = localStorage.getItem('recruiter_company_prefs');
     if (savedPrefs) {
       try {
@@ -116,7 +125,11 @@ export default function CreateJobPage() {
         console.error('Error parsing recruiter_company_prefs:', err);
       }
     }
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   const handleFieldChange = (field: string, value: string, setter: (v: string) => void) => {
     setter(value);
@@ -269,7 +282,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.title && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.title}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.title}
+                </p>
               )}
             </div>
             <div>
@@ -329,7 +345,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.location && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.location}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.location}
+                </p>
               )}
             </div>
             <div>
@@ -390,7 +409,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.salaryMin && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.salaryMin}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.salaryMin}
+                </p>
               )}
             </div>
             <div>
@@ -403,7 +425,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.salaryMax && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.salaryMax}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.salaryMax}
+                </p>
               )}
             </div>
             <div>
@@ -417,7 +442,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.vacancies && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.vacancies}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.vacancies}
+                </p>
               )}
             </div>
           </div>
@@ -437,7 +465,10 @@ export default function CreateJobPage() {
               placeholder="Type a skill and press Enter…"
             />
             {errors.skills && (
-              <p className="mt-1.5 text-xs text-destructive font-medium">{errors.skills}</p>
+              <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                <span>⚠</span>
+                {errors.skills}
+              </p>
             )}
           </div>
           <div>
@@ -450,7 +481,10 @@ export default function CreateJobPage() {
               disabled={saving}
             />
             {errors.description && (
-              <p className="mt-1.5 text-xs text-destructive font-medium">{errors.description}</p>
+              <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                <span>⚠</span>
+                {errors.description}
+              </p>
             )}
           </div>
           <div>
@@ -463,7 +497,10 @@ export default function CreateJobPage() {
               disabled={saving}
             />
             {errors.responsibilities && (
-              <p className="mt-1.5 text-xs text-destructive font-medium">{errors.responsibilities}</p>
+              <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                <span>⚠</span>
+                {errors.responsibilities}
+              </p>
             )}
           </div>
           <div>
@@ -476,7 +513,10 @@ export default function CreateJobPage() {
               disabled={saving}
             />
             {errors.requirements && (
-              <p className="mt-1.5 text-xs text-destructive font-medium">{errors.requirements}</p>
+              <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                <span>⚠</span>
+                {errors.requirements}
+              </p>
             )}
           </div>
         </CardContent>
@@ -497,7 +537,10 @@ export default function CreateJobPage() {
                 disabled={saving}
               />
               {errors.applicationDeadline && (
-                <p className="mt-1.5 text-xs text-destructive font-medium">{errors.applicationDeadline}</p>
+                <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+                  <span>⚠</span>
+                  {errors.applicationDeadline}
+                </p>
               )}
             </div>
           </div>

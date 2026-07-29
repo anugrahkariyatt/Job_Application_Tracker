@@ -7,20 +7,33 @@ import {
 } from "../validations/company.validation.js";
 import { uploadImage } from "./cloudinary.service.js";
 import { createNotification } from "./notification.service.js";
+import { sendCompanyRegistrationAdminAlert } from "./mail.service.js";
 
-const notifyAdminsOnRegistration = async (companyName: string) => {
+const notifyAdminsOnRegistration = async (companyName: string, industry: string = "Technology") => {
   try {
     const admins = await User.find({ role: "admin" });
     for (const admin of admins) {
+      // In-app system notification
       await createNotification(
         admin._id.toString(),
         "New Company Registered",
         `A new company "${companyName}" has registered and is pending verification.`,
         "SYSTEM",
       );
+
+      // n8n email/webhook dispatch
+      if (admin.email) {
+        await sendCompanyRegistrationAdminAlert({
+          adminEmail: admin.email,
+          adminName: admin.name || "Admin",
+          companyName,
+          industry,
+          registeredAt: new Date().toISOString(),
+        });
+      }
     }
   } catch (err) {
-    console.error("Error creating registration notification for admins:", err);
+    console.error("Error creating registration notification/n8n alert for admins:", err);
   }
 };
 
@@ -42,7 +55,7 @@ export const createCompanyService = async (
     industry: data.industry,
   });
 
-  await notifyAdminsOnRegistration(company.companyName);
+  await notifyAdminsOnRegistration(company.companyName, company.industry);
 
   return company;
 };
@@ -71,7 +84,7 @@ export const updateCompanyDetails = async (
   await company.save();
 
   if (wasPlaceholder && company.companyName !== "Placeholder Company Name") {
-    await notifyAdminsOnRegistration(company.companyName);
+    await notifyAdminsOnRegistration(company.companyName, company.industry);
   }
 
   return company;

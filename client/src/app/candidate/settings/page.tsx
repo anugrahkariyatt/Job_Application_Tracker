@@ -1,6 +1,19 @@
 'use client';
 
 import * as React from 'react';
+import { z } from 'zod';
+
+const verifyPasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required.'),
+});
+
+const updatePasswordSchema = z.object({
+  newPassword: z.string().min(8, 'New password must be at least 8 characters long.'),
+  confirmPassword: z.string().min(1, 'Confirm password is required.'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'New passwords do not match.',
+  path: ['confirmPassword'],
+});
 import { User, Lock, Mail, Bell, Trash2, Eye, EyeOff, Loader2, CreditCard, Zap, Check, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
@@ -60,6 +73,8 @@ export default function SettingsPage() {
   const [verificationToken, setVerificationToken] = React.useState('');
   const [verifyingPassword, setVerifyingPassword] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [verifyPasswordError, setVerifyPasswordError] = React.useState<string | null>(null);
+  const [updatePasswordErrors, setUpdatePasswordErrors] = React.useState<{ newPassword?: string; confirmPassword?: string }>({});
 
   const fetchSettingsData = async () => {
     try {
@@ -112,8 +127,11 @@ export default function SettingsPage() {
   };
 
   const handleVerifyCurrentPassword = async () => {
-    if (!currentPassword) {
-      toast.error('Please enter your current password.');
+    setVerifyPasswordError(null);
+    const result = verifyPasswordSchema.safeParse({ currentPassword });
+    if (!result.success) {
+      const msg = result.error.flatten().fieldErrors.currentPassword?.[0] || 'Current password is required.';
+      setVerifyPasswordError(msg);
       return;
     }
 
@@ -126,29 +144,27 @@ export default function SettingsPage() {
       if (res.data?.success && res.data?.verificationToken) {
         setVerificationToken(res.data.verificationToken);
         setPasswordStep(2);
+        setVerifyPasswordError(null);
         toast.success('Password verified. You may now enter a new password.');
       }
     } catch (err: any) {
-      console.error('Verify password error:', err);
-      toast.error(err.response?.data?.message || 'Verification failed. Incorrect password.');
+      const errMsg = err.response?.data?.message || 'Verification failed. Incorrect password.';
+      setVerifyPasswordError(errMsg);
+      toast.error(errMsg);
     } finally {
       setVerifyingPassword(false);
     }
   };
 
   const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      toast.error('Please enter both password fields.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      toast.error('Password must be at least 6 characters.');
+    setUpdatePasswordErrors({});
+    const result = updatePasswordSchema.safeParse({ newPassword, confirmPassword });
+    if (!result.success) {
+      const fe = result.error.flatten().fieldErrors;
+      setUpdatePasswordErrors({
+        newPassword: fe.newPassword?.[0],
+        confirmPassword: fe.confirmPassword?.[0],
+      });
       return;
     }
 
@@ -166,10 +182,10 @@ export default function SettingsPage() {
         setConfirmPassword('');
         setVerificationToken('');
         setPasswordStep(1);
+        setUpdatePasswordErrors({});
       }
     } catch (err: any) {
-      console.error('Reset password error:', err);
-      toast.error(err.response?.data?.message || 'Failed to change password.');
+      toast.error(err.response?.data?.message || 'Failed to update password.');
     } finally {
       setVerifyingPassword(false);
     }
@@ -301,7 +317,10 @@ export default function SettingsPage() {
                         type={showPassword ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        onChange={(e) => {
+                          setCurrentPassword(e.target.value);
+                          if (verifyPasswordError) setVerifyPasswordError(null);
+                        }}
                       />
                       <Button
                         variant="ghost"
@@ -312,6 +331,12 @@ export default function SettingsPage() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
                     </div>
+                    {verifyPasswordError && (
+                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {verifyPasswordError}
+                      </p>
+                    )}
                   </div>
                   <Button onClick={handleVerifyCurrentPassword} disabled={verifyingPassword}>
                     {verifyingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -327,8 +352,18 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="••••••••"
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (updatePasswordErrors.newPassword)
+                          setUpdatePasswordErrors((prev) => ({ ...prev, newPassword: undefined }));
+                      }}
                     />
+                    {updatePasswordErrors.newPassword && (
+                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {updatePasswordErrors.newPassword}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-pw">Confirm New Password</Label>
@@ -337,8 +372,18 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="••••••••"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (updatePasswordErrors.confirmPassword)
+                          setUpdatePasswordErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                      }}
                     />
+                    {updatePasswordErrors.confirmPassword && (
+                      <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {updatePasswordErrors.confirmPassword}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleChangePassword} disabled={verifyingPassword}>

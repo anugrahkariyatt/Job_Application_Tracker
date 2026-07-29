@@ -18,7 +18,16 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
+import axiosInstance from "@/lib/axios";
+
+const contactFormSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(50, "Name cannot exceed 50 characters"),
+  email: z.string().trim().email("Invalid email format"),
+  subject: z.string().trim().max(100, "Subject cannot exceed 100 characters").optional().or(z.literal("")),
+  message: z.string().trim().min(10, "Message must be at least 10 characters").max(1000, "Message cannot exceed 1000 characters"),
+});
 
 const contactCards = [
   {
@@ -31,7 +40,7 @@ const contactCards = [
     icon: Headphones,
     title: "Sales & Enterprise",
     detail: "sales@nuvora.com",
-    subtext: "Custom recruiting plans & API access",
+    subtext: "Custom recruiting plans & platform access",
   },
   {
     icon: MapPin,
@@ -49,24 +58,24 @@ const contactCards = [
 
 const faqs = [
   {
-    question: "How does n8n AI Candidate Screening work?",
+    question: "How does Gemini AI Candidate Screening work?",
     answer:
-      "When a candidate applies to a PRO recruiter's job posting, our n8n automated pipeline processes the resume and profile data against job requirements to calculate an instant AI Suitability Score and key candidate strengths.",
+      "When a candidate applies to a job posting, our Gemini AI integration analyzes the resume and candidate details against job requirements to calculate an instant AI Suitability Match Score and key candidate insights.",
   },
   {
     question: "What is the difference between Candidate Pro and Recruiter Pro?",
     answer:
-      "Candidate Pro unlocks unlimited company job alert subscriptions and priority application visibility. Recruiter Pro unlocks unlimited job posts, automated n8n AI candidate screening, and advanced talent analytics.",
+      "Candidate Pro unlocks instant email job alerts, company subscriptions, and priority status tracking. Recruiter Pro unlocks unlimited active job posts, Gemini AI candidate screening, and direct candidate email notifications.",
   },
   {
     question: "How do candidates track their application status?",
     answer:
-      "Every candidate has a live personal dashboard where application statuses (Applied, Under Review, Shortlisted, Interview, Hired) update automatically whenever recruiters take action.",
+      "Every candidate has a live dashboard where application statuses (Applied, Under Review, Shortlisted, Interview, Hired) update automatically whenever recruiters advance candidate status.",
   },
   {
-    question: "Can I cancel or upgrade my subscription anytime?",
+    question: "Can I upgrade or manage my subscription plan anytime?",
     answer:
-      "Yes! You can manage or update your subscription plan at any time directly through your account settings or pricing page without any hidden cancellation fees.",
+      "Yes! You can manage or update your subscription plan at any time directly through your account settings or pricing page without any hidden fees.",
   },
 ];
 
@@ -80,6 +89,7 @@ export default function ContactPage() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
   const handleChange = (
@@ -87,30 +97,50 @@ export default function ContactPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all required fields.");
+    setErrors({});
+
+    const validation = contactFormSchema.safeParse(formData);
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string> = {};
+      validation.error.errors.forEach((err) => {
+        if (err.path.length > 0) {
+          fieldErrors[err.path[0]] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Please correct the form errors before submitting.");
       return;
     }
 
-    setLoading(true);
-
-    // Simulate contact form submission delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setLoading(false);
-    toast.success("Thank you for reaching out! We've received your message and will respond within 24 hours.");
-    setFormData({
-      name: "",
-      email: "",
-      role: "candidate",
-      subject: "",
-      message: "",
-    });
+    try {
+      setLoading(true);
+      const res = await axiosInstance.post("/api/contact", formData);
+      if (res.data?.success) {
+        toast.success(res.data.message || "Thank you for reaching out! We've received your message and will respond within 24 hours.");
+        setFormData({
+          name: "",
+          email: "",
+          role: "candidate",
+          subject: "",
+          message: "",
+        });
+        setErrors({});
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -120,11 +150,6 @@ export default function ContactPage() {
 
       {/* Header / Hero */}
       <section className="relative pt-16 pb-12 px-6 max-w-7xl mx-auto text-center space-y-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
-          <MessageSquare className="h-4 w-4" />
-          <span>Contact Nuvora Team</span>
-        </div>
-
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
           We’d Love to Hear From You
         </h1>
@@ -188,9 +213,14 @@ export default function ContactPage() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Alex Morgan"
-                    required
                     className="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
+                      <span>⚠</span>
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -203,9 +233,14 @@ export default function ContactPage() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="alex@example.com"
-                    required
                     className="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
+                      <span>⚠</span>
+                      {errors.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -239,6 +274,12 @@ export default function ContactPage() {
                     placeholder="e.g. Recruiter Pro Plan Inquiry"
                     className="w-full h-10 px-3.5 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                   />
+                  {errors.subject && (
+                    <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
+                      <span>⚠</span>
+                      {errors.subject}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -252,9 +293,14 @@ export default function ContactPage() {
                   value={formData.message}
                   onChange={handleChange}
                   placeholder="How can we help you today?"
-                  required
                   className="w-full p-3 rounded-xl border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
                 />
+                {errors.message && (
+                  <p className="mt-1 text-xs text-red-500 font-medium flex items-center gap-1">
+                    <span>⚠</span>
+                    {errors.message}
+                  </p>
+                )}
               </div>
 
               <button

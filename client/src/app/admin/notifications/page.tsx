@@ -119,19 +119,19 @@ export default function AdminNotificationsPage() {
               }`}
             >
               <CardContent className="flex items-start justify-between gap-4 p-4">
-                <div className="flex gap-3">
-                  <div className={`mt-0.5 rounded-full p-2 ${n.isRead ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.isRead ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
                     <AlertCircle className="h-4 w-4" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-semibold">{n.title}</h4>
                       {!n.isRead && (
-                        <span className="h-2 w-2 rounded-full bg-primary" />
+                        <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{n.message}</p>
-                    <p className="text-xs text-muted-foreground/80">
+                    <p className="text-sm text-muted-foreground leading-relaxed">{n.message}</p>
+                    <p className="text-xs text-muted-foreground/80 pt-0.5">
                       {new Date(n.createdAt).toLocaleString()}
                     </p>
                   </div>

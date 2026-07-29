@@ -300,17 +300,20 @@ export const updateApplicationStatus = async (
   );
 
   try {
-    const preferences = user.preferences || { applicationReceived: true };
-    if (preferences.applicationReceived !== false) {
-      await sendApplicationStatusEmail({
-        email: user.email,
-        candidateName: user.name,
-        jobTitle: job.title,
-        companyName: company.companyName,
-        status: application.status,
-      });
-    } else {
-      console.log(`[APPLICATION SERVICE] Status email suppressed for candidate ${user._id} (${user.email}) due to applicationReceived preference Config`);
+    const recruiterUser = await User.findById(userId);
+    const isProRecruiter = recruiterUser?.subscriptionPlan === "pro";
+
+    if (isProRecruiter) {
+      const preferences = user.preferences || { applicationReceived: true };
+      if (preferences.applicationReceived !== false) {
+        await sendApplicationStatusEmail({
+          email: user.email,
+          candidateName: user.name,
+          jobTitle: job.title,
+          companyName: company.companyName,
+          status: application.status,
+        });
+      }
     }
   } catch (emailErr) {
     console.error("[APPLICATION SERVICE ERROR] Failed to send status update email:", emailErr);

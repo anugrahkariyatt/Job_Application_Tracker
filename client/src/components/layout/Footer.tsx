@@ -1,8 +1,17 @@
 'use client';
 
 import Link from 'next/link';
+import { useAppSelector } from '@/store/hooks';
 
 export default function Footer() {
+  const { user } = useAppSelector((state) => state.auth);
+  const contactHref =
+    user?.role === 'candidate'
+      ? '/candidate/contact'
+      : user?.role === 'recruiter'
+      ? '/recruiter/contact'
+      : '/contact';
+
   return (
     <footer className="border-t border-border/60 bg-card/60 py-12 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-6">
@@ -70,12 +79,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link href={contactHref} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Contact Us
                 </Link>
               </li>

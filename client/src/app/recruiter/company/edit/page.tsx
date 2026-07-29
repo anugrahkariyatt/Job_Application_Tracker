@@ -12,8 +12,38 @@ import { Upload, Save, X, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import axiosInstance from '@/lib/axios';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const PREDEFINED_INDUSTRIES = [
+  "Information Technology & Software",
+  "Software Development",
+  "Finance & Banking",
+  "Healthcare & Life Sciences",
+  "E-Commerce & Retail",
+  "Education & EdTech",
+  "Manufacturing & Industrial",
+  "Marketing & Advertising",
+  "Real Estate & Construction",
+  "Telecommunications",
+  "Media & Entertainment",
+  "Management Consulting",
+  "Logistics & Supply Chain",
+  "Hospitality & Tourism",
+  "Energy & Clean Tech",
+  "Non-Profit & NGO",
+  "Automotive",
+  "Aerospace & Defense",
+  "Others",
+];
 
 const optionalUrlSchema = z.preprocess((val) => {
   if (typeof val !== "string" || !val.trim()) return undefined;
@@ -26,18 +56,22 @@ const companyProfileSchema = z.object({
     .string()
     .trim()
     .min(3, "Company name must be at least 3 characters")
-    .max(100, "Company name cannot exceed 100 characters"),
+    .max(100, "Company name cannot exceed 100 characters")
+    .regex(/^[a-zA-Z0-9\s&.,'/-]+$/, "Company name contains invalid characters"),
   industry: z
     .string()
     .trim()
     .min(2, "Industry must be at least 2 characters")
-    .max(50, "Industry cannot exceed 50 characters"),
+    .max(50, "Industry cannot exceed 50 characters")
+    .regex(/^[a-zA-Z0-9\s&.,'/-]+$/, "Industry contains invalid characters"),
+  
   companySize: z
     .string()
     .trim()
+    .min(1, "Company size (number of employees) is required")
     .max(50, "Company size cannot exceed 50 characters")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[0-9+\-\s]+$/, "Only numbers and symbols (e.g., 10-50, 500+) are allowed"),
+
   website: optionalUrlSchema,
   email: z
     .string()
@@ -45,14 +79,19 @@ const companyProfileSchema = z.object({
     .email("Invalid email format")
     .optional()
     .or(z.literal("")),
+    
   phone: z
     .string()
     .trim()
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number cannot exceed 15 digits")
-    .regex(/^\+?[0-9]{10,15}$/, "Invalid phone number format. Must contain 10-15 digits, optionally starting with '+'")
+    .regex(/^[0-9+\-\(\)\s]*$/, "Only numbers and phone symbols (+, -, ()) are allowed")
+    .refine((val) => {
+      if (!val) return true; 
+      const digitCount = val.replace(/\D/g, "").length;
+      return digitCount >= 10 && digitCount <= 15;
+    }, "Phone number must have between 10 and 15 digits")
     .optional()
     .or(z.literal("")),
+
   description: z
     .string()
     .trim()
@@ -60,15 +99,17 @@ const companyProfileSchema = z.object({
     .max(2000, "Description cannot exceed 2000 characters")
     .optional()
     .or(z.literal("")),
-  foundedYear: z.preprocess(
-    (val) => (val === "" || val === undefined || val === null || isNaN(Number(val)) ? undefined : Number(val)),
-    z
-      .number()
-      .int("Founded year must be an integer")
-      .min(1800, "Founded year must be 1800 or later")
-      .max(new Date().getFullYear() + 1, "Founded year cannot be in the future")
-      .optional()
-  ),
+  foundedYear: z
+    .string()
+    .trim()
+    .regex(/^[0-9]*$/, "Founded year must contain numbers only")
+    .refine((val) => {
+      if (!val) return true;
+      const num = Number(val);
+      return num >= 1800 && num <= new Date().getFullYear() + 1;
+    }, `Founded year must be a valid 4-digit year between 1800 and ${new Date().getFullYear() + 1}`)
+    .optional()
+    .or(z.literal("")),
   headquarters: z
     .string()
     .trim()
@@ -246,7 +287,7 @@ export default function EditCompanyPage() {
     // Validate with Zod
     const validation = companyProfileSchema.safeParse({
       ...form,
-      foundedYear: form.foundedYear && !isNaN(Number(form.foundedYear)) ? Number(form.foundedYear) : undefined,
+      foundedYear: form.foundedYear ? String(form.foundedYear).trim() : "",
     });
 
     if (!validation.success) {
@@ -284,7 +325,7 @@ export default function EditCompanyPage() {
     if (form.email) payload.email = form.email;
     if (form.phone) payload.phone = form.phone;
     if (form.description) payload.description = form.description;
-    if (validation.data.foundedYear) payload.foundedYear = validation.data.foundedYear;
+    if (validation.data.foundedYear) payload.foundedYear = Number(validation.data.foundedYear);
     if (form.headquarters) payload.headquarters = form.headquarters;
     if (form.address) payload.address = form.address;
     if (form.linkedin) payload.linkedin = form.linkedin;
@@ -470,13 +511,50 @@ export default function EditCompanyPage() {
               disabled={saving}
               error={fieldErrors.companyName}
             />
-            <FormField
-              label="Industry *"
-              value={form.industry}
-              onChange={(v) => handleChange('industry', v)}
-              disabled={saving}
-              error={fieldErrors.industry}
-            />
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Industry *</Label>
+              <Select
+                value={
+                  PREDEFINED_INDUSTRIES.includes(form.industry)
+                    ? form.industry
+                    : "Others"
+                }
+                onValueChange={(val) => {
+                  if (val === "Others") {
+                    const customVal = PREDEFINED_INDUSTRIES.includes(form.industry) ? "Others" : form.industry;
+                    handleChange("industry", customVal);
+                  } else {
+                    handleChange("industry", val);
+                  }
+                }}
+                disabled={saving}
+              >
+                <SelectTrigger className={cn("w-full h-10", fieldErrors.industry && "border-destructive")}>
+                  <SelectValue placeholder="Select Industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREDEFINED_INDUSTRIES.map((ind) => (
+                    <SelectItem key={ind} value={ind}>
+                      {ind}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {(!PREDEFINED_INDUSTRIES.includes(form.industry) || form.industry === "Others") && (
+                <Input
+                  placeholder="Enter custom industry (e.g. BioTech, Robotics)"
+                  value={form.industry === "Others" ? "" : form.industry}
+                  onChange={(e) => handleChange("industry", e.target.value || "Others")}
+                  disabled={saving}
+                  className="mt-2"
+                />
+              )}
+
+              {fieldErrors.industry && (
+                <p className="text-xs text-destructive">{fieldErrors.industry}</p>
+              )}
+            </div>
             <FormField
               label="Company Size"
               placeholder="e.g. 10-50 employees"
@@ -488,6 +566,7 @@ export default function EditCompanyPage() {
             <FormField
               label="Founded Year"
               placeholder="e.g. 2016"
+              type="number"
               value={form.foundedYear}
               onChange={(v) => handleChange('foundedYear', v)}
               disabled={saving}
@@ -554,7 +633,7 @@ export default function EditCompanyPage() {
             className={fieldErrors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}
           />
           {fieldErrors.description && (
-            <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{fieldErrors.description}</p>
+            <p className="mt-1 text-xs text-red-500 flex items-center gap-1">{fieldErrors.description}</p>
           )}
         </CardContent>
       </Card>
@@ -645,10 +724,12 @@ function FormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={error ? 'border-red-500 focus-visible:ring-red-500' : ''}
       />
       {error && (
-        <p className="mt-1 text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{error}</p>
+        <p className="mt-1.5 text-xs text-red-500 font-medium flex items-center gap-1">
+          <span>⚠</span>
+          {error}
+        </p>
       )}
     </div>
   );

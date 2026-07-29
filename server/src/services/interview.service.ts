@@ -78,8 +78,9 @@ export const createInterview = async (
         "APPLICATION",
       );
 
-      // Trigger email invitation
-      if (candidateUser.email) {
+      // Trigger email invitation only if recruiter is PRO
+      const recruiterUser = await User.findById(recruiterUserId);
+      if (recruiterUser?.subscriptionPlan === "pro" && candidateUser.email) {
         await sendInterviewEmail({
           email: candidateUser.email,
           candidateName: candidateUser.name || "Candidate",
@@ -165,8 +166,8 @@ export const updateInterviewStatus = async (
             "APPLICATION",
           );
 
-          // Trigger n8n email webhook if interview is cancelled
-          if (status === "Cancelled" && candidateUser.email) {
+          const recruiterUser = await User.findById(userId);
+          if (recruiterUser?.subscriptionPlan === "pro" && status === "Cancelled" && candidateUser.email) {
             await sendInterviewCancelledEmail({
               email: candidateUser.email,
               candidateName: candidateUser.name || "Candidate",

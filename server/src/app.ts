@@ -18,6 +18,7 @@ import adminRoutes from "./routes/admin.route.js";
 import interviewRoutes from "./routes/interview.routes.js";
 import settingsRoutes from "./routes/settings.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import contactRoutes from "./routes/contact.route.js";
 const app = express();
 
 app.set("trust proxy", 1);
@@ -80,6 +81,7 @@ app.use("/api/interviews", interviewRoutes);
 //settings
 app.use("/api/settings", settingsRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/contact", contactRoutes);
 
 //admin
 app.use("/api/admin", adminRoutes);

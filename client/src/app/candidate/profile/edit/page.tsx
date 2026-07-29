@@ -23,7 +23,47 @@ const experienceSchema = z
     {
       path: ["endDate"],
       message: "End date is required unless currently working",
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.currentlyWorking || !data.startDate || !data.endDate) return true;
+      return new Date(data.endDate) >= new Date(data.startDate);
     },
+    {
+      path: ["endDate"],
+      message: "End date cannot be before start date",
+    }
+  );
+
+const educationSchema = z
+  .object({
+    degree: z.string().trim().min(1, "Degree or Certification is required"),
+    institution: z.string().trim().min(1, "Institution is required"),
+    startDate: z.string().min(1, "Start date is required"),
+    endDate: z.union([z.string(), z.literal("")]).optional(),
+    currentlyStudying: z.boolean().optional().default(false),
+    description: z.string().trim().optional().or(z.literal("")),
+  })
+  .refine(
+    (data) => {
+      if (data.currentlyStudying) return true;
+      return !!data.endDate?.trim();
+    },
+    {
+      path: ["endDate"],
+      message: "End date is required unless currently studying",
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.currentlyStudying || !data.startDate || !data.endDate) return true;
+      return new Date(data.endDate) >= new Date(data.startDate);
+    },
+    {
+      path: ["endDate"],
+      message: "End date cannot be before start date",
+    }
   );
 
 const candidateProfileSchema = z.object({
@@ -160,8 +200,20 @@ export default function EditProfilePage() {
     }
   >;
 
+  interface EducationErrors {
+    [id: string]: {
+      degree?: string;
+      institution?: string;
+      startDate?: string;
+      endDate?: string;
+      description?: string;
+    };
+  }
+
   const [experienceErrors, setExperienceErrors] =
     React.useState<ExperienceErrors>({});
+  const [educationErrors, setEducationErrors] =
+    React.useState<EducationErrors>({});
   const [experience, setExperience] = React.useState<any[]>([]);
   const [initialExperience, setInitialExperience] = React.useState<any[]>([]);
 
@@ -290,6 +342,7 @@ export default function EditProfilePage() {
         institution: "",
         startDate: "",
         endDate: "",
+        currentlyStudying: false,
         description: "",
       },
     ]);
@@ -406,6 +459,52 @@ export default function EditProfilePage() {
 
     if (Object.keys(expErrors).length > 0) {
       setExperienceErrors(expErrors);
+      return;
+    }
+
+    setEducationErrors({});
+    const eduErrors: EducationErrors = {};
+    const validEducations = [];
+
+    for (let i = 0; i < education.length; i++) {
+      const edu = education[i];
+      const isBlank =
+        !edu.degree?.trim() &&
+        !edu.institution?.trim() &&
+        !edu.startDate?.trim();
+      if (isBlank && edu._id.startsWith("temp-")) {
+        continue;
+      }
+      validEducations.push(edu);
+
+      const result = educationSchema.safeParse({
+        degree: edu.degree,
+        institution: edu.institution,
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        currentlyStudying: edu.currentlyStudying,
+        description: edu.description,
+      });
+
+      if (!result.success) {
+        const fe = result.error.flatten().fieldErrors;
+        const errObj = {
+          degree: fe.degree?.[0],
+          institution: fe.institution?.[0],
+          startDate: fe.startDate?.[0],
+          endDate: fe.endDate?.[0],
+          description: fe.description?.[0],
+        };
+        eduErrors[edu._id] = errObj;
+        const firstErr = Object.values(errObj).find(Boolean);
+        if (firstErr) {
+          toast.error(`Education #${i + 1}: ${firstErr}`);
+        }
+      }
+    }
+
+    if (Object.keys(eduErrors).length > 0) {
+      setEducationErrors(eduErrors);
       return;
     }
 
@@ -1226,67 +1325,154 @@ export default function EditProfilePage() {
                 {idx > 0 && <Separator className="my-4" />}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Degree / Certification</Label>
+                    <Label>Degree or Certification</Label>
                     <Input
                       value={edu.degree || ""}
-                      onChange={(e) =>
-                        updateEducationField(edu._id, "degree", e.target.value)
-                      }
+                      onChange={(e) => {
+                        updateEducationField(edu._id, "degree", e.target.value);
+                        setEducationErrors((prev) => ({
+                          ...prev,
+                          [edu._id]: {
+                            ...prev[edu._id],
+                            degree: undefined,
+                          },
+                        }));
+                      }}
                       placeholder="B.S. in Computer Science"
                     />
+                    {educationErrors[edu._id]?.degree && (
+                      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                        <span>⚠</span>
+                        {educationErrors[edu._id].degree}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Institution</Label>
                     <Input
                       value={edu.institution || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         updateEducationField(
                           edu._id,
                           "institution",
                           e.target.value,
-                        )
-                      }
+                        );
+                        setEducationErrors((prev) => ({
+                          ...prev,
+                          [edu._id]: {
+                            ...prev[edu._id],
+                            institution: undefined,
+                          },
+                        }));
+                      }}
                       placeholder="Stanford University"
                     />
+                    {educationErrors[edu._id]?.institution && (
+                      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                        <span>⚠</span>
+                        {educationErrors[edu._id].institution}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Start Date</Label>
                     <Input
                       type="month"
                       value={edu.startDate ? edu.startDate.slice(0, 7) : ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         updateEducationField(
                           edu._id,
                           "startDate",
                           e.target.value,
-                        )
-                      }
+                        );
+                        setEducationErrors((prev) => ({
+                          ...prev,
+                          [edu._id]: {
+                            ...prev[edu._id],
+                            startDate: undefined,
+                          },
+                        }));
+                      }}
                     />
+                    {educationErrors[edu._id]?.startDate && (
+                      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                        <span>⚠</span>
+                        {educationErrors[edu._id].startDate}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>End Date</Label>
                     <Input
                       type="month"
                       value={edu.endDate ? edu.endDate.slice(0, 7) : ""}
-                      onChange={(e) =>
-                        updateEducationField(edu._id, "endDate", e.target.value)
-                      }
+                      onChange={(e) => {
+                        updateEducationField(edu._id, "endDate", e.target.value);
+                        setEducationErrors((prev) => ({
+                          ...prev,
+                          [edu._id]: {
+                            ...prev[edu._id],
+                            endDate: undefined,
+                          },
+                        }));
+                      }}
+                      disabled={edu.currentlyStudying}
                     />
+                    {educationErrors[edu._id]?.endDate && (
+                      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                        <span>⚠</span>
+                        {educationErrors[edu._id].endDate}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2 sm:col-span-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id={`current-edu-${edu._id}`}
+                      checked={edu.currentlyStudying || false}
+                      onChange={(e) =>
+                        updateEducationField(
+                          edu._id,
+                          "currentlyStudying",
+                          e.target.checked,
+                        )
+                      }
+                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                    />
+                    <Label
+                      htmlFor={`current-edu-${edu._id}`}
+                      className="cursor-pointer"
+                    >
+                      I am currently studying here
+                    </Label>
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>Description</Label>
                     <Textarea
                       rows={2}
                       value={edu.description || ""}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         updateEducationField(
                           edu._id,
                           "description",
                           e.target.value,
-                        )
-                      }
+                        );
+                        setEducationErrors((prev) => ({
+                          ...prev,
+                          [edu._id]: {
+                            ...prev[edu._id],
+                            description: undefined,
+                          },
+                        }));
+                      }}
                       placeholder="Honors, activities, focus of study..."
                     />
+                    {educationErrors[edu._id]?.description && (
+                      <p className="text-xs text-red-500 font-medium flex items-center gap-1">
+                        <span>⚠</span>
+                        {educationErrors[edu._id].description}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <Button

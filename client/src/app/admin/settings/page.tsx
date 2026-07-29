@@ -160,7 +160,9 @@ export default function SettingsPage() {
       }
     } catch (err: any) {
       console.error('Password verification error:', err);
-      toast.error(err.response?.data?.message || 'Invalid current password.');
+      const errMsg = err.response?.data?.message || 'Invalid current password.';
+      setPasswordErrors({ currentPassword: errMsg });
+      toast.error(errMsg);
     } finally {
       setUpdatingPassword(false);
     }
@@ -293,7 +295,10 @@ export default function SettingsPage() {
                   disabled={updatingPassword}
                 />
                 {passwordErrors.currentPassword && (
-                  <p className="text-xs text-red-500 font-medium mt-1">{passwordErrors.currentPassword}</p>
+                  <p className="text-xs text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                    <span>⚠</span>
+                    {passwordErrors.currentPassword}
+                  </p>
                 )}
               </div>
               <Button onClick={handleVerifyCurrentPassword} disabled={updatingPassword}>
@@ -330,7 +335,10 @@ export default function SettingsPage() {
                     disabled={updatingPassword}
                   />
                   {passwordErrors.newPassword && (
-                    <p className="text-xs text-red-500 font-medium mt-1">{passwordErrors.newPassword}</p>
+                    <p className="text-xs text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                      <span>⚠</span>
+                      {passwordErrors.newPassword}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -347,7 +355,10 @@ export default function SettingsPage() {
                     disabled={updatingPassword}
                   />
                   {passwordErrors.confirmPassword && (
-                    <p className="text-xs text-red-500 font-medium mt-1">{passwordErrors.confirmPassword}</p>
+                    <p className="text-xs text-red-500 font-medium mt-1.5 flex items-center gap-1">
+                      <span>⚠</span>
+                      {passwordErrors.confirmPassword}
+                    </p>
                   )}
                 </div>
               </div>

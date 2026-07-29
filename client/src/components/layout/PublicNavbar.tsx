@@ -62,7 +62,6 @@ const PublicNavbar = () => {
             {[
               { label: "Candidate", href: "/register/candidate" },
               { label: "Company", href: "/register/recruiter" },
-              { label: "About", href: "/about" },
               { label: "Contact", href: "/contact" },
             ].map((link) => (
               <li key={link.label}>

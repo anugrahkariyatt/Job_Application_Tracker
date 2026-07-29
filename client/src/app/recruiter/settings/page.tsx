@@ -1,7 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+const verifyPasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required.'),
+});
+
+const updatePasswordSchema = z.object({
+  newPassword: z.string().min(8, 'New password must be at least 8 characters long.'),
+  confirmPassword: z.string().min(1, 'Confirm password is required.'),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: 'New passwords do not match.',
+  path: ['confirmPassword'],
+});
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,6 +75,8 @@ export default function SettingsPage() {
   const [passwordUpdating, setPasswordUpdating] = useState(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [passwordVerifying, setPasswordVerifying] = useState(false);
+  const [verifyPasswordError, setVerifyPasswordError] = useState<string | null>(null);
+  const [updatePasswordErrors, setUpdatePasswordErrors] = useState<{ newPassword?: string; confirmPassword?: string }>({});
 
   // Notification preferences
   const [notifPrefs, setNotifPrefs] = useState({
@@ -156,8 +171,11 @@ export default function SettingsPage() {
   };
 
   const handleVerifyPassword = async () => {
-    if (!currentPassword) {
-      toast.error('Current password is required.');
+    setVerifyPasswordError(null);
+    const result = verifyPasswordSchema.safeParse({ currentPassword });
+    if (!result.success) {
+      const msg = result.error.flatten().fieldErrors.currentPassword?.[0] || 'Current password is required.';
+      setVerifyPasswordError(msg);
       return;
     }
 
@@ -170,36 +188,35 @@ export default function SettingsPage() {
       if (verifyResponse.data?.success && verifyResponse.data?.verificationToken) {
         setVerificationToken(verifyResponse.data.verificationToken);
         setCurrentPassword('');
+        setVerifyPasswordError(null);
         toast.success('Identity verified! You can now set a new password.');
       } else {
-        toast.error('Failed to verify password.');
+        setVerifyPasswordError('Failed to verify password.');
       }
     } catch (err: any) {
       console.error('Password verification error:', err);
-      toast.error(err.response?.data?.message || 'Invalid current password.');
+      const errMsg = err.response?.data?.message || 'Invalid current password.';
+      setVerifyPasswordError(errMsg);
+      toast.error(errMsg);
     } finally {
       setPasswordVerifying(false);
     }
   };
 
   const handlePasswordUpdate = async () => {
+    setUpdatePasswordErrors({});
     if (!verificationToken) {
       toast.error('Identity not verified. Please verify your current password first.');
       return;
     }
 
-    if (!newPassword || !confirmPassword) {
-      toast.error('All new password fields are required.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match.');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long.');
+    const result = updatePasswordSchema.safeParse({ newPassword, confirmPassword });
+    if (!result.success) {
+      const fe = result.error.flatten().fieldErrors;
+      setUpdatePasswordErrors({
+        newPassword: fe.newPassword?.[0],
+        confirmPassword: fe.confirmPassword?.[0],
+      });
       return;
     }
 
@@ -215,6 +232,7 @@ export default function SettingsPage() {
         setVerificationToken(null);
         setNewPassword('');
         setConfirmPassword('');
+        setUpdatePasswordErrors({});
       } else {
         toast.error(updateResponse.data?.message || 'Failed to update password.');
       }
@@ -347,9 +365,18 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="••••••••"
                       value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      onChange={(e) => {
+                        setCurrentPassword(e.target.value);
+                        if (verifyPasswordError) setVerifyPasswordError(null);
+                      }}
                       disabled={passwordVerifying}
                     />
+                    {verifyPasswordError && (
+                      <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {verifyPasswordError}
+                      </p>
+                    )}
                   </div>
                   <div className="flex justify-end">
                     <Button onClick={handleVerifyPassword} disabled={passwordVerifying}>
@@ -384,9 +411,19 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="••••••••"
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (updatePasswordErrors.newPassword)
+                          setUpdatePasswordErrors((prev) => ({ ...prev, newPassword: undefined }));
+                      }}
                       disabled={passwordUpdating}
                     />
+                    {updatePasswordErrors.newPassword && (
+                      <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {updatePasswordErrors.newPassword}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label className="mb-1.5 block">Confirm New Password</Label>
@@ -394,9 +431,19 @@ export default function SettingsPage() {
                       type="password"
                       placeholder="••••••••"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (updatePasswordErrors.confirmPassword)
+                          setUpdatePasswordErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                      }}
                       disabled={passwordUpdating}
                     />
+                    {updatePasswordErrors.confirmPassword && (
+                      <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+                        <span>⚠</span>
+                        {updatePasswordErrors.confirmPassword}
+                      </p>
+                    )}
                   </div>
                   <div className="flex justify-end">
                     <Button onClick={handlePasswordUpdate} disabled={passwordUpdating}>

@@ -3,18 +3,9 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  MapPin,
-  Briefcase,
-  DollarSign,
-  Clock,
   Trash2,
-  Building2,
-  Calendar,
-  Globe,
-  Award,
   Loader2,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,7 +116,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     <div className="space-y-6">
       <PageHeader
         title={job.title}
-        description={`Job ID: ${job._id}`}
         breadcrumbs={[
           { label: 'Admin', href: '/admin' },
           { label: 'Jobs', href: '/admin/jobs' },
@@ -163,7 +153,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                   <>
                     <span>·</span>
                     <a href={job.companyId.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5 font-medium">
-                      <Globe className="h-3 w-3" /> Website
+                      Website
                     </a>
                   </>
                 )}
@@ -182,54 +172,42 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         </div>
 
         {/* Specs Bar */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-            <Briefcase className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="text-[11px] text-muted-foreground">Vacancies</p>
-              <p className="text-xs font-semibold">{job.vacancies || 1}</p>
-            </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Vacancies</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">{job.vacancies || 1}</p>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-            <DollarSign className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="text-[11px] text-muted-foreground">Salary (Annual)</p>
-              <p className="text-xs font-semibold">
-                {job.salaryMin !== undefined && job.salaryMax !== undefined
-                  ? `$${job.salaryMin.toLocaleString()} - $${job.salaryMax.toLocaleString()}`
-                  : 'N/A'}
-              </p>
-            </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Salary Range</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">
+              {job.salaryMin !== undefined && job.salaryMax !== undefined
+                ? `$${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`
+                : 'N/A'}
+            </p>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-            <MapPin className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="text-[11px] text-muted-foreground">Location</p>
-              <p className="text-xs font-semibold">{job.location}</p>
-            </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Location</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">{job.location}</p>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
-            <Award className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="text-[11px] text-muted-foreground">Experience Level</p>
-              <p className="text-xs font-semibold">{job.experienceLevel}</p>
-            </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">Experience Level</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">{job.experienceLevel}</p>
           </div>
         </div>
 
         <Separator />
 
         {/* Content Sections */}
-        <div className="space-y-4 pt-1">
+        <div className="space-y-6 pt-1">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Job Description</h3>
-            <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.description}</p>
+            <p className="whitespace-pre-line text-sm text-foreground/90 leading-relaxed">{job.description}</p>
           </div>
 
           {job.responsibilities && (
-            <div className="pt-3 border-t border-border/50">
+            <div className="pt-4 border-t border-border/50">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Responsibilities</h3>
-              <p className="whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{job.responsibilities}</p>
+              <p className="whitespace-pre-line text-sm text-foreground/90 leading-relaxed">{job.responsibilities}</p>
             </div>
           )}
 
@@ -241,9 +219,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               : [];
             if (reqList.length === 0) return null;
             return (
-              <div className="pt-3 border-t border-border/50">
+              <div className="pt-4 border-t border-border/50">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Requirements</h3>
-                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                <ul className="list-disc pl-5 text-sm text-foreground/90 space-y-1.5">
                   {reqList.map((req, idx) => (
                     <li key={idx}>{req}</li>
                   ))}

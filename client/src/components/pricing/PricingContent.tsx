@@ -214,22 +214,22 @@ export function PricingContent({
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0" />
-                    <span>Daily email job updates</span>
+                    <span>Daily Job Alerts</span>
                   </li>
                 </>
               ) : (
                 <>
                   <li className="flex items-center gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0" />
-                    <span>Post up to 3 active jobs</span>
+                    <span>Standard active job postings</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0" />
-                    <span>Standard applicant management dashboard</span>
+                    <span>Full applicant management pipeline</span>
                   </li>
                   <li className="flex items-center gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary shrink-0" />
-                    <span>Direct candidate email notifications</span>
+                    <span>Company profile & branding page</span>
                   </li>
                 </>
               )}
@@ -279,7 +279,7 @@ export function PricingContent({
             <CardDescription className="text-xs sm:text-sm font-medium pt-1">
               {userRole === "candidate"
                 ? "Unlimited company subscriptions & instant job alerts"
-                : "Unlimited job postings & AI candidate screening"}
+                : "Unlimited job postings, Gemini AI screening & interview tools"}
             </CardDescription>
 
             <div className="pt-4">
@@ -313,10 +313,6 @@ export function PricingContent({
                     <Check className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
                     <span>Priority application status notifications</span>
                   </li>
-                  <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
-                    <span>Verified Pro candidate badge</span>
-                  </li>
                 </>
               ) : (
                 <>
@@ -329,16 +325,14 @@ export function PricingContent({
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
                     <Check className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
                     <span>
-                      <strong>AI Candidate Screening</strong> & match scores
+                      <strong>Candidate Screening</strong> & match scores
                     </span>
                   </li>
                   <li className="flex items-center gap-3 text-sm font-medium text-foreground">
                     <Check className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
-                    <span>Top-of-search featured job placement</span>
-                  </li>
-                  <li className="flex items-center gap-3 text-sm font-medium text-foreground">
-                    <Check className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
-                    <span>Automated interview round scheduling</span>
+                    <span>
+                      <strong>Direct Candidate Email Notifications</strong> & status updates
+                    </span>
                   </li>
                 </>
               )}
