@@ -523,13 +523,13 @@ export const googleLogin = async (
   next: NextFunction,
 ) => {
   try {
-    const { idToken, role } = req.body;
+    const { idToken, accessToken, role } = req.body;
 
-    if (!idToken) {
-      throw new AppError("Google ID token is required", 400);
+    if (!idToken && !accessToken) {
+      throw new AppError("Google token is required", 400);
     }
 
-    const result = await googleLoginUser(idToken, role);
+    const result = await googleLoginUser({ idToken, accessToken }, role);
     const isProd = process.env.NODE_ENV === "production";
 
     res.cookie("accessToken", result.accessToken, {
@@ -552,8 +552,7 @@ export const googleLogin = async (
       user: result.user,
     });
   } catch (error) {
+    console.log("Google Auth Error:", error);
     next(error);
-    console.log("Error", error);
-    
   }
 };

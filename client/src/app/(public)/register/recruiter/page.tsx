@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { useAppDispatch } from "@/store/hooks";
-import { setUser } from "@/store/slices/authSlice";
-import { register, googleAuth } from "@/features/auth/api/auth.api";
+import { register } from "@/features/auth/api/auth.api";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { GoogleAuthButton } from "@/components/shared";
 
 const registerSchema = z.object({
   name: z.string().trim().min(3, "Full name must be at least 3 characters").max(50, "Full name cannot exceed 50 characters"),
@@ -26,7 +24,6 @@ type FormErrors = {
 
 export default function RecruiterRegisterPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,32 +64,6 @@ export default function RecruiterRegisterPage() {
     }
   };
 
-  const handleGoogleSignup = async (
-    credentialResponse: CredentialResponse
-  ) => {
-    try {
-      const idToken = credentialResponse.credential;
-
-      if (!idToken) {
-        toast.error("Google authentication failed.");
-        return;
-      }
-
-      const response = await googleAuth({
-        idToken,
-        role: "recruiter",
-      });
-
-      toast.success(response.message);
-      dispatch(setUser(response.user));
-      router.push("/recruiter/dashboard");
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Google authentication failed."
-      );
-    }
-  };
-
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-4">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-10 shadow-xl space-y-6">
@@ -107,18 +78,12 @@ export default function RecruiterRegisterPage() {
           </p>
         </div>
 
-        {/* OAuth Google Button */}
-        <div className="w-full flex justify-center min-h-[44px]">
-          <GoogleLogin
-            onSuccess={handleGoogleSignup}
-            onError={() => toast.error("Google Sign Up failed")}
-            width="400"
-            theme="outline"
-            shape="rectangular"
-            size="large"
-            text="signup_with"
-          />
-        </div>
+        {/* Custom OAuth Google Button */}
+        <GoogleAuthButton
+          role="recruiter"
+          text="Sign up with Google"
+          onSuccessRedirect="/recruiter/dashboard"
+        />
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">

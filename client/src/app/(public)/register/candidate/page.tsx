@@ -1,16 +1,13 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
-import { register, googleAuth } from "@/features/auth/api/auth.api";
+import { register } from "@/features/auth/api/auth.api";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAppDispatch } from "@/store/hooks";
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
-import { setUser } from "@/store/slices/authSlice";
+import { GoogleAuthButton } from "@/components/shared";
 
 const registerSchema = z.object({
   name: z
@@ -30,7 +27,6 @@ type FormErrors = {
 
 export default function CandidateRegisterPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -79,30 +75,6 @@ export default function CandidateRegisterPage() {
     }
   };
 
-  const handleGoogleSignup = async (credentialResponse: CredentialResponse) => {
-    try {
-      const idToken = credentialResponse.credential;
-
-      if (!idToken) {
-        toast.error("Google authentication failed.");
-        return;
-      }
-
-      const response = await googleAuth({
-        idToken,
-        role: "candidate",
-      });
-
-      toast.success(response.message);
-      dispatch(setUser(response.user));
-      router.push("/candidate/dashboard");
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Google authentication failed."
-      );
-    }
-  };
-
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-6">
       {/* Centered card aligned with the login page structure */}
@@ -118,18 +90,13 @@ export default function CandidateRegisterPage() {
           </p>
         </div>
 
-        {/* OAuth Google Button */}
-        <div className="w-full flex justify-center min-h-[44px]">
-          <GoogleLogin
-            onSuccess={handleGoogleSignup}
-            onError={() => toast.error("Google Sign Up failed")}
-            width="400"
-            theme="outline"
-            shape="rectangular"
-            size="large"
-            text="signup_with"
-          />
-        </div>
+        {/* Custom OAuth Google Button */}
+        <GoogleAuthButton
+          role="candidate"
+          text="Sign up with Google"
+          onSuccessRedirect="/candidate/dashboard"
+        />
+       
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">

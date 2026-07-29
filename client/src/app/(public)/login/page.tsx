@@ -1,16 +1,15 @@
 "use client";
-
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { useAppDispatch } from "@/store/hooks";
 import { setUser } from "@/store/slices/authSlice";
-import { login, googleAuth } from "@/features/auth/api/auth.api";
+import { login } from "@/features/auth/api/auth.api";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { GoogleAuthButton } from "@/components/shared";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email address"),
@@ -79,34 +78,6 @@ function LoginForm() {
     }
   };
 
-  const handleGoogleLogin = async (credentialResponse: CredentialResponse) => {
-    try {
-      const idToken = credentialResponse.credential;
-
-      if (!idToken) {
-        toast.error("Google authentication failed.");
-        return;
-      }
-
-      const response = await googleAuth({ idToken, role });
-
-      toast.success(response.message);
-      dispatch(setUser(response.user));
-
-      if (response.user.role === "candidate") {
-        router.push("/candidate");
-      } else if (response.user.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/recruiter/dashboard");
-      }
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Google authentication failed."
-      );
-    }
-  };
-
   return (
     <div className="w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-10 shadow-xl space-y-6">
@@ -151,18 +122,8 @@ function LoginForm() {
           </button>
         </div>
 
-        {/* OAuth Google Button */}
-        <div className="w-full flex justify-center min-h-[44px]">
-          <GoogleLogin
-            onSuccess={handleGoogleLogin}
-            onError={() => toast.error("Google login failed")}
-            width="400"
-            theme="outline"
-            shape="rectangular"
-            size="large"
-            text="continue_with"
-          />
-        </div>
+        {/* Custom OAuth Google Button */}
+        <GoogleAuthButton role={role} text="Continue with Google" />
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">

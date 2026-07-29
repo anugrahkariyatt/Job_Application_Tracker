@@ -66,7 +66,8 @@ export const verifyEmail = async (token: string) => {
 // Google Auth
 
 export interface GoogleAuthRequest {
-  idToken: string;
+  idToken?: string;
+  accessToken?: string;
   role: "candidate" | "recruiter";
 }
 
