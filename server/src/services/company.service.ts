@@ -128,3 +128,54 @@ export const getCompanyByIdService = async (id: string) => {
   }
   return company;
 };
+
+export const getAllPublicCompaniesService = async (query: {
+  search?: string;
+  industry?: string;
+  location?: string;
+  page?: string | number;
+  limit?: string | number;
+}) => {
+  const { search, industry, location, page, limit } = query;
+  const filter: any = { isActive: { $ne: false }, verified: true };
+
+  if (search) {
+    const regex = new RegExp(search, "i");
+    filter.$or = [
+      { companyName: regex },
+      { description: regex },
+      { industry: regex },
+    ];
+  }
+
+  if (industry && industry !== "All" && industry !== "all") {
+    filter.industry = industry;
+  }
+
+  if (location && location !== "all") {
+    const regex = new RegExp(location, "i");
+    filter.headquarters = regex;
+  }
+
+  const pageNum = page ? Math.max(1, Number(page)) : 1;
+  const limitNum = limit ? Math.max(1, Number(limit)) : 9;
+  const skip = (pageNum - 1) * limitNum;
+
+  const totalCount = await Company.countDocuments(filter);
+  const companies = await Company.find(filter)
+    .sort({ companyName: 1 })
+    .skip(skip)
+    .limit(limitNum);
+
+  const totalPages = Math.ceil(totalCount / limitNum);
+
+  return {
+    companies,
+    pagination: {
+      totalCount,
+      page: pageNum,
+      limit: limitNum,
+      totalPages,
+    },
+  };
+};

@@ -86,27 +86,80 @@ export const sendVerificationEmail = async ({
   }
 };
 
-interface JobAlertEmailPayload {
-  email: string;
-  candidateName: string;
-  jobTitle: string;
+export interface JobSummary {
+  jobId: string;
+  title: string;
   companyName: string;
   location: string;
-  jobId: string;
+  employmentType: string;
+  workplaceType: string; // Remote / Hybrid / Onsite
+  experienceLevel?: string;
+  salary?: string;
+}
+
+export interface JobAlertEmailPayload {
+  email: string;
+  candidateName: string;
+  type?: "job-alert" | "scheduled-job-alert";
+  frequency?: string;
+  totalJobs?: number;
+  jobs?: JobSummary[];
+  // Fallback / legacy single-job fields for instant alerts
+  jobTitle?: string;
+  companyName?: string;
+  location?: string;
+  jobId?: string;
 }
 
 export const sendJobAlertEmail = async (
   payload: JobAlertEmailPayload,
 ): Promise<void> => {
   try {
-    console.log("[MAIL SERVICE] Sending Job Alert email to:", payload.email, "for job:", payload.jobTitle);
-    const response = await n8nClient.post("/send-email", {
-      type: "job-alert",
-      ...payload,
-    });
-    console.log("[MAIL SERVICE] n8n Job Alert email response success:", response.status);
+    const alertType = payload.type || "scheduled-job-alert";
+    const totalJobsCount = payload.totalJobs || payload.jobs?.length || (payload.jobTitle ? 1 : 0);
+
+    console.log(
+      "[MAIL SERVICE] Sending Job Alert email via n8n to:",
+      payload.email,
+      "Type:",
+      alertType,
+      "Frequency:",
+      payload.frequency || "Daily",
+      "Total jobs:",
+      totalJobsCount
+    );
+
+    // Build clean payload for scheduled digest vs instant alert
+    const postBody =
+      alertType === "scheduled-job-alert"
+        ? {
+            type: "scheduled-job-alert",
+            frequency: payload.frequency || "Daily",
+            candidateName: payload.candidateName,
+            email: payload.email,
+            totalJobs: totalJobsCount,
+            jobs: payload.jobs || [],
+          }
+        : {
+            type: "job-alert",
+            candidateName: payload.candidateName,
+            email: payload.email,
+            jobTitle: payload.jobTitle,
+            companyName: payload.companyName,
+            location: payload.location,
+            jobId: payload.jobId,
+          };
+
+    const response = await n8nClient.post("/send-email", postBody);
+    console.log(
+      "[MAIL SERVICE SUCCESS] n8n Job Alert email response status:",
+      response.status
+    );
   } catch (error: any) {
-    console.error("[MAIL SERVICE ERROR] Failed to send Job Alert email via n8n:", error?.response?.data || error?.message || error);
+    console.error(
+      "[MAIL SERVICE ERROR] Failed to send Job Alert email via n8n:",
+      error?.response?.data || error?.message || error
+    );
   }
 };
 

@@ -41,10 +41,12 @@ export const createJobController = async (
     }
 
     if (company.isActive === false) {
-      return res.status(403).json({
-        success: false,
-        message: "Your company has been disabled by the administrator. Job creation is blocked.",
-      });
+      if (validation.data.status !== "Draft") {
+        return res.status(403).json({
+          success: false,
+          message: "Your company has been disabled by the administrator. You can only save jobs as draft.",
+        });
+      }
     }
 
     if (company.verified === false) {
@@ -158,10 +160,21 @@ export const updateJobController = async (
     }
 
     if (company.isActive === false) {
-      return res.status(403).json({
-        success: false,
-        message: "Your company has been disabled by the administrator. Job editing is blocked.",
-      });
+      const job = await Job.findById(paramsValidation.data.jobId);
+      if (!job) {
+        return res.status(404).json({
+          success: false,
+          message: "Job not found.",
+        });
+      }
+
+      const targetStatus = validation.data.status !== undefined ? validation.data.status : job.status;
+      if (targetStatus !== "Draft") {
+        return res.status(403).json({
+          success: false,
+          message: "Your company has been disabled by the administrator. You can only save jobs as draft.",
+        });
+      }
     }
 
     if (company.verified === false) {
@@ -241,10 +254,12 @@ export const updateJobStatusController = async (
     }
 
     if (company.isActive === false) {
-      return res.status(403).json({
-        success: false,
-        message: "Your company has been disabled by the administrator. Job status modification is blocked.",
-      });
+      if (validation.data.status === "Open") {
+        return res.status(403).json({
+          success: false,
+          message: "Your company has been disabled by the administrator. You cannot publish jobs.",
+        });
+      }
     }
 
     if (company.verified === false) {

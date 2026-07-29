@@ -12,6 +12,7 @@ import {
   updateCompanyLogo,
   updateCompanyCoverImage,
   getCompanyByIdService,
+  getAllPublicCompaniesService,
 } from "../services/company.service.js";
 import User from "../models/user.model.js";
 import Job from "../models/job.model.js";
@@ -339,48 +340,14 @@ export const getAllCompaniesPublicController = async (
   next: NextFunction,
 ) => {
   try {
-    const { search, industry, location, page, limit } = req.query;
-    const filter: any = { isActive: { $ne: false }, verified: true };
-
-    if (search) {
-      const regex = new RegExp(search as string, "i");
-      filter.$or = [
-        { companyName: regex },
-        { description: regex },
-        { industry: regex },
-      ];
-    }
-
-    if (industry && industry !== "All" && industry !== "all") {
-      filter.industry = industry;
-    }
-
-    if (location && location !== "all") {
-      const regex = new RegExp(location as string, "i");
-      filter.headquarters = regex;
-    }
-
-    const pageNum = page ? Math.max(1, Number(page)) : 1;
-    const limitNum = limit ? Math.max(1, Number(limit)) : 9;
-    const skip = (pageNum - 1) * limitNum;
-
-    const totalCount = await Company.countDocuments(filter);
-    const companies = await Company.find(filter)
-      .sort({ companyName: 1 })
-      .skip(skip)
-      .limit(limitNum);
-
-    const totalPages = Math.ceil(totalCount / limitNum);
+    const { companies, pagination } = await getAllPublicCompaniesService(
+      req.query as any,
+    );
 
     return res.status(200).json({
       success: true,
       data: companies,
-      pagination: {
-        totalCount,
-        page: pageNum,
-        limit: limitNum,
-        totalPages,
-      },
+      pagination,
     });
   } catch (error) {
     next(error);

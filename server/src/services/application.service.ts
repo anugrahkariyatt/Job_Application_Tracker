@@ -19,6 +19,9 @@ export const applyForJob = async (userId: string, jobId: string) => {
   if (!user) {
     throw new AppError("User not found", 404);
   }
+  if (user.isActive === false) {
+    throw new AppError("Your account has been blocked or deactivated by an administrator.", 403);
+  }
   const job = await Job.findById(jobId);
   if (!job) {
     throw new AppError("Job not found", 404);
@@ -77,7 +80,7 @@ export const applyForJob = async (userId: string, jobId: string) => {
 export const FetchAllAppliedApplications = async (userId: string) => {
   const candidate = await Candidate.findOne({ userId });
   if (!candidate) {
-    throw new AppError("Candidate profile not found", 404);
+    return [];
   }
 
   const applications = await Application.find({
