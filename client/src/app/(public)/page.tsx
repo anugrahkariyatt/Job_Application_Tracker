@@ -27,7 +27,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-              Whether you&apos;re looking to land your next high-impact role or hire pre-vetted engineers and product leads without recruiter fees.
+              Whether you&apos;re looking to land your next role or hire qualified candidates for your growing team.
             </p>
 
             {/* DUAL CTA BUTTONS */}
@@ -42,7 +42,7 @@ export default function HomePage() {
 
               <Link
                 href="/register/recruiter"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold text-base hover:bg-slate-800 dark:hover:bg-slate-200 transition-all shadow-sm active:translate-y-px"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl border border-border bg-card text-foreground font-semibold text-base hover:bg-muted transition-all shadow-xs active:translate-y-px"
               >
                 <span>Start Hiring Candidates</span>
                 <ArrowRight className="h-4 w-4" />
@@ -70,7 +70,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">Candidate Matched</p>
-                  <p className="text-xs text-muted-foreground">Senior Full-Stack Engineer pitched to Stripe</p>
+                  <p className="text-xs text-muted-foreground">Senior Full-Stack Engineer matched to job opening</p>
                 </div>
               </div>
 
@@ -80,7 +80,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-foreground">Recruiter Sourced Profile</p>
-                  <p className="text-xs text-muted-foreground">Google Engineering Manager sent interview invite</p>
+                  <p className="text-xs text-muted-foreground">Engineering Manager sent interview invite</p>
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function HomePage() {
               Built for Both Job Seekers & Hiring Teams
             </h2>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Discover what you can do on Nuvora whether you&apos;re hunting for your next role or building your core team.
+              Discover what you can do on Nuvora whether you&apos;re looking for your next role or building your team.
             </p>
           </div>
 
@@ -215,7 +215,7 @@ export default function HomePage() {
               <div className="pt-2">
                 <Link
                   href="/register/candidate"
-                  className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold text-sm hover:bg-slate-800 transition-all shadow-xs active:translate-y-px"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all shadow-xs active:translate-y-px"
                 >
                   <span>Join as Candidate</span>
                   <ArrowRight className="h-4 w-4" />
