@@ -153,6 +153,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
   const handleToggleSubscribe = async () => {
     try {
       setSubscribing(true);
+      const targetCompanyId = company?._id || id;
       if (isSubscribed && subId) {
         const res = await axiosInstance.delete(`/api/subscriptions/${subId}`);
         if (res.data?.success) {
@@ -161,7 +162,7 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
           toast.success(`Unsubscribed from ${company?.companyName || 'company'}`);
         }
       } else {
-        const res = await axiosInstance.post('/api/subscriptions', { companyId: id });
+        const res = await axiosInstance.post('/api/subscriptions', { companyId: targetCompanyId });
         if (res.data?.success && res.data.data) {
           setIsSubscribed(true);
           setSubId(res.data.data._id);
@@ -170,7 +171,14 @@ export default function CompanyDetailsPage({ params }: { params: Promise<{ id: s
       }
     } catch (err: any) {
       console.error('Subscription toggle error:', err);
-      toast.error('Failed to update subscription.');
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || 'Failed to update subscription.';
+      if (status === 404 && msg.toLowerCase().includes('candidate profile')) {
+        toast.error('Please create your candidate profile first.');
+        router.push('/candidate/profile/edit');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubscribing(false);
     }

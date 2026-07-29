@@ -126,7 +126,14 @@ export default function FindCompaniesPage() {
       }
     } catch (err: any) {
       console.error('Subscription error:', err);
-      toast.error('Failed to update subscription status.');
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || 'Failed to update subscription status.';
+      if (status === 404 && msg.toLowerCase().includes('candidate profile')) {
+        toast.error('Please create your candidate profile first.');
+        router.push('/candidate/profile/edit');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubscribingId(null);
     }

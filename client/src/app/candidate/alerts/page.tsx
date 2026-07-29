@@ -1,12 +1,15 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Plus, Pencil, Trash2, MapPin, Search, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
 const alertFormSchema = z.object({
-  keyword: z.string().trim().min(1, 'Keyword is required'),
+  keyword: z.string().trim().min(1, 'At least one keyword is required'),
   location: z.string().trim().optional(),
+  employmentType: z.enum(['Full-time', 'Part-time', 'Contract', 'Internship']),
+  remote: z.boolean(),
 });
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -59,6 +62,7 @@ interface UIJobAlert {
 }
 
 export default function JobAlertsPage() {
+  const router = useRouter();
   const [loading, setLoading] = React.useState(true);
   const [alerts, setAlerts] = React.useState<UIJobAlert[]>([]);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -86,9 +90,9 @@ export default function JobAlertsPage() {
   const mapAlertToUI = (dbAlert: any): UIJobAlert => {
     return {
       id: dbAlert._id,
-      keyword: dbAlert.keywords?.join(', ') || '',
+      keyword: Array.isArray(dbAlert.keywords) ? dbAlert.keywords.join(', ') : dbAlert.keywords || '',
       location: dbAlert.location || '',
-      frequency: 'Daily', // Mock default frequency
+      frequency: dbAlert.frequency || 'Daily',
       active: dbAlert.isActive ?? true,
       createdAt: dbAlert.createdAt || new Date().toISOString(),
       employmentType: dbAlert.employmentType || 'Full-time',
@@ -148,12 +152,23 @@ export default function JobAlertsPage() {
       return;
     }
 
+    const parsedKeywords = form.keyword
+      .split(',')
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0);
+
+    if (parsedKeywords.length === 0) {
+      setErrors({ keyword: 'At least one valid keyword is required' });
+      return;
+    }
+
     try {
       const payload = {
-        keywords: form.keyword.split(',').map((k) => k.trim()),
-        location: form.location,
+        keywords: parsedKeywords,
+        location: form.location.trim(),
         employmentType: form.employmentType,
         remote: form.remote,
+        frequency: form.frequency,
       };
 
       if (editTarget) {
@@ -172,7 +187,14 @@ export default function JobAlertsPage() {
       setDialogOpen(false);
     } catch (err: any) {
       console.error('Save alert error:', err);
-      toast.error(err.response?.data?.message || 'Failed to save job alert.');
+      const status = err.response?.status;
+      const msg = err.response?.data?.message || 'Failed to save job alert.';
+      if (status === 404 && msg.toLowerCase().includes('candidate profile')) {
+        toast.error('Please create your candidate profile first.');
+        router.push('/candidate/profile/edit');
+      } else {
+        toast.error(msg);
+      }
     }
   };
 
@@ -249,18 +271,31 @@ export default function JobAlertsPage() {
                 className="relative overflow-hidden border border-border/60 shadow-xs hover:shadow-md hover:border-primary/40 transition-all rounded-2xl bg-card flex flex-col justify-between"
               >
                 <CardContent className="p-5 space-y-4">
-                  {/* Top Row: Target Keywords & Active Switch */}
+                  {/* Top Row: Target Keywords Badges & Active Switch */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-base text-foreground tracking-tight">{alert.keyword}</h3>
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center justify-between gap-2">
                         <Badge
                           variant={alert.active ? 'default' : 'secondary'}
-                          className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                          className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0"
                         >
                           {alert.active ? 'Active' : 'Paused'}
                         </Badge>
                       </div>
+
+                      {/* Display Multiple Keyword Badges */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {alert.keyword.split(',').map((kw, i) => {
+                          const trimmed = kw.trim();
+                          if (!trimmed) return null;
+                          return (
+                            <Badge key={i} variant="secondary" className="text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                              {trimmed}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+
                       {alert.location ? (
                         <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
                           <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -274,7 +309,7 @@ export default function JobAlertsPage() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       <Switch
                         checked={alert.active}
                         onCheckedChange={() => toggleActive(alert.id, alert.active)}
@@ -338,17 +373,27 @@ export default function JobAlertsPage() {
           </DialogHeader>
           <div className="space-y-4">
              <div className="space-y-2">
-              <Label htmlFor="keyword">Keyword</Label>
+              <Label htmlFor="keyword">Keywords</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="keyword"
-                  placeholder="e.g. Frontend, React"
+                  placeholder="e.g. React, Node.js, TypeScript, Python"
                   value={form.keyword}
                   onChange={(e) => handleFieldChange('keyword', e.target.value)}
                   className="pl-9"
                 />
               </div>
+              <p className="text-[11px] text-muted-foreground">Separate multiple keywords with commas.</p>
+              {form.keyword.trim() && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {form.keyword.split(',').map((k) => k.trim()).filter(Boolean).map((kw, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs bg-muted/50 border-primary/30 text-foreground font-medium">
+                      {kw}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               {errors.keyword && (
                 <p className="mt-1 text-xs text-destructive font-medium">{errors.keyword}</p>
               )}

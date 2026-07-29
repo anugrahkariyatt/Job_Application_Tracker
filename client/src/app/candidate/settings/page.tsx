@@ -91,7 +91,7 @@ export default function SettingsPage() {
 
   React.useEffect(() => {
     fetchSettingsData();
-  }, [user]);
+  }, [user?._id, user?.id]);
 
   const handlePreferenceToggle = async (key: keyof typeof preferences, checked: boolean) => {
     const updatedPrefs = { ...preferences, [key]: checked };

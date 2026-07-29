@@ -241,30 +241,32 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0 pt-2 sm:pt-0">
-            <Button onClick={async () => {
-              try {
-                setApplying(true);
-                const res = await axiosInstance.post('/api/application', { jobId: id });
-                if (res.data?.success) {
-                  setApplied(true);
-                  toast.success('Successfully applied for this job!');
+            <Button
+              onClick={async () => {
+                try {
+                  setApplying(true);
+                  const res = await axiosInstance.post('/api/application', { jobId: id });
+                  if (res.data?.success) {
+                    setApplied(true);
+                    toast.success('Successfully applied for this job!');
+                  }
+                } catch (err: any) {
+                  console.error('Apply job error:', err);
+                  const status = err.response?.status;
+                  const msg = err.response?.data?.message || 'Failed to submit application.';
+                  if (status === 404 && msg.toLowerCase().includes('candidate profile')) {
+                    toast.error('Please create your candidate profile first.');
+                    router.push('/candidate/profile/edit');
+                  } else {
+                    toast.error(msg);
+                  }
+                } finally {
+                  setApplying(false);
                 }
-              } catch (err: any) {
-                console.error('Apply job error:', err);
-                const status = err.response?.status;
-                const msg = err.response?.data?.message || 'Failed to submit application.';
-                const isProfileMissing = status === 404 || msg.toLowerCase().includes('profile');
-                
-                if (isProfileMissing) {
-                  toast.error('Please create your candidate profile before applying.');
-                  router.push('/candidate/profile');
-                } else {
-                  toast.error(msg);
-                }
-              } finally {
-                setApplying(false);
-              }
-            }} disabled={applied || applying} className="font-semibold px-6 h-10">
+              }}
+              disabled={applied || applying}
+              className="font-semibold px-6 h-10"
+            >
               {applying ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : applied ? (
