@@ -5,22 +5,58 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import axiosInstance from "@/lib/axios";
+import { z } from "zod";
+import { cn } from "@/lib/utils";
+
+const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email address cannot be empty or contain only spaces.")
+    .email("Invalid email address format.")
+    .refine((val) => !/\s/.test(val), "Email address cannot contain spaces."),
+});
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      toast.error("Please enter your email address.");
+    setError(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      const msg = "Email address cannot be empty or contain only spaces.";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (/\s/.test(trimmedEmail)) {
+      const msg = "Email address cannot contain spaces.";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    const validation = forgotPasswordSchema.safeParse({ email });
+    if (!validation.success) {
+      const msg =
+        validation.error.flatten().fieldErrors.email?.[0] ||
+        "Invalid email address.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     try {
       setIsLoading(true);
-      const response = await axiosInstance.post("/api/auth/forgot-password", { email });
+      const response = await axiosInstance.post("/api/auth/forgot-password", {
+        email: validation.data.email,
+      });
 
       if (response.data?.success) {
         setIsSent(true);
@@ -29,7 +65,9 @@ export default function ForgotPasswordPage() {
         toast.error(response.data?.message || "Failed to send reset link.");
       }
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Something went wrong. Please try again.";
+      const errorMsg =
+        error.response?.data?.message ||
+        "Something went wrong. Please try again.";
       toast.error(errorMsg);
     } finally {
       setIsLoading(false);
@@ -53,7 +91,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} noValidate className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-xs font-semibold text-foreground">
                   Email Address
@@ -65,12 +103,20 @@ export default function ForgotPasswordPage() {
                     type="email"
                     placeholder="name@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError(null);
+                    }}
                     disabled={isLoading}
-                    required
-                    className="w-full pl-10 pr-3.5 py-3 text-sm rounded-xl border border-input bg-background text-foreground outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary focus:ring-3 focus:ring-primary/10"
+                    className={cn(
+                      "w-full pl-10 pr-3.5 py-3 text-sm rounded-xl border border-input bg-background text-foreground outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary focus:ring-3 focus:ring-primary/10",
+                      error && "border-destructive focus:border-destructive focus:ring-destructive/10"
+                    )}
                   />
                 </div>
+                {error && (
+                  <p className="text-xs text-destructive font-medium">{error}</p>
+                )}
               </div>
 
               <button

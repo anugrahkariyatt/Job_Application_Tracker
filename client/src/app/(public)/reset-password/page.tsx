@@ -13,6 +13,27 @@ import Link from "next/link";
 import { Lock, Loader2, AlertCircle } from "lucide-react";
 import axiosInstance from "@/lib/axios";
 
+import { z } from "zod";
+
+const complexPasswordSchema = z
+  .string()
+  .trim()
+  .min(8, "Password must be at least 8 characters long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character (@, $, !, %, etc.)");
+
+const resetPasswordSchema = z
+  .object({
+    password: complexPasswordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"],
+  });
+
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,27 +44,26 @@ function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
 
     if (!token) {
       toast.error("Password reset token is missing. Please use the link sent to your email.");
       return;
     }
 
-    if (!password || !confirmPassword) {
-      toast.error("Please fill in all fields.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters long.");
+    const validation = resetPasswordSchema.safeParse({ password, confirmPassword });
+    if (!validation.success) {
+      const fieldErrors = validation.error.flatten().fieldErrors;
+      setErrors({
+        password: fieldErrors.password?.[0],
+        confirmPassword: fieldErrors.confirmPassword?.[0],
+      });
+      const firstError = fieldErrors.password?.[0] || fieldErrors.confirmPassword?.[0];
+      if (firstError) toast.error(firstError);
       return;
     }
 
@@ -51,7 +71,7 @@ function ResetPasswordForm() {
       setIsLoading(true);
       const response = await axiosInstance.post("/api/auth/reset-password", {
         token,
-        password,
+        password: validation.data.password,
       });
 
       if (response.data?.success && response.data?.user) {
@@ -113,12 +133,21 @@ function ResetPasswordForm() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setErrors((prev) => ({ ...prev, password: undefined }));
+                }}
                 className="pl-10"
                 disabled={isLoading}
-                required
               />
             </div>
+            {errors.password ? (
+              <p className="text-xs text-destructive font-medium">{errors.password}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Must be 8+ characters with uppercase, lowercase, number & special symbol.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -130,12 +159,17 @@ function ResetPasswordForm() {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                }}
                 className="pl-10"
                 disabled={isLoading}
-                required
               />
             </div>
+            {errors.confirmPassword && (
+              <p className="text-xs text-destructive font-medium">{errors.confirmPassword}</p>
+            )}
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>

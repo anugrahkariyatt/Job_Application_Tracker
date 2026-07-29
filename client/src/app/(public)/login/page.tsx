@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 import { GoogleAuthButton } from "@/components/shared";
 
 const loginSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().trim().min(1, "Email address is required").email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type FormErrors = {
@@ -49,7 +49,10 @@ function LoginForm() {
 
     try {
       setIsLoading(true);
-      const response = await login({ email, password });
+      const response = await login({
+        email: validation.data.email,
+        password: validation.data.password,
+      });
 
       if (response.success && response.user) {
         dispatch(setUser(response.user));
@@ -135,7 +138,7 @@ function LoginForm() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           <div className="space-y-2">
             <label htmlFor="email" className="block text-xs font-semibold text-foreground">
               Email address

@@ -9,14 +9,23 @@ import { Lock, Mail, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GoogleAuthButton } from "@/components/shared";
 
+const complexPasswordSchema = z
+  .string()
+  .trim()
+  .min(8, "Password must be at least 8 characters long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character (@, $, !, %, etc.)");
+
 const registerSchema = z.object({
   name: z
     .string()
     .trim()
     .min(3, "Full name must be at least 3 characters")
     .max(50, "Full name cannot exceed 50 characters"),
-  email: z.string().trim().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().trim().min(1, "Email address is required").email("Invalid email address"),
+  password: complexPasswordSchema,
 });
 
 type FormErrors = {
@@ -53,15 +62,15 @@ export default function CandidateRegisterPage() {
     try {
       setIsLoading(true);
       const response = await register({
-        name,
-        email,
-        password,
+        name: validation.data.name,
+        email: validation.data.email,
+        password: validation.data.password,
         role: "candidate",
       });
 
       if (response.success && response.user) {
         toast.success("Account created! Please check your email to verify before logging in.");
-        router.push(`/login?email=${encodeURIComponent(email)}`);
+        router.push(`/login?email=${encodeURIComponent(validation.data.email)}`);
       } else {
         toast.error(response.message || "Registration failed");
       }
@@ -108,7 +117,7 @@ export default function CandidateRegisterPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {/* Full Name */}
           <div className="space-y-2">
             <label htmlFor="name" className="block text-xs font-semibold text-foreground">
@@ -196,8 +205,12 @@ export default function CandidateRegisterPage() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {errors.password && (
+            {errors.password ? (
               <p className="text-xs text-destructive font-medium">{errors.password}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Must be 8+ characters with uppercase, lowercase, number & special symbol.
+              </p>
             )}
           </div>
 
