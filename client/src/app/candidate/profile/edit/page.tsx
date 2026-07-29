@@ -35,11 +35,12 @@ const candidateProfileSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(10, "Phone number must be at least 10 digits")
-    .max(15, "Phone number cannot exceed 15 digits")
-    .regex(
-      /^\+?[0-9]{10,15}$/,
-      "Invalid phone number format. Must contain 10-15 digits, optionally starting with '+'",
+    .transform((value) => value.replace(/\s+/g, ""))
+    .refine(
+      (value) => /^(\+91)?[6-9]\d{9}$/.test(value),
+      {
+        message: "Enter a valid Indian phone number",
+      }
     ),
   location: z
     .string()
@@ -414,14 +415,14 @@ export default function EditProfilePage() {
       setSaving(true);
 
       const profilePayload = {
-        fullName,
-        phone,
-        location,
-        headline,
-        bio,
-        github: github ? ensureUrl(github) : "",
-        linkedin: linkedin ? ensureUrl(linkedin) : "",
-        portfolio: portfolio ? ensureUrl(portfolio) : "",
+        fullName: validation.data.fullName,
+        phone: validation.data.phone,
+        location: validation.data.location,
+        headline: validation.data.headline,
+        bio: validation.data.bio,
+        github: validation.data.github ? ensureUrl(validation.data.github) : "",
+        linkedin: validation.data.linkedin ? ensureUrl(validation.data.linkedin) : "",
+        portfolio: validation.data.portfolio ? ensureUrl(validation.data.portfolio) : "",
       };
 
       let currentCandidateId = "";
@@ -560,9 +561,13 @@ export default function EditProfilePage() {
       router.push("/candidate/profile");
     } catch (err: any) {
       console.error("Save profile error:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to save candidate details.",
-      );
+      const backendError =
+        err.response?.data?.message ||
+        (err.response?.data?.errors?.fieldErrors
+          ? Object.values(err.response.data.errors.fieldErrors).flat().join(", ")
+          : null) ||
+        "Failed to save candidate details.";
+      toast.error(backendError);
     } finally {
       setSaving(false);
     }
