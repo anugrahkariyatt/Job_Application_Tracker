@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,6 +21,16 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import axiosInstance from '@/lib/axios';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
   APPLICATION: { icon: UserPlus, color: 'bg-info/10 text-info' },
@@ -30,7 +42,9 @@ const typeConfig: Record<string, { icon: LucideIcon; color: string }> = {
 export default function NotificationsPage() {
   const [notifs, setNotifs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [clearing, setClearing] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const fetchNotifications = async () => {
     try {
@@ -72,7 +86,7 @@ export default function NotificationsPage() {
     if (unread.length === 0) return;
 
     try {
-      setClearing(true);
+      setMarkingAllRead(true);
       await Promise.all(
         unread.map((n) => axiosInstance.patch(`/api/notifications/${n._id}/read`))
       );
@@ -82,7 +96,7 @@ export default function NotificationsPage() {
       console.error('Error marking all read:', err);
       toast.error('Failed to mark all notifications as read.');
     } finally {
-      setClearing(false);
+      setMarkingAllRead(false);
     }
   };
 
@@ -99,12 +113,11 @@ export default function NotificationsPage() {
     }
   };
 
-  const deleteAll = async () => {
+  const confirmDeleteAll = async () => {
     if (notifs.length === 0) return;
-    if (!confirm('Are you sure you want to delete all notifications?')) return;
 
     try {
-      setClearing(true);
+      setDeletingAll(true);
       await Promise.all(
         notifs.map((n) => axiosInstance.delete(`/api/notifications/${n._id}`))
       );
@@ -114,7 +127,8 @@ export default function NotificationsPage() {
       console.error('Error deleting all notifications:', err);
       toast.error('Failed to delete all notifications.');
     } finally {
-      setClearing(false);
+      setDeletingAll(false);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -134,9 +148,9 @@ export default function NotificationsPage() {
               variant="outline"
               size="sm"
               onClick={markAllRead}
-              disabled={unreadCount === 0 || clearing}
+              disabled={unreadCount === 0 || markingAllRead || deletingAll}
             >
-              {clearing ? (
+              {markingAllRead ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
                 <CheckCheck className="mr-1.5 h-4 w-4" />
@@ -146,10 +160,10 @@ export default function NotificationsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={deleteAll}
-              disabled={notifs.length === 0 || clearing}
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={notifs.length === 0 || markingAllRead || deletingAll}
             >
-              {clearing ? (
+              {deletingAll ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="mr-1.5 h-4 w-4" />
@@ -237,6 +251,26 @@ export default function NotificationsPage() {
           </div>
         </Card>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all notifications?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete all notifications? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

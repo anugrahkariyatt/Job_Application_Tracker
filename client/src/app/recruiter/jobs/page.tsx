@@ -22,6 +22,7 @@ import {
   Calendar,
   DollarSign,
   CheckCircle,
+  Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -330,6 +331,11 @@ export default function MyJobsPage() {
                             <DropdownMenuItem asChild>
                               <Link href={`/recruiter/jobs/${jobId}`}>
                                 <Eye className="mr-2 h-4 w-4" /> View
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/recruiter/jobs/${jobId}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" /> Edit
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
