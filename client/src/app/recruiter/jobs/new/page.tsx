@@ -68,14 +68,25 @@ export default function CreateJobPage() {
 
   // Proactively check company profile on mount
   useEffect(() => {
-    axiosInstance.get('/api/company').catch((err) => {
-      const status = err.response?.status;
-      const msg = err.response?.data?.message || '';
-      if (status === 404 || msg.toLowerCase().includes('company profile')) {
+    let isMounted = true;
+    axiosInstance
+      .get('/api/company')
+      .then((res) => {
+        if (isMounted && (!res.data?.success || !res.data?.data)) {
+          toast.error('Please create your company profile before posting a job.');
+          router.push('/recruiter/company/edit');
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
         toast.error('Please create your company profile before posting a job.');
         router.push('/recruiter/company/edit');
-      }
-    });
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
     const savedPrefs = localStorage.getItem('recruiter_company_prefs');
     if (savedPrefs) {

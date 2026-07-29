@@ -25,7 +25,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { JobStatus } from '@/lib/types';
 import {
   Select,
@@ -48,6 +48,7 @@ const statusFilters = ['All', 'Open', 'Draft', 'Closed'];
 const PER_PAGE = 6;
 
 export default function MyJobsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchParam = searchParams.get('search') || '';
 
@@ -167,6 +168,13 @@ export default function MyJobsPage() {
         actions={
           <Link
             href="/recruiter/jobs/new"
+            onClick={(e) => {
+              if (!company) {
+                e.preventDefault();
+                toast.error('Please create your company profile before posting a job.');
+                router.push('/recruiter/company/edit');
+              }
+            }}
             className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
           >
             <PlusCircle className="h-4 w-4" />
