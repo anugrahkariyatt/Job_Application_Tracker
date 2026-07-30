@@ -1,4 +1,4 @@
-# 🚀 Job Application & Recruitment Portal (Full-Stack)
+#  Job Application & Recruitment Portal (Full-Stack)
 
 A modern, full-stack Job Application and Recruitment platform built with **Next.js 16**, **React 19**, **Node.js**, **Express**, **TypeScript**, and **MongoDB**. Designed with a feature-based architecture, Role-Based Access Control (RBAC), AI integration, real-time notifications, and email alerts.
 

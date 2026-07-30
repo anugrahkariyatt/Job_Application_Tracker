@@ -155,35 +155,62 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-9 w-28" />
-        <Card className="p-6 space-y-4">
-          <div className="flex items-start gap-4">
-            <Skeleton className="h-14 w-14 rounded-xl shrink-0" />
-            <div className="space-y-2 flex-1">
-              <Skeleton className="h-7 w-1/3" />
-              <Skeleton className="h-4 w-1/4" />
+        <Skeleton className="h-9 w-32 rounded-lg" />
+
+        <Card className="w-full border border-border/60 p-6 sm:p-8 space-y-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4 flex-1">
+              <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
+              <div className="space-y-2.5 flex-1 min-w-0">
+                <Skeleton className="h-8 w-2/3 max-w-md" />
+                <Skeleton className="h-4 w-1/3 max-w-xs" />
+                <div className="pt-2 flex flex-wrap gap-4">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+                <div className="pt-2 flex flex-wrap gap-2">
+                  <Skeleton className="h-6 w-16 rounded-md" />
+                  <Skeleton className="h-6 w-20 rounded-md" />
+                  <Skeleton className="h-6 w-16 rounded-md" />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons Skeleton */}
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              <Skeleton className="h-10 w-28 rounded-md" />
+              <Skeleton className="h-10 w-24 rounded-md" />
+              <Skeleton className="h-10 w-20 rounded-md" />
+              <Skeleton className="h-10 w-24 rounded-md" />
             </div>
           </div>
-          <div className="flex gap-2 pt-2">
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
+
+          {/* Job Description Skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+
+          {/* Key Responsibilities Skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+
+          {/* Requirements Skeleton */}
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="h-4 w-11/12" />
           </div>
         </Card>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 p-6 space-y-4">
-            <Skeleton className="h-6 w-1/3" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-6 w-1/4" />
-            <Skeleton className="h-20 w-full" />
-          </Card>
-          <Card className="p-6 space-y-4">
-            <Skeleton className="h-6 w-1/2" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </Card>
-        </div>
       </div>
     );
   }
