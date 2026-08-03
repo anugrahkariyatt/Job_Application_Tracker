@@ -1,0 +1,996 @@
+{
+  "name": "Nuvora Email Service - Full UI",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Verify your email • Nuvora\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Verify Your Email</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Verify your email</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Welcome to <strong>Nuvora</strong>!</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Please verify your email address to activate your account and start applying for jobs.</p><table cellpadding='0' cellspacing='0' style='margin:30px auto;'><tr><td align='center' bgcolor='#0F6FFF' style='border-radius:8px;'><a href='{{ $json.body.verificationLink }}' style='display:inline-block;padding:14px 30px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;'>Verify Email</a></td></tr></table><p style='font-size:15px;color:#475569;'>Or copy and paste this link into your browser:</p><p style='margin:0;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;word-break:break-all;font-size:14px;color:#0F6FFF;'>{{ $json.body.verificationLink }}</p><hr style='margin:40px 0;border:none;border-top:1px solid #e2e8f0;'><p style='font-size:14px;color:#64748b;line-height:1.6;'>This verification link will expire in <strong>15 minutes</strong>.</p><p style='font-size:14px;color:#64748b;line-height:1.6;'>If you didn't create a Nuvora account, you can safely ignore this email.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p><p style='margin:8px 0 0;font-size:12px;color:#94a3b8;'>Helping candidates and companies connect.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        640
+      ],
+      "id": "eca40bac-4765-4df3-ab67-61b853f35526",
+      "name": "Verification HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Reset your password - Nuvora\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Reset Password</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Reset your password</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>We received a request to reset your password for your <strong>Nuvora</strong> account.</p><table cellpadding='0' cellspacing='0' style='margin:30px auto;'><tr><td align='center' bgcolor='#0F6FFF' style='border-radius:8px;'><a href='{{ $json.body.resetLink }}' style='display:inline-block;padding:14px 30px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;'>Reset Password</a></td></tr></table><p style='font-size:15px;color:#475569;'>Or copy and paste this link into your browser:</p><p style='margin:0;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;word-break:break-all;font-size:14px;color:#0F6FFF;'>{{ $json.body.resetLink }}</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p><p style='margin:8px 0 0;font-size:12px;color:#94a3b8;'>Helping candidates and companies connect.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        832
+      ],
+      "id": "d80fb25f-9ef0-4046-8f45-430886f3eccf",
+      "name": "Forgot Password HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Application Received • {{ $json.body.jobTitle }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Application Submitted</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Application Received</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Your application for <strong>{{ $json.body.jobTitle }}</strong> at <strong>{{ $json.body.companyName }}</strong> has been successfully submitted on <strong>{{ $json.body.applicationDate }}</strong>.</p><p style='font-size:16px;color:#475569;line-height:1.7;'>You can track your application status directly from your Nuvora dashboard.</p><table cellpadding='0' cellspacing='0' style='margin:30px auto;'><tr><td align='center' bgcolor='#0F6FFF' style='border-radius:8px;'><a href='#' style='display:inline-block;padding:14px 30px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;'>View Dashboard</a></td></tr></table></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p><p style='margin:8px 0 0;font-size:12px;color:#94a3b8;'>Helping candidates and companies connect.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1024
+      ],
+      "id": "a9fa86a5-9c21-4a86-8a48-343a7173d2c8",
+      "name": "App Submitted HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Application Status Updated • {{ $json.body.jobTitle }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Status Updated</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Status Updated</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>There has been an update regarding your application for <strong>{{ $json.body.jobTitle }}</strong> at <strong>{{ $json.body.companyName }}</strong>.</p><p style='font-size:16px;color:#475569;line-height:1.7;'>New Status: <strong>{{ $json.body.status }}</strong></p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1216
+      ],
+      "id": "f0763b36-52f5-49f6-a128-03912a0eb9b6",
+      "name": "App Status HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"New Job Alert • {{ $json.body.jobTitle }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Job Alert</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>New Job Match</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>We found a new position that matches your profile: <strong>{{ $json.body.jobTitle }}</strong> at <strong>{{ $json.body.companyName }}</strong> in <strong>{{ $json.body.location }}</strong>.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1408
+      ],
+      "id": "7053ce05-b07e-4e52-abce-deca250fc90c",
+      "name": "Job Alert HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"New Job Opening • {{ $json.body.companyName }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Company Job</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>New Company Posting</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>A company you follow, <strong>{{ $json.body.companyName }}</strong>, has posted a new opportunity: <strong>{{ $json.body.jobTitle }}</strong> in <strong>{{ $json.body.location }}</strong>.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1600
+      ],
+      "id": "48247227-5b59-4cb8-bfb2-ebc874c14af4",
+      "name": "Company Job HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Interview Scheduled • {{ $json.body.jobTitle }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Interview Scheduled</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Interview Scheduled</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Your <strong>{{ $json.body.interviewTitle }}</strong> interview for the position of <strong>{{ $json.body.jobTitle }}</strong> at <strong>{{ $json.body.companyName }}</strong> has been scheduled.</p><p style='font-size:16px;color:#475569;line-height:1.7;'><strong>Date & Time:</strong> {{ $json.body.dateTime }}<br /><strong>Type:</strong> {{ $json.body.interviewType }}</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1792
+      ],
+      "id": "f991e481-bc49-411a-bc4f-a5ea0aef6b04",
+      "name": "Interview Sch HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"{{ $json.body.interviewTitle }} - Cancelled\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Interview Cancelled</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Interview Cancelled</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Your <strong>{{ $json.body.interviewTitle }}</strong> interview for <strong>{{ $json.body.jobTitle }}</strong> at <strong>{{ $json.body.companyName }}</strong>, originally scheduled for <strong>{{ $json.body.dateTime }}</strong>, has been cancelled by <strong>{{ $json.body.cancelledBy }}</strong>.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        1984
+      ],
+      "id": "37ecdf28-0903-4df8-8a77-7ecd1a7fde49",
+      "name": "Interview Cancelled HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"Payment Successful • {{ $json.body.planName }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Payment Success</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Payment Successful</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.userName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Thank you for your payment! We have successfully processed your payment of <strong>{{ $json.body.amount }}</strong> for the <strong>{{ $json.body.planName }}</strong> plan.</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Your subscription is active and valid until <strong>{{ $json.body.expiresAt }}</strong>.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        2176
+      ],
+      "id": "ff512112-febc-4a92-93f0-7371ef3714f3",
+      "name": "Payment Success HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"{{ $json.body.frequency }} Job Alert • {{ $json.body.totalJobs }} New Opportunities\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Scheduled Jobs</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Your Job Recommendations</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.candidateName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Here are your <strong>{{ $json.body.frequency }}</strong> job recommendations. We found <strong>{{ $json.body.totalJobs }}</strong> new positions matching your preferences.</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Log in to your Nuvora dashboard to view all the latest listings and apply.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        2368
+      ],
+      "id": "4af69a7d-bdae-4068-a557-2f923d513674",
+      "name": "Scheduled Job HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.email }}\"\n    }\n  ],\n  \"subject\": \"{{ $json.body.subject || 'Contact Form Submission' }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>Contact Form</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>Contact Request Received</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.name }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>Thank you for reaching out to us. We have received your message regarding <strong>{{ $json.body.subject || 'General Inquiry' }}</strong> and will respond shortly.</p><p style='font-size:16px;color:#475569;line-height:1.7;'><strong>Your Message:</strong><br /><em>{{ $json.body.message }}</em></p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        2560
+      ],
+      "id": "e60e376f-bd02-4602-9853-4609b3c03ef9",
+      "name": "Contact Form HTTP"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{$env.BREVO_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sender\": {\n    \"name\": \"Nuvora\",\n    \"email\": \"={{$env.SENDER_EMAIL}}\"\n  },\n  \"to\": [\n    {\n      \"email\": \"{{ $json.body.adminEmail }}\"\n    }\n  ],\n  \"subject\": \"New Company Registration • {{ $json.body.companyName }}\",\n  \"htmlContent\": \"<!DOCTYPE html><html><head><meta charset='UTF-8' /><title>New Company</title></head><body style='margin:0;padding:0;background:#f8fafc;font-family:Arial,Helvetica,sans-serif;'><table width='100%' cellpadding='0' cellspacing='0' style='background:#f8fafc;padding:40px 0;'><tr><td align='center'><table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;'><tr><td style='background:#0F6FFF;padding:30px;text-align:center;'><h1 style='color:#ffffff;margin:0;font-size:28px;font-weight:700;'>Nuvora Admin</h1></td></tr><tr><td style='padding:40px;'><h2 style='margin-top:0;color:#0f172a;font-size:26px;'>New Company Registered</h2><p style='font-size:16px;color:#475569;line-height:1.7;'>Hi <strong>{{ $json.body.adminName }}</strong>,</p><p style='font-size:16px;color:#475569;line-height:1.7;'>A new company, <strong>{{ $json.body.companyName }}</strong>, specializing in <strong>{{ $json.body.industry }}</strong> has successfully registered on <strong>{{ $json.body.registeredAt }}</strong>.</p></td></tr><tr><td style='background:#fafafa;border-top:1px solid #e2e8f0;padding:24px;text-align:center;'><p style='margin:0;font-size:13px;color:#64748b;'>© 2026 Nuvora. All rights reserved.</p></td></tr></table></td></tr></table></body></html>\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -192,
+        2752
+      ],
+      "id": "6d358ab3-fbd9-457e-92b1-3110f25cc055",
+      "name": "New Company HTTP"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-email",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        1696
+      ],
+      "id": "3d14a280-e3cd-4661-9476-618ee1fb5324",
+      "name": "Webhook2",
+      "webhookId": "cf7e2f43-2576-440e-b910-cc966d94dfd1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "verification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "verification"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "forgot-password",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "forgot-password"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "application-submitted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "application-submitted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "application-status-updated",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "application-status-updated"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "job-alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "job-alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "company-new-job",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "company-new-job"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "interview-scheduled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "interview-scheduled"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "interview-cancelled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "interview-cancelled"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "payment-success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "payment-success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "scheduled-job-alert",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "scheduled-job-alert"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "contact-form-submitted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "contact-form-submitted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.body.type}}",
+                    "rightValue": "new-company",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "new-company"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        1536
+      ],
+      "id": "8d1f5de8-8737-4817-875f-1feaeeee704e",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        -32
+      ],
+      "id": "1fd8d672-ef0c-44c4-a12c-5edf9abdace8",
+      "name": "Schedule Trigger Daily"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.API_URL}}/api/job-alerts/process-scheduled",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "frequency",
+              "value": "Daily"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-cron-secret",
+              "value": "={{$env.CRON_SECRET}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "249f4e45-2815-4ffd-a2e1-f66dcb71d5ea",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.API_URL}}/api/job-alerts/process-scheduled",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "frequency",
+              "value": "Monthly"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-cron-secret",
+              "value": "={{$env.CRON_SECRET}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        416
+      ],
+      "id": "12df770e-31a7-4724-8b8f-e66b4bc9a9a9",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.API_URL}}/api/job-alerts/process-scheduled",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "frequency",
+              "value": "Weekly"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-cron-secret",
+              "value": "={{$env.CRON_SECRET}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        192
+      ],
+      "id": "05af506c-572e-4984-8b6c-a2e702b91b88",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        416
+      ],
+      "id": "df4f9362-d682-4ae2-94d8-707c35f125b0",
+      "name": "Schedule Trigger Monthly"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        192
+      ],
+      "id": "17eb0b57-c09b-426e-9480-c25d255f3412",
+      "name": "Schedule Trigger Weekly"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Verification HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Forgot Password HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "App Submitted HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "App Status HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job Alert HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Company Job HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Interview Sch HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Interview Cancelled HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Payment Success HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scheduled Job HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Contact Form HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "New Company HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Daily": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Monthly": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger Weekly": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d4da0fea-c2bf-44ac-9a40-7393e042c4e5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b1006c125ccedef53295552df31f144d583341730d5ed18fca3718042e30facc"
+  },
+  "nodeGroups": [],
+  "id": "HzHUfttcLeQF1rzw",
+  "tags": []
+}
