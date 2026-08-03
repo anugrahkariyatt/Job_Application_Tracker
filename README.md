@@ -184,7 +184,7 @@ Track Application
 ## Clone
 
 ```bash
-git clone https://github.com/<your-username>/job-application-tracker.git
+git clone https://github.com/anugrahkariyatt/Job_Application_Tracker
 cd job-application-tracker
 ```
 
