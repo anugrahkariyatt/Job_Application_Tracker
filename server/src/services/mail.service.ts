@@ -111,7 +111,7 @@ export interface JobSummary {
   companyName: string;
   location: string;
   employmentType: string;
-  workplaceType: string; // Remote / Hybrid / Onsite
+  workplaceType: string;
   experienceLevel?: string;
   salary?: string;
 }
