@@ -323,14 +323,9 @@ export const getAllJobsController = async (
       filterQuery.companyId = { $in: activeCompanyIds };
     }
 
-    // 1. Search text filter (title, skills, description)
+    // 1. Search text filter (title, skills, description via MongoDB text index)
     if (search) {
-      const searchRegex = new RegExp(search as string, "i");
-      filterQuery.$or = [
-        { title: searchRegex },
-        { skills: { $in: [searchRegex] } },
-        { description: searchRegex },
-      ];
+      filterQuery.$text = { $search: search as string };
     }
 
     // 2. Employment types filter

@@ -106,6 +106,8 @@ const companyProfileSchema = new Schema<ICompanyProfile>(
   },
 );
 
+companyProfileSchema.index({ companyName: "text", industry: "text", website: "text" });
+
 const CompanyProfile: Model<ICompanyProfile> = mongoose.model<ICompanyProfile>(
   "CompanyProfile",
   companyProfileSchema,

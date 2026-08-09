@@ -74,12 +74,7 @@ export const getMyJobs = async (
   }
 
   if (filters.search) {
-    const searchRegex = new RegExp(filters.search, "i");
-    query.$or = [
-      { title: searchRegex },
-      { location: searchRegex },
-      { skills: { $in: [searchRegex] } },
-    ];
+    query.$text = { $search: filters.search };
   }
 
   const page = Number(filters.page) || 1;

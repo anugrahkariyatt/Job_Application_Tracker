@@ -119,6 +119,8 @@ const jobSchema = new Schema(
   },
 );
 
+jobSchema.index({ title: "text", description: "text", skills: "text" });
+
 export type Job = InferSchemaType<typeof jobSchema>;
 
 const Job = mongoose.model<Job>("Job", jobSchema);

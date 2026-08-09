@@ -162,12 +162,7 @@ export const getAllCompanies = async (query: {
   }
 
   if (query.search) {
-    const searchRegex = new RegExp(query.search, "i");
-    filter.$or = [
-      { companyName: searchRegex },
-      { website: searchRegex },
-      { industry: searchRegex },
-    ];
+    filter.$text = { $search: query.search };
   }
 
   const companies = await CompanyProfile.aggregate([
