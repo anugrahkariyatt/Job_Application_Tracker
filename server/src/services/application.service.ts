@@ -51,29 +51,30 @@ export const applyForJob = async (userId: string, jobId: string) => {
     companyId: job.companyId,
   });
 
-  try {
-    await sendApplicationSubmittedEmail({
-      email: user.email,
-      candidateName: user.name,
-      jobTitle: job.title,
-      companyName: company.companyName,
-      applicationDate: new Date().toLocaleDateString(),
-    });
-  } catch (emailErr) {
-    console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
-  }
+  setImmediate(async () => {
+    try {
+      await sendApplicationSubmittedEmail({
+        email: user.email,
+        candidateName: user.name,
+        jobTitle: job.title,
+        companyName: company.companyName,
+        applicationDate: new Date().toLocaleDateString(),
+      });
+    } catch (emailErr) {
+      console.error("[APPLICATION SERVICE ERROR] Failed to send submission email:", emailErr);
+    }
 
-
-  try {
-    await createNotification(
-      company.ownerId.toString(),
-      "Application Received",
-      `${user.name} applied for your job: ${job.title}`,
-      "APPLICATION",
-    );
-  } catch (notifErr) {
-    console.error("[APPLICATION SERVICE ERROR] Failed to create recruiter application notification:", notifErr);
-  }
+    try {
+      await createNotification(
+        company.ownerId.toString(),
+        "Application Received",
+        `${user.name} applied for your job: ${job.title}`,
+        "APPLICATION",
+      );
+    } catch (notifErr) {
+      console.error("[APPLICATION SERVICE ERROR] Failed to create recruiter application notification:", notifErr);
+    }
+  });
 
   return application;
 };
@@ -127,7 +128,6 @@ export const deleteApplication = async (
     );
   }
 
-  // Check if recruiter has disabled candidate withdrawals
   const company = await CompanyProfile.findById(application.companyId);
   if (company) {
     const recruiter = await User.findById(company.ownerId);
@@ -139,7 +139,6 @@ export const deleteApplication = async (
     }
   }
 
-  // Trigger in-app notification to recruiter before deleting application
   try {
     const job = await Job.findById(application.jobId);
     const candidateUser = await User.findById(userId);
@@ -212,7 +211,6 @@ export const updateApplicationStatus = async (
     );
   }
 
-  // Prevent modifying finalized terminal statuses (Hired / Rejected)
   if (application.status === "Hired" || application.status === "Rejected") {
     throw new AppError(
       `Application status is finalized as '${application.status}' and cannot be modified further.`,
@@ -292,32 +290,34 @@ export const updateApplicationStatus = async (
       message = "Congratulations! You have been hired.";
       break;
   }
-  await createNotification(
-    candidate.userId.toString(),
-    title,
-    message,
-    "APPLICATION",
-  );
+  setImmediate(async () => {
+    try {
+      await createNotification(
+        candidate.userId.toString(),
+        title,
+        message,
+        "APPLICATION",
+      );
 
-  try {
-    const recruiterUser = await User.findById(userId);
-    const isProRecruiter = recruiterUser?.subscriptionPlan === "pro";
+      const recruiterUser = await User.findById(userId);
+      const isProRecruiter = recruiterUser?.subscriptionPlan === "pro";
 
-    if (isProRecruiter) {
-      const preferences = user.preferences || { applicationReceived: true };
-      if (preferences.applicationReceived !== false) {
-        await sendApplicationStatusEmail({
-          email: user.email,
-          candidateName: user.name,
-          jobTitle: job.title,
-          companyName: company.companyName,
-          status: application.status,
-        });
+      if (isProRecruiter) {
+        const preferences = user.preferences || { applicationReceived: true };
+        if (preferences.applicationReceived !== false) {
+          await sendApplicationStatusEmail({
+            email: user.email,
+            candidateName: user.name,
+            jobTitle: job.title,
+            companyName: company.companyName,
+            status: application.status,
+          });
+        }
       }
+    } catch (err) {
+      console.error("[APPLICATION SERVICE ERROR] Failed to send background notifications/email:", err);
     }
-  } catch (emailErr) {
-    console.error("[APPLICATION SERVICE ERROR] Failed to send status update email:", emailErr);
-  }
+  });
 
   return application;
 };
