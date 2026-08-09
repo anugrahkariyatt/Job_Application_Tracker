@@ -170,24 +170,54 @@ export const getAllCompanies = async (query: {
     ];
   }
 
-  const companies = await CompanyProfile.find(filter)
-    .populate({
-      path: "ownerId",
-      select: "name email",
-    })
-    .sort({ createdAt: -1 });
+  const companies = await CompanyProfile.aggregate([
+    { $match: filter },
+    { $sort: { createdAt: -1 } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "ownerId",
+        foreignField: "_id",
+        as: "ownerId",
+      },
+    },
+    {
+      $unwind: {
+        path: "$ownerId",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "jobs",
+        let: { companyId: "$_id" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$companyId", "$$companyId"] } } },
+          { $group: { _id: "$companyId", count: { $sum: 1 } } },
+        ],
+        as: "jobCountData",
+      },
+    },
+    {
+      $addFields: {
+        jobsPosted: {
+          $ifNull: [{ $arrayElemAt: ["$jobCountData.count", 0] }, 0],
+        },
+        ownerId: {
+          _id: "$ownerId._id",
+          name: "$ownerId.name",
+          email: "$ownerId.email",
+        },
+      },
+    },
+    {
+      $project: {
+        jobCountData: 0,
+      },
+    },
+  ]);
 
-  const companiesWithCount = await Promise.all(
-    companies.map(async (company) => {
-      const jobsCount = await Job.countDocuments({ companyId: company._id });
-      return {
-        ...company.toObject(),
-        jobsPosted: jobsCount,
-      };
-    })
-  );
-
-  return companiesWithCount;
+  return companies;
 };
 
 export const updateCompanyVerification = async (
@@ -482,8 +512,7 @@ export const updateApplicationStatusByAdmin = async (
 
   application.status = status as any;
   await application.save();
-
-  // Create notification for candidate
+    
   const candidate = await Candidate.findById(application.candidateId);
   if (candidate) {
     try {
