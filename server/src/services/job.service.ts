@@ -221,7 +221,7 @@ export const getCandidateJobAIMatch = async (userId: string, jobId: string) => {
     skills: skills.map((s) => s.name),
     experience: experiences.map((exp) => `${exp.jobTitle} at ${exp.companyName}. ${exp.description || ""}`),
     education: educations.map((edu) => `${edu.degree} in ${edu.fieldOfStudy || ""} from ${edu.institution}`),
-    resumeUrl: candidate.resumeUrl || "",
+    resumeUrl: candidate.resume?.url || (candidate as any).resumeUrl || "",
   };
 
   const jobData = {

@@ -1,6 +1,7 @@
 import cloudinary from "../config/cloudinary.config.js";
 import { UploadApiResponse } from "cloudinary";
-export const uploadImage = async (
+
+export const uploadFile = async (
   file: Express.Multer.File,
   folder: string,
 ): Promise<UploadApiResponse> => {
@@ -8,6 +9,7 @@ export const uploadImage = async (
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
+        resource_type: "image",
       },
       (error, result) => {
         if (error) {
@@ -15,7 +17,7 @@ export const uploadImage = async (
         }
 
         if (!result) {
-          return reject(new Error("Image upload failed"));
+          return reject(new Error("File upload failed"));
         }
 
         resolve(result);
@@ -26,6 +28,9 @@ export const uploadImage = async (
   });
 };
 
-export const deleteImage = async (publicId: string) => {
-  return cloudinary.uploader.destroy(publicId);
+export const deleteFile = async (publicId: string) => {
+  return cloudinary.uploader.destroy(publicId, {
+    resource_type: "image",
+    invalidate: true,
+  });
 };

@@ -106,10 +106,10 @@ export const getAllUsers = async (query: {
       let profileImage = null;
       if (u.role === "candidate") {
         const candidate = await Candidate.findOne({ userId: u._id }).select("profileImage");
-        if (candidate?.profileImage) profileImage = candidate.profileImage;
+        if (candidate?.profileImage) profileImage = typeof candidate.profileImage === "object" ? candidate.profileImage.url || "" : candidate.profileImage;
       } else if (u.role === "recruiter") {
         const company = await CompanyProfile.findOne({ ownerId: u._id }).select("logo");
-        if (company?.logo) profileImage = company.logo;
+        if (company?.logo) profileImage = typeof company.logo === "object" ? company.logo.url || "" : company.logo;
       }
       userObj.profileImage = profileImage;
       return userObj;

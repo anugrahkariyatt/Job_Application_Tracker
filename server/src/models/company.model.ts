@@ -3,8 +3,8 @@ import mongoose, { Schema, Document, Types, Model } from "mongoose";
 export interface ICompanyProfile extends Document {
   ownerId: Types.ObjectId;
   companyName: string;
-  logo?: string;
-  coverImage?: string;
+  logo?: { url: string; publicId: string; resourceType: string };
+  coverImage?: { url: string; publicId: string; resourceType: string };
   industry: string;
   companySize?: string;
   website?: string;
@@ -35,7 +35,6 @@ const companyProfileSchema = new Schema<ICompanyProfile>(
       type: String,
       required: true,
     },
-
     industry: {
       type: String,
       required: true,
@@ -44,13 +43,17 @@ const companyProfileSchema = new Schema<ICompanyProfile>(
       type: String,
       default: "",
     },
+
     logo: {
-      type: String,
-      default: "",
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+      resourceType: { type: String, default: "image" },
     },
+
     coverImage: {
-      type: String,
-      default: "",
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+      resourceType: { type: String, default: "image" },
     },
 
     companySize: {
@@ -60,7 +63,6 @@ const companyProfileSchema = new Schema<ICompanyProfile>(
       type: String,
       default: "",
     },
-
     phone: {
       type: String,
       default: "",
@@ -103,6 +105,30 @@ const companyProfileSchema = new Schema<ICompanyProfile>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret: any) => {
+        if (ret.logo && typeof ret.logo === "object") {
+          ret.logo = ret.logo.url || "";
+        }
+        if (ret.coverImage && typeof ret.coverImage === "object") {
+          ret.coverImage = ret.coverImage.url || "";
+        }
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret: any) => {
+        if (ret.logo && typeof ret.logo === "object") {
+          ret.logo = ret.logo.url || "";
+        }
+        if (ret.coverImage && typeof ret.coverImage === "object") {
+          ret.coverImage = ret.coverImage.url || "";
+        }
+        return ret;
+      },
+    },
   },
 );
 

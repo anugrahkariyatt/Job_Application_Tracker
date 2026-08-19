@@ -236,7 +236,7 @@ export const getRecruiterDashboardStats = async (
         return {
           id: app._id,
           name: user?.name || "Candidate",
-          photo: candidate?.profileImage || "",
+          photo: typeof candidate?.profileImage === "object" ? candidate?.profileImage?.url || "" : candidate?.profileImage || "",
           headline: candidate?.headline || "Software Engineer",
           jobTitle: (app.jobId as any)?.title || "Job Title",
           appliedDate: app.createdAt.toISOString().split("T")[0],
@@ -276,7 +276,7 @@ export const getRecruiterDashboardStats = async (
         id: iv._id,
         candidateName: candidateUser?.name || "Candidate",
         candidateEmail: candidateUser?.email || "",
-        candidatePhoto: candidate?.profileImage || "",
+        candidatePhoto: typeof candidate?.profileImage === "object" ? candidate?.profileImage?.url || "" : candidate?.profileImage || "",
         jobTitle: (iv.jobId as any)?.title || "Position",
         date: iv.date,
         type: iv.type,

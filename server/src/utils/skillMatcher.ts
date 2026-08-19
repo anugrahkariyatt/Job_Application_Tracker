@@ -126,7 +126,7 @@ export function calculateRealSkillMatch(candidate: any, job: any): {
     strengths.push(`Verified ${candidate.experience.length} work experience entry/entries`);
   }
 
-  if (candidate?.resumeUrl) {
+  if (candidate?.resume?.url || candidate?.resumeUrl) {
     strengths.push("Resume document attached");
   }
 

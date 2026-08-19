@@ -5,7 +5,7 @@ import {
   CreateCandidateInput,
   UpdateCandidateInput,
 } from "../validations/candidate.validation.js";
-import { uploadImage } from "./cloudinary.service.js";
+import { uploadFile, deleteFile } from "./cloudinary.service.js";
 
 export const createCandidate = async (
   userId: string,
@@ -63,21 +63,35 @@ export const updateCandidate = async (
 
   return candidate;
 };
+
 export const updateCandidateProfileImage = async (
   userId: string,
   file: Express.Multer.File,
 ) => {
   const candidate = await Candidate.findOne({ userId });
-
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
 
-  const uploadedImage = await uploadImage(file, "candidate/profile-image");
+  const oldPublicId = candidate.profileImage?.publicId;
 
-  candidate.profileImage = uploadedImage.secure_url;
+  const uploadedImage = await uploadFile(file, "candidate/profile-image");
+
+  candidate.profileImage = {
+    url: uploadedImage.secure_url,
+    publicId: uploadedImage.public_id,
+    resourceType: "image",
+  };
 
   await candidate.save();
+
+  if (oldPublicId) {
+    try {
+      await deleteFile(oldPublicId);
+    } catch (err) {
+      console.warn("[CLOUDINARY] Failed to delete old profile image:", err);
+    }
+  }
 
   return candidate;
 };
@@ -87,16 +101,29 @@ export const updateCandidateResume = async (
   file: Express.Multer.File,
 ) => {
   const candidate = await Candidate.findOne({ userId });
-
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
 
-  const uploadedResume = await uploadImage(file, "candidate/resume");
+  const oldPublicId = candidate.resume?.publicId;
 
-  candidate.resumeUrl = uploadedResume.secure_url;
+  const uploadedResume = await uploadFile(file, "candidate/resume");
+
+  candidate.resume = {
+    url: uploadedResume.secure_url,
+    publicId: uploadedResume.public_id,
+    resourceType: "image",
+  };
 
   await candidate.save();
+
+  if (oldPublicId) {
+    try {
+      await deleteFile(oldPublicId);
+    } catch (err) {
+      console.warn("[CLOUDINARY] Failed to delete old resume:", err);
+    }
+  }
 
   return candidate;
 };

@@ -399,7 +399,7 @@ export const getApplicationAIScreening = async (
         `${edu.degree} in ${edu.fieldOfStudy || ""} from ${edu.institution}`,
     ),
 
-    resumeUrl: candidate.resumeUrl || "",
+    resumeUrl: candidate.resume?.url || (candidate as any).resumeUrl || "",
   };
 
   const jobData = {

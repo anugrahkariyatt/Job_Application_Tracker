@@ -2,12 +2,12 @@ import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 export interface ICandidate extends Document {
   userId: Types.ObjectId;
-  profileImage: string;
+  profileImage: { url: string; publicId: string; resourceType: string; };
   phone: string;
   location: string;
   headline: string;
   bio: string;
-  resumeUrl: string;
+  resume: { url: string; publicId: string; resourceType: string; };
   portfolio: string;
   github: string;
   linkedin: string;
@@ -26,8 +26,9 @@ const candidateSchema = new Schema<ICandidate>(
     },
 
     profileImage: {
-      type: String,
-      default: "",
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+      resourceType: { type: String, default: "image" }
     },
 
     phone: {
@@ -50,9 +51,10 @@ const candidateSchema = new Schema<ICandidate>(
       default: "",
     },
 
-    resumeUrl: {
-      type: String,
-      default: "",
+    resume: {
+      url: { type: String, default: "" },
+      publicId: { type: String, default: "" },
+      resourceType: { type: String, default: "image" }
     },
 
     portfolio: {
@@ -77,6 +79,30 @@ const candidateSchema = new Schema<ICandidate>(
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret: any) => {
+        if (ret.profileImage && typeof ret.profileImage === "object") {
+          ret.profileImage = ret.profileImage.url || "";
+        }
+        if (ret.resume && typeof ret.resume === "object") {
+          ret.resumeUrl = ret.resume.url || "";
+        }
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret: any) => {
+        if (ret.profileImage && typeof ret.profileImage === "object") {
+          ret.profileImage = ret.profileImage.url || "";
+        }
+        if (ret.resume && typeof ret.resume === "object") {
+          ret.resumeUrl = ret.resume.url || "";
+        }
+        return ret;
+      },
+    },
   },
 );
 

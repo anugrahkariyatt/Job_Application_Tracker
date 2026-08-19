@@ -19,9 +19,11 @@ export const createCandidateController = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(`[CANDIDATE_CONTROLLER] POST /api/candidate - User ID: ${req.user?.id}`);
     const validation = createCandidateSchema.safeParse(req.body);
 
     if (!validation.success) {
+      console.warn(`[CANDIDATE_CONTROLLER] Validation failed for createCandidate:`, validation.error.flatten());
       return res.status(400).json({
         success: false,
         errors: validation.error.flatten(),
@@ -29,6 +31,7 @@ export const createCandidateController = async (
     }
 
     const result = await createCandidate(req.user!.id, validation.data);
+    console.log(`[CANDIDATE_CONTROLLER] Candidate created successfully for User ID: ${req.user?.id}`);
 
     return res.status(201).json({
       success: true,
@@ -36,6 +39,7 @@ export const createCandidateController = async (
       data: result,
     });
   } catch (error) {
+    console.error(`[CANDIDATE_CONTROLLER] Error in createCandidateController:`, error);
     next(error);
   }
 };
@@ -46,6 +50,7 @@ export const getMyCandidateController = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(`[CANDIDATE_CONTROLLER] GET /api/candidate - User ID: ${req.user?.id}`);
     const result = await getMyCandidate(req.user!.id);
 
     return res.status(200).json({
@@ -53,6 +58,7 @@ export const getMyCandidateController = async (
       data: result,
     });
   } catch (error) {
+    console.error(`[CANDIDATE_CONTROLLER] Error in getMyCandidateController:`, error);
     next(error);
   }
 };
@@ -63,9 +69,11 @@ export const updateCandidateController = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(`[CANDIDATE_CONTROLLER] PATCH /api/candidate - User ID: ${req.user?.id}`, req.body);
     const validation = updateCandidateSchema.safeParse(req.body);
 
     if (!validation.success) {
+      console.warn(`[CANDIDATE_CONTROLLER] Validation failed for updateCandidate:`, validation.error.flatten());
       return res.status(400).json({
         success: false,
         errors: validation.error.flatten(),
@@ -73,6 +81,7 @@ export const updateCandidateController = async (
     }
 
     const result = await updateCandidate(req.user!.id, validation.data);
+    console.log(`[CANDIDATE_CONTROLLER] Candidate updated successfully for User ID: ${req.user?.id}`);
 
     return res.status(200).json({
       success: true,
@@ -80,6 +89,7 @@ export const updateCandidateController = async (
       data: result,
     });
   } catch (error) {
+    console.error(`[CANDIDATE_CONTROLLER] Error in updateCandidateController:`, error);
     next(error);
   }
 };
@@ -90,7 +100,9 @@ export const updateProfileImageController = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(`[CANDIDATE_CONTROLLER] PATCH /api/candidate/profile-image - User ID: ${req.user?.id}, File present: ${Boolean(req.file)}`);
     if (!req.file) {
+      console.warn(`[CANDIDATE_CONTROLLER] No file attached in req.file for profile image upload.`);
       throw new AppError("Profile image is required", 400);
     }
 
@@ -102,6 +114,7 @@ export const updateProfileImageController = async (
       data: result,
     });
   } catch (error) {
+    console.error(`[CANDIDATE_CONTROLLER] Error in updateProfileImageController:`, error);
     next(error);
   }
 };
@@ -112,7 +125,9 @@ export const updateResumeController = async (
   next: NextFunction,
 ) => {
   try {
+    console.log(`[CANDIDATE_CONTROLLER] PATCH /api/candidate/resume - User ID: ${req.user?.id}, File present: ${Boolean(req.file)}`);
     if (!req.file) {
+      console.warn(`[CANDIDATE_CONTROLLER] No file attached in req.file for resume upload.`);
       throw new AppError("Resume is required", 400);
     }
 
@@ -124,6 +139,7 @@ export const updateResumeController = async (
       data: result,
     });
   } catch (error) {
+    console.error(`[CANDIDATE_CONTROLLER] Error in updateResumeController:`, error);
     next(error);
   }
 };

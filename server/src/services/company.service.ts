@@ -5,7 +5,7 @@ import {
   CreateCompanyInput,
   UpdateCompanyInput,
 } from "../validations/company.validation.js";
-import { uploadImage } from "./cloudinary.service.js";
+import { uploadFile, deleteFile } from "./cloudinary.service.js";
 import { createNotification } from "./notification.service.js";
 import { sendCompanyRegistrationAdminAlert } from "./mail.service.js";
 
@@ -103,14 +103,30 @@ export const updateCompanyLogo = async (
       industry: "Technology",
     });
   }
-  const uploadedImage = await uploadImage(file, "company/logo");
 
-  company.logo = uploadedImage.secure_url;
+  const oldPublicId = company.logo?.publicId;
+
+  const uploadedImage = await uploadFile(file, "company/logo");
+
+  company.logo = {
+    url: uploadedImage.secure_url,
+    publicId: uploadedImage.public_id,
+    resourceType: "image",
+  };
 
   await company.save();
 
+  if (oldPublicId) {
+    try {
+      await deleteFile(oldPublicId);
+    } catch (err) {
+      console.warn("[CLOUDINARY] Failed to delete old logo:", err);
+    }
+  }
+
   return company;
 };
+
 export const updateCompanyCoverImage = async (
   ownerId: string,
   file: Express.Multer.File,
@@ -125,11 +141,26 @@ export const updateCompanyCoverImage = async (
       industry: "Technology",
     });
   }
-  const uploadedImage = await uploadImage(file, "company/coverImage");
 
-  company.coverImage = uploadedImage.secure_url;
+  const oldPublicId = company.coverImage?.publicId;
+
+  const uploadedImage = await uploadFile(file, "company/coverImage");
+
+  company.coverImage = {
+    url: uploadedImage.secure_url,
+    publicId: uploadedImage.public_id,
+    resourceType: "image",
+  };
 
   await company.save();
+
+  if (oldPublicId) {
+    try {
+      await deleteFile(oldPublicId);
+    } catch (err) {
+      console.warn("[CLOUDINARY] Failed to delete old cover image:", err);
+    }
+  }
 
   return company;
 };
