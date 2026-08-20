@@ -93,31 +93,93 @@ export const getAllUsers = async (query: {
   const limit = query.limit ? Math.max(1, Number(query.limit)) : 8;
   const skip = (page - 1) * limit;
 
-  const totalCount = await User.countDocuments(filter);
-  const users = await User.find(filter)
-    .select("-password")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+  const pipeline: any[] = [
+    { $match: filter },
+    {
+      $lookup: {
+        from: "candidates",
+        localField: "_id",
+        foreignField: "userId",
+        as: "candidateProfile",
+      },
+    },
+    {
+      $lookup: {
+        from: "companyprofiles",
+        localField: "_id",
+        foreignField: "ownerId",
+        as: "companyProfile",
+      },
+    },
+    {
+      $addFields: {
+        profileImage: {
+          $cond: {
+            if: { $eq: ["$role", "candidate"] },
+            then: {
+              $let: {
+                vars: { cand: { $arrayElemAt: ["$candidateProfile", 0] } },
+                in: {
+                  $cond: {
+                    if: { $eq: [{ $type: "$$cand.profileImage" }, "object"] },
+                    then: "$$cand.profileImage.url",
+                    else: "$$cand.profileImage",
+                  },
+                },
+              },
+            },
+            else: {
+              $cond: {
+                if: { $eq: ["$role", "recruiter"] },
+                then: {
+                  $let: {
+                    vars: { comp: { $arrayElemAt: ["$companyProfile", 0] } },
+                    in: {
+                      $cond: {
+                        if: { $eq: [{ $type: "$$comp.logo" }, "object"] },
+                        then: "$$comp.logo.url",
+                        else: "$$comp.logo",
+                      },
+                    },
+                  },
+                },
+                else: null,
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        password: 0,
+        candidateProfile: 0,
+        companyProfile: 0,
+      },
+    },
+    {
+      $facet: {
+        metadata: [{ $count: "totalCount" }],
+        users: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+        ],
+      },
+    },
+  ];
 
-  const usersWithImages = await Promise.all(
-    users.map(async (u: any) => {
-      const userObj: any = { ...u };
-      let profileImage = null;
-      if (u.role === "candidate") {
-        const candidate = await Candidate.findOne({ userId: u._id }).select("profileImage").lean();
-        if (candidate?.profileImage) profileImage = typeof candidate.profileImage === "object" ? candidate.profileImage.url || "" : candidate.profileImage;
-      } else if (u.role === "recruiter") {
-        const company = await CompanyProfile.findOne({ ownerId: u._id }).select("logo").lean();
-        if (company?.logo) profileImage = typeof company.logo === "object" ? company.logo.url || "" : company.logo;
-      }
-      userObj.profileImage = profileImage;
-      return userObj;
-    })
-  );
+  const [facetResult] = await User.aggregate(pipeline);
+  const totalCount = facetResult?.metadata[0]?.totalCount || 0;
+  const users = facetResult?.users || [];
 
-  return { users: usersWithImages, totalCount, page, limit, totalPages: Math.ceil(totalCount / limit) };
+  return {
+    users,
+    totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
 };
 
 export const updateUserStatus = async (userId: string, isActive: boolean) => {
@@ -372,30 +434,53 @@ export const getAllJobs = async (query: {
   const limit = query.limit ? Math.max(1, Number(query.limit)) : 10;
   const skip = (page - 1) * limit;
 
-  const totalCount = await Job.countDocuments(filter);
+  const pipeline: any[] = [
+    { $match: filter },
+    {
+      $lookup: {
+        from: "companyprofiles",
+        localField: "companyId",
+        foreignField: "_id",
+        as: "companyId",
+      },
+    },
+    { $unwind: { path: "$companyId", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "applications",
+        localField: "_id",
+        foreignField: "jobId",
+        as: "applications",
+      },
+    },
+    {
+      $addFields: {
+        applicationsCount: { $size: "$applications" },
+      },
+    },
+    {
+      $project: {
+        applications: 0,
+      },
+    },
+    {
+      $facet: {
+        metadata: [{ $count: "totalCount" }],
+        jobs: [
+          { $sort: { createdAt: -1 } },
+          { $skip: skip },
+          { $limit: limit },
+        ],
+      },
+    },
+  ];
 
-  const jobs = await Job.find(filter)
-    .populate({
-      path: "companyId",
-      select: "companyName logo location industry",
-    })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
-
-  const jobsWithCount = await Promise.all(
-    jobs.map(async (job: any) => {
-      const appsCount = await Application.countDocuments({ jobId: job._id });
-      return {
-        ...job,
-        applicationsCount: appsCount,
-      };
-    })
-  );
+  const [facetResult] = await Job.aggregate(pipeline);
+  const totalCount = facetResult?.metadata[0]?.totalCount || 0;
+  const jobs = facetResult?.jobs || [];
 
   return {
-    jobs: jobsWithCount,
+    jobs,
     totalCount,
     page,
     limit,
