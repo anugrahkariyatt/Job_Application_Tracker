@@ -7,8 +7,6 @@ import {
   updateCompanyStatusSchema,
   updateCompanyVerificationSchema,
   getJobSchema,
-  getApplicationSchema,
-  updateApplicationStatusSchema,
 } from "../validations/admin.validation.js";
 import {
   getDashboard,
@@ -21,10 +19,7 @@ import {
   deleteCompanyService,
   getAllJobs,
   deleteJobByAdmin,
-  getAllApplications,
   getJobByIdForAdmin,
-  getApplicationByIdForAdmin,
-  updateApplicationStatusByAdmin,
   getCompanyByIdForAdmin,
 } from "../services/admin.service.js";
 
@@ -295,22 +290,7 @@ export const deleteJobController = async (
   }
 };
 
-export const getAllApplicationsController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const result = await getAllApplications(req.query as any);
-    return res.status(200).json({
-      success: true,
-      message: "Applications fetched successfully",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+
 
 
 export const getJobByIdController = async (
@@ -338,67 +318,7 @@ export const getJobByIdController = async (
   }
 };
 
-export const getApplicationByIdController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const paramsValidation = getApplicationSchema.safeParse(req.params);
-    if (!paramsValidation.success) {
-      return res.status(400).json({
-        success: false,
-        errors: paramsValidation.error.flatten(),
-      });
-    }
 
-    const result = await getApplicationByIdForAdmin(paramsValidation.data.applicationId);
-    return res.status(200).json({
-      success: true,
-      message: "Application fetched successfully",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const updateApplicationStatusController = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const paramsValidation = getApplicationSchema.safeParse(req.params);
-    if (!paramsValidation.success) {
-      return res.status(400).json({
-        success: false,
-        errors: paramsValidation.error.flatten(),
-      });
-    }
-
-    const bodyValidation = updateApplicationStatusSchema.safeParse(req.body);
-    if (!bodyValidation.success) {
-      return res.status(400).json({
-        success: false,
-        errors: bodyValidation.error.flatten(),
-      });
-    }
-
-    const result = await updateApplicationStatusByAdmin(
-      paramsValidation.data.applicationId,
-      bodyValidation.data.status,
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Application status updated successfully",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const getCompanyByIdController = async (
   req: Request,

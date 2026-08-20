@@ -25,29 +25,29 @@ export const getDashboard = async () => {
   // Generate 6 months data for charts
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const chartData: any[] = [];
-  
+
   for (let i = 5; i >= 0; i--) {
     const d = new Date();
     d.setMonth(d.getMonth() - i);
     const year = d.getFullYear();
     const month = d.getMonth();
     const monthName = monthNames[month];
-    
+
     const startOfMonth = new Date(year, month, 1);
     const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
-    
+
     const usersCount = await User.countDocuments({
       createdAt: { $gte: startOfMonth, $lte: endOfMonth }
     });
-    
+
     const companiesCount = await CompanyProfile.countDocuments({
       createdAt: { $gte: startOfMonth, $lte: endOfMonth }
     });
-    
+
     const jobsCount = await Job.countDocuments({
       createdAt: { $gte: startOfMonth, $lte: endOfMonth }
     });
-    
+
     chartData.push({
       name: `${monthName} ${year.toString().slice(-2)}`,
       Users: usersCount,
@@ -359,7 +359,7 @@ export const getAllJobs = async (query: {
     // Find matching companies
     const matchedCompanies = await CompanyProfile.find({ companyName: searchRegex }).select("_id").lean();
     const companyIds = matchedCompanies.map((c) => c._id);
-    
+
     filter.$or = [
       { title: searchRegex },
       { companyId: { $in: companyIds } }
@@ -416,45 +416,7 @@ export const deleteJobByAdmin = async (jobId: string) => {
   return { success: true };
 };
 
-export const getAllApplications = async (query: {
-  search?: string;
-  status?: string;
-}) => {
-  const filter: any = {};
 
-  if (query.status && query.status !== "all") {
-    filter.status = query.status;
-  }
-
-  let applications = await Application.find(filter)
-    .populate({
-      path: "candidateId",
-      populate: {
-        path: "userId",
-        select: "name email",
-      },
-    })
-    .populate("jobId")
-    .populate("companyId")
-    .sort({ createdAt: -1 })
-    .lean();
-
-  if (query.search) {
-    const searchLower = query.search.toLowerCase();
-    applications = applications.filter((app: any) => {
-      const candidateName = app.candidateId?.userId?.name?.toLowerCase() || "";
-      const companyName = app.companyId?.companyName?.toLowerCase() || "";
-      const jobTitle = app.jobId?.title?.toLowerCase() || "";
-      return (
-        candidateName.includes(searchLower) ||
-        companyName.includes(searchLower) ||
-        jobTitle.includes(searchLower)
-      );
-    });
-  }
-
-  return applications;
-};
 
 export const getJobByIdForAdmin = async (jobId: string) => {
   const job: any = await Job.findById(jobId)
@@ -473,63 +435,7 @@ export const getJobByIdForAdmin = async (jobId: string) => {
   };
 };
 
-export const getApplicationByIdForAdmin = async (applicationId: string) => {
-  const application = await Application.findById(applicationId)
-    .populate({
-      path: "candidateId",
-      populate: [
-        { path: "userId", select: "name email" },
-        { path: "experience" },
-        { path: "education" },
-        { path: "skills" }
-      ]
-    })
-    .populate({
-      path: "jobId",
-      select: "title description location salaryMin salaryMax employmentType experienceLevel requirements responsibilities",
-    })
-    .populate("companyId")
-    .lean();
 
-  if (!application) {
-    throw new AppError("Application not found", 404);
-  }
-  return application;
-};
-
-export const updateApplicationStatusByAdmin = async (
-  applicationId: string,
-  status: string,
-) => {
-  const validStatuses = ["Applied", "Under Review", "Shortlisted", "Rejected", "Hired"];
-  if (!validStatuses.includes(status)) {
-    throw new AppError("Invalid application status", 400);
-  }
-
-  const application = await Application.findById(applicationId);
-  if (!application) {
-    throw new AppError("Application not found", 404);
-  }
-
-  application.status = status as any;
-  await application.save();
-    
-  const candidate = await Candidate.findById(application.candidateId);
-  if (candidate) {
-    try {
-      await createNotification(
-        candidate.userId.toString(),
-        "Application Status Updated",
-        `Your application status for job has been updated to "${status}" by Administrator.`,
-        "APPLICATION",
-      );
-    } catch (err) {
-      console.error("Failed to send status update notification:", err);
-    }
-  }
-
-  return application;
-};
 
 export const getCompanyByIdForAdmin = async (companyId: string) => {
   const company: any = await CompanyProfile.findById(companyId)
