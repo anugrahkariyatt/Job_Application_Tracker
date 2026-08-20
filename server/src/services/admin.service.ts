@@ -343,6 +343,8 @@ export const getAllJobs = async (query: {
   search?: string;
   type?: string;
   status?: string;
+  page?: string | number;
+  limit?: string | number;
 }) => {
   const filter: any = {};
 
@@ -366,12 +368,20 @@ export const getAllJobs = async (query: {
     ];
   }
 
+  const page = query.page ? Math.max(1, Number(query.page)) : 1;
+  const limit = query.limit ? Math.max(1, Number(query.limit)) : 10;
+  const skip = (page - 1) * limit;
+
+  const totalCount = await Job.countDocuments(filter);
+
   const jobs = await Job.find(filter)
     .populate({
       path: "companyId",
       select: "companyName logo location industry",
     })
     .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
     .lean();
 
   const jobsWithCount = await Promise.all(
@@ -384,7 +394,13 @@ export const getAllJobs = async (query: {
     })
   );
 
-  return jobsWithCount;
+  return {
+    jobs: jobsWithCount,
+    totalCount,
+    page,
+    limit,
+    totalPages: Math.ceil(totalCount / limit),
+  };
 };
 
 export const deleteJobByAdmin = async (jobId: string) => {

@@ -51,6 +51,8 @@ export default function JobsPage() {
   const [deleteTarget, setDeleteTarget] = useState<JobItem | null>(null);
   const [viewTarget, setViewTarget] = useState<JobItem | null>(null);
 
+  const [totalItems, setTotalItems] = useState(0);
+
   const fetchJobs = async (params?: { search?: string; filters?: Record<string, string>; page?: number }) => {
     try {
       setLoading(true);
@@ -65,10 +67,18 @@ export default function JobsPage() {
         // Map Active UI status filter to Open backend status filter
         queryParams.set('status', params.filters.status === 'Active' ? 'Open' : 'Closed');
       }
+      if (params?.page) {
+        queryParams.set('page', params.page.toString());
+      }
 
       const res = await axiosInstance.get(`/api/admin/jobs?${queryParams.toString()}`);
       if (res.data?.success) {
-        const mapped: JobItem[] = res.data.data.map((j: any) => ({
+        const resData = res.data.data;
+        const rawJobs = Array.isArray(resData) ? resData : resData?.jobs || [];
+        const total = Array.isArray(resData) ? resData.length : resData?.totalCount || rawJobs.length;
+        setTotalItems(total);
+
+        const mapped: JobItem[] = rawJobs.map((j: any) => ({
           id: j._id,
           title: j.title,
           company: j.companyId?.companyName || 'Deleted Company',
@@ -149,6 +159,7 @@ export default function JobsPage() {
         searchPlaceholder="Search jobs…"
         getRowId={(j) => j.id}
         serverSide={true}
+        serverTotalItems={totalItems}
         loading={loading}
         onRowClick={(j) => router.push(`/admin/jobs/${j.id}`)}
         onServerParamsChange={(p) => fetchJobs(p)}
