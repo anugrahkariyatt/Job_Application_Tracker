@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import { z } from "zod";
 import { AppError } from "../utils/AppError.js";
 import {
@@ -12,6 +13,7 @@ import {
   deleteApplication,
   FetchAllAppliedApplications,
   getApplicationsByJob,
+  getRecruiterApplicationsService,
   updateApplicationStatus,
 } from "../services/application.service.js";
 import Job from "../models/job.model.js";
@@ -187,124 +189,15 @@ export const getRecruiterApplicationsController = async (
   next: NextFunction,
 ) => {
   try {
-    const company = await Company.findOne({ ownerId: req.user!.id });
-    if (!company) {
-      return res.status(404).json({
-        success: false,
-        message: "Company profile not found",
-      });
-    }
-
-    const { search, status, jobId, page, limit } = req.query;
-
-    const jobs = await Job.find({ companyId: company._id });
-    const jobIds = jobs.map((j) => j._id);
-
-    const query: any = { jobId: { $in: jobIds } };
-
-    if (status && status !== "All") {
-      query.status = status;
-    }
-
-    if (jobId && jobId !== "All") {
-      query.jobId = jobId;
-    }
-
-    if (search) {
-      const searchRegex = new RegExp(search as string, "i");
-
-      // Find matching users by name or email
-      const matchingUsers = await User.find({
-        $or: [{ name: searchRegex }, { email: searchRegex }],
-      });
-      const matchingUserIds = matchingUsers.map((u) => u._id);
-
-      // Find matching candidate profiles by userId, headline, or location
-      const matchingCandidates = await Candidate.find({
-        $or: [
-          { userId: { $in: matchingUserIds } },
-          { headline: searchRegex },
-          { location: searchRegex },
-        ],
-      });
-      const matchingCandidateIds = matchingCandidates.map((c) => c._id);
-
-      query.candidateId = { $in: matchingCandidateIds };
-    }
-
-    const pageNum = Number(page) || 1;
-    const limitNum = Number(limit) || 9;
-    const skipNum = (pageNum - 1) * limitNum;
-
-    const totalCount = await Application.countDocuments(query);
-    const applications = await Application.find(query)
-      .populate({
-        path: "candidateId",
-        populate: {
-          path: "userId",
-          select: "name email",
-        },
-      })
-      .populate("jobId", "title skills location employmentType experienceLevel requirements")
-      .sort({ createdAt: -1 })
-      .skip(skipNum)
-      .limit(limitNum);
-
-    const candidateIds = applications
-      .map((app) => app.candidateId?._id)
-      .filter(Boolean);
-
-    const [skillsList, expList] = await Promise.all([
-      Skill.find({ candidateId: { $in: candidateIds } }),
-      Experience.find({ candidateId: { $in: candidateIds } }),
-    ]);
-
-    const enrichedApplications = applications.map((app) => {
-      const appObj = app.toObject();
-      if (appObj.candidateId && appObj.candidateId._id) {
-        const candIdStr = appObj.candidateId._id.toString();
-        const candSkills = skillsList
-          .filter((s) => s.candidateId.toString() === candIdStr)
-          .map((s) => s.name);
-        const candExp = expList.filter(
-          (e) => e.candidateId.toString() === candIdStr
-        );
-
-        (appObj.candidateId as any).skills = candSkills;
-        (appObj.candidateId as any).experience = candExp;
-
-        if (appObj.aiScreening) {
-          (appObj as any).aiMatchScore = appObj.aiScreening.score;
-          (appObj as any).aiStrengths = appObj.aiScreening.strengths;
-          (appObj as any).aiSummary = appObj.aiScreening.summary;
-        } else {
-          (appObj as any).aiMatchScore = null;
-          (appObj as any).aiStrengths = [];
-          (appObj as any).aiSummary = "";
-        }
-      }
-      return appObj;
-    });
-
-    // Calculate statistics for recruiter's company applications
-    const baseCompanyQuery = { jobId: { $in: jobIds } };
-    const stats = {
-      total: await Application.countDocuments(baseCompanyQuery),
-      applied: await Application.countDocuments({ ...baseCompanyQuery, status: "Applied" }),
-      underReview: await Application.countDocuments({ ...baseCompanyQuery, status: "Under Review" }),
-      shortlisted: await Application.countDocuments({ ...baseCompanyQuery, status: "Shortlisted" }),
-      hired: await Application.countDocuments({ ...baseCompanyQuery, status: "Hired" }),
-      rejected: await Application.countDocuments({ ...baseCompanyQuery, status: "Rejected" }),
-    };
+    const result = await getRecruiterApplicationsService(
+      req.user!.id,
+      req.query,
+    );
 
     return res.status(200).json({
       success: true,
       message: "Applications fetched successfully",
-      data: {
-        applications: enrichedApplications,
-        totalCount,
-        stats,
-      },
+      data: result,
     });
   } catch (error) {
     next(error);

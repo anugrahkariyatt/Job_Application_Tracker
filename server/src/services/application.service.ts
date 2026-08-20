@@ -1,4 +1,5 @@
 import Application from "../models/application.model.js";
+import mongoose from "mongoose";
 import Candidate from "../models/candidate.model.js";
 import CompanyProfile from "../models/company.model.js";
 import Job from "../models/job.model.js";
@@ -437,4 +438,199 @@ export const getApplicationAIScreening = async (
   console.log(`[AI SCREENING SERVICE SUCCESS] Saved new Gemini screening report to database for App ID: ${applicationId}`);
 
   return application.aiScreening;
+};
+
+export const getRecruiterApplicationsService = async (
+  userId: string,
+  queryParams: {
+    search?: string;
+    status?: string;
+    jobId?: string;
+    page?: string | number;
+    limit?: string | number;
+  },
+) => {
+  const company = await CompanyProfile.findOne({ ownerId: userId }).lean();
+  if (!company) {
+    throw new AppError("Company profile not found", 404);
+  }
+
+  const { search, status, jobId, page, limit } = queryParams;
+
+  const jobs = await Job.find({ companyId: company._id }).select("_id").lean();
+  const jobIds = jobs.map((j) => j._id);
+
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 9;
+  const skipNum = (pageNum - 1) * limitNum;
+
+  const matchStage: any = { jobId: { $in: jobIds } };
+
+  if (status && status !== "All") {
+    matchStage.status = status;
+  }
+
+  if (jobId && jobId !== "All") {
+    matchStage.jobId = new mongoose.Types.ObjectId(jobId as string);
+  }
+
+  const pipeline: any[] = [
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: "candidates",
+        localField: "candidateId",
+        foreignField: "_id",
+        as: "candidateId",
+      },
+    },
+    { $unwind: { path: "$candidateId", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "candidateId.userId",
+        foreignField: "_id",
+        as: "candidateUser",
+      },
+    },
+    { $unwind: { path: "$candidateUser", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "jobs",
+        localField: "jobId",
+        foreignField: "_id",
+        as: "jobId",
+      },
+    },
+    { $unwind: { path: "$jobId", preserveNullAndEmptyArrays: true } },
+  ];
+
+  if (search) {
+    const searchRegex = new RegExp(search as string, "i");
+    pipeline.push({
+      $match: {
+        $or: [
+          { "candidateUser.name": searchRegex },
+          { "candidateUser.email": searchRegex },
+          { "candidateId.headline": searchRegex },
+          { "candidateId.location": searchRegex },
+          { "jobId.title": searchRegex },
+        ],
+      },
+    });
+  }
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: "totalCount" }],
+      data: [
+        { $sort: { createdAt: -1 } },
+        { $skip: skipNum },
+        { $limit: limitNum },
+        {
+          $project: {
+            _id: 1,
+            status: 1,
+            aiScreening: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            companyId: 1,
+            jobId: {
+              _id: "$jobId._id",
+              title: "$jobId.title",
+              skills: "$jobId.skills",
+              location: "$jobId.location",
+              employmentType: "$jobId.employmentType",
+              experienceLevel: "$jobId.experienceLevel",
+              requirements: "$jobId.requirements",
+            },
+            candidateId: {
+              _id: "$candidateId._id",
+              userId: {
+                _id: "$candidateUser._id",
+                name: "$candidateUser.name",
+                email: "$candidateUser.email",
+              },
+              headline: "$candidateId.headline",
+              bio: "$candidateId.bio",
+              location: "$candidateId.location",
+              profileImage: "$candidateId.profileImage",
+              resume: "$candidateId.resume",
+              phone: "$candidateId.phone",
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  const [facetResult] = await Application.aggregate(pipeline);
+  const totalCount = facetResult.metadata[0]?.totalCount || 0;
+  const applications = facetResult.data || [];
+
+  const pageCandidateIds = applications
+    .map((app: any) => app.candidateId?._id)
+    .filter(Boolean);
+
+  const [skillsList, expList] = await Promise.all([
+    Skill.find({ candidateId: { $in: pageCandidateIds } }).lean(),
+    Experience.find({ candidateId: { $in: pageCandidateIds } }).lean(),
+  ]);
+
+  const enrichedApplications = applications.map((appObj: any) => {
+    if (appObj.candidateId && appObj.candidateId._id) {
+      const candIdStr = appObj.candidateId._id.toString();
+      const candSkills = skillsList
+        .filter((s) => s.candidateId.toString() === candIdStr)
+        .map((s) => s.name);
+      const candExp = expList.filter(
+        (e) => e.candidateId.toString() === candIdStr,
+      );
+
+      appObj.candidateId.skills = candSkills;
+      appObj.candidateId.experience = candExp;
+
+      if (appObj.aiScreening) {
+        appObj.aiMatchScore = appObj.aiScreening.score;
+        appObj.aiStrengths = appObj.aiScreening.strengths;
+        appObj.aiSummary = appObj.aiScreening.summary;
+      } else {
+        appObj.aiMatchScore = null;
+        appObj.aiStrengths = [];
+        appObj.aiSummary = "";
+      }
+    }
+    return appObj;
+  });
+
+  const baseCompanyQuery = { jobId: { $in: jobIds } };
+  const stats = {
+    total: await Application.countDocuments(baseCompanyQuery),
+    applied: await Application.countDocuments({
+      ...baseCompanyQuery,
+      status: "Applied",
+    }),
+    underReview: await Application.countDocuments({
+      ...baseCompanyQuery,
+      status: "Under Review",
+    }),
+    shortlisted: await Application.countDocuments({
+      ...baseCompanyQuery,
+      status: "Shortlisted",
+    }),
+    hired: await Application.countDocuments({
+      ...baseCompanyQuery,
+      status: "Hired",
+    }),
+    rejected: await Application.countDocuments({
+      ...baseCompanyQuery,
+      status: "Rejected",
+    }),
+  };
+
+  return {
+    applications: enrichedApplications,
+    totalCount,
+    stats,
+  };
 };
