@@ -7,7 +7,7 @@ import {
 } from "../validations/skill.validation.js";
 
 export const addSkill = async (userId: string, data: CreateSkillInput) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -16,7 +16,7 @@ export const addSkill = async (userId: string, data: CreateSkillInput) => {
   const existingSkill = await Skill.findOne({
     candidateId: candidate._id,
     name: data.name,
-  });
+  }).lean();
 
   if (existingSkill) {
     throw new AppError("Skill already exists", 400);
@@ -31,7 +31,7 @@ export const addSkill = async (userId: string, data: CreateSkillInput) => {
 };
 
 export const getMySkills = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -39,9 +39,11 @@ export const getMySkills = async (userId: string) => {
 
   const skills = await Skill.find({
     candidateId: candidate._id,
-  }).sort({
-    createdAt: -1,
-  });
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .lean();
 
   return skills;
 };
@@ -51,7 +53,7 @@ export const updateSkill = async (
   skillId: string,
   data: UpdateSkillInput,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -75,7 +77,7 @@ export const updateSkill = async (
 };
 
 export const deleteSkill = async (userId: string, skillId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);

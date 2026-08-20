@@ -13,7 +13,7 @@ export const createCandidate = async (
 ) => {
   const existingCandidate = await Candidate.findOne({
     userId,
-  });
+  }).lean();
 
   if (existingCandidate) {
     throw new AppError("Candidate profile already exists", 400);
@@ -28,10 +28,9 @@ export const createCandidate = async (
 };
 
 export const getMyCandidate = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId }).populate(
-    "userId",
-    "name email",
-  );
+  const candidate = await Candidate.findOne({ userId })
+    .populate("userId", "name email")
+    .lean();
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }

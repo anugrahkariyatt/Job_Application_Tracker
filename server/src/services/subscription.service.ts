@@ -10,12 +10,12 @@ import { sendCompanyNewJobEmail } from "./mail.service.js";
 const MAX_SUBSCRIPTIONS = 10;
 
 export const subscribeCompany = async (userId: string, companyId: string) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -34,7 +34,7 @@ export const subscribeCompany = async (userId: string, companyId: string) => {
     );
   }
 
-  const company = await CompanyProfile.findById(companyId);
+  const company = await CompanyProfile.findById(companyId).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -43,7 +43,7 @@ export const subscribeCompany = async (userId: string, companyId: string) => {
   const existingSubscription = await Subscription.findOne({
     candidateId: candidate._id,
     companyId: company._id,
-  });
+  }).lean();
 
   if (existingSubscription) {
     throw new AppError("You are already subscribed to this company", 400);
@@ -58,7 +58,7 @@ export const subscribeCompany = async (userId: string, companyId: string) => {
 };
 
 export const getMySubscriptions = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     return [];
@@ -66,9 +66,11 @@ export const getMySubscriptions = async (userId: string) => {
 
   const subscriptions = await Subscription.find({
     candidateId: candidate._id,
-  }).populate({
-    path: "companyId",
-  });
+  })
+    .populate({
+      path: "companyId",
+    })
+    .lean();
 
   return subscriptions;
 };
@@ -77,7 +79,7 @@ export const unsubscribeCompany = async (
   userId: string,
   subscriptionId: string,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -115,10 +117,12 @@ export const notifyCompanySubscribers = async (
 
     const subscriptions = await Subscription.find({
       companyId: job.companyId,
-    }).populate({
-      path: "candidateId",
-      populate: { path: "userId", select: "name email" },
-    });
+    })
+      .populate({
+        path: "candidateId",
+        populate: { path: "userId", select: "name email" },
+      })
+      .lean();
 
     console.log(`[SUBSCRIPTION SERVICE] Found ${subscriptions.length} subscribers for this company`);
 
@@ -129,7 +133,7 @@ export const notifyCompanySubscribers = async (
     if (job.companyId && typeof job.companyId === "object" && job.companyId.companyName) {
       companyName = job.companyId.companyName;
     } else if (job.companyId) {
-      const company = await CompanyProfile.findById(job.companyId);
+      const company = await CompanyProfile.findById(job.companyId).lean();
       if (company) companyName = company.companyName;
     }
 
@@ -143,7 +147,7 @@ export const notifyCompanySubscribers = async (
       let user = candidate.userId as any;
       if (!user || typeof user !== "object" || !user.email) {
         if (candidate.userId) {
-          user = await User.findById(candidate.userId).select("name email");
+          user = await User.findById(candidate.userId).select("name email").lean();
         }
       }
 

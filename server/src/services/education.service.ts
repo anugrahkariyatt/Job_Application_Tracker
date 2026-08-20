@@ -10,7 +10,7 @@ export const addEducation = async (
   userId: string,
   data: CreateEducationInput,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -25,7 +25,7 @@ export const addEducation = async (
 };
 
 export const getMyEducation = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -33,9 +33,11 @@ export const getMyEducation = async (userId: string) => {
 
   const education = await Education.find({
     candidateId: candidate._id,
-  }).sort({
-    startDate: -1,
-  });
+  })
+    .sort({
+      startDate: -1,
+    })
+    .lean();
 
   return education;
 };
@@ -45,7 +47,7 @@ export const updateEducation = async (
   educationId: string,
   data: UpdateEducationInput,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -75,7 +77,7 @@ export const deleteEducation = async (
   userId: string,
   educationId: string,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);

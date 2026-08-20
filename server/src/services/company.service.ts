@@ -11,7 +11,7 @@ import { sendCompanyRegistrationAdminAlert } from "./mail.service.js";
 
 const notifyAdminsOnRegistration = async (companyName: string, industry: string = "Technology") => {
   try {
-    const admins = await User.find({ role: "admin" });
+    const admins = await User.find({ role: "admin" }).lean();
     for (const admin of admins) {
       // In-app system notification
       await createNotification(
@@ -43,7 +43,7 @@ export const createCompanyService = async (
 ) => {
   const existingCompany = await Company.findOne({
     ownerId,
-  });
+  }).lean();
 
   if (existingCompany) {
     throw new AppError("Recruiter already owns a company", 409);
@@ -62,7 +62,7 @@ export const createCompanyService = async (
 export const getMyCompanyDetails = async (ownerId: string) => {
   const company = await Company.findOne({
     ownerId,
-  });
+  }).lean();
 
   return company;
 };
@@ -166,7 +166,7 @@ export const updateCompanyCoverImage = async (
 };
 
 export const getCompanyByIdService = async (id: string) => {
-  const company = await Company.findById(id);
+  const company = await Company.findById(id).lean();
   if (!company) {
     throw new AppError("Company not found", 404);
   }
@@ -209,7 +209,8 @@ export const getAllPublicCompaniesService = async (query: {
   const companies = await Company.find(filter)
     .sort({ companyName: 1 })
     .skip(skip)
-    .limit(limitNum);
+    .limit(limitNum)
+    .lean();
 
   const totalPages = Math.ceil(totalCount / limitNum);
 

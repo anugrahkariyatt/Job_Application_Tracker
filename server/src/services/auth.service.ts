@@ -363,9 +363,11 @@ export const verifyEmailService = async (token: string) => {
 };
 
 export const getCurrentUser = async (userId: string) => {
-  const user = await User.findById(userId).select(
-    "name email role isVerified isActive preferences subscriptionPlan subscriptionExpiresAt",
-  );
+  const user = await User.findById(userId)
+    .select(
+      "name email role isVerified isActive preferences subscriptionPlan subscriptionExpiresAt",
+    )
+    .lean();
   if (!user) {
     throw new AppError("User not found", 404);
   }

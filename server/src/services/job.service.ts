@@ -13,12 +13,12 @@ import {
 const FREE_RECRUITER_MAX_JOBS = 3;
 
 export const createJob = async (ownerId: string, data: CreateJobInput) => {
-  const user = await User.findById(ownerId);
+  const user = await User.findById(ownerId).lean();
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
-  const company = await Company.findOne({ ownerId });
+  const company = await Company.findOne({ ownerId }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -61,7 +61,7 @@ export const getMyJobs = async (
   ownerId: string,
   filters: { search?: string; status?: string; page?: number; limit?: number } = {}
 ) => {
-  const company = await Company.findOne({ ownerId });
+  const company = await Company.findOne({ ownerId }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -85,16 +85,16 @@ export const getMyJobs = async (
   const jobs = await Job.find(query)
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .lean();
 
   return { jobs, totalCount };
 };
 
 export const getJobById = async (jobId: string) => {
-  const job = await Job.findById(jobId).populate(
-    "companyId",
-    "companyName logo headquarters",
-  );
+  const job = await Job.findById(jobId)
+    .populate("companyId", "companyName logo headquarters")
+    .lean();
 
   if (!job) {
     throw new AppError("Job not found", 404);
@@ -110,7 +110,7 @@ export const updateJob = async (
 ) => {
   const company = await Company.findOne({
     ownerId,
-  });
+  }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -136,7 +136,7 @@ export const updateJob = async (
 export const deleteJob = async (ownerId: string, jobId: string) => {
   const company = await Company.findOne({
     ownerId,
-  });
+  }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -161,7 +161,7 @@ export const updateJobStatus = async (
   jobId: string,
   status: UpdateJobStatusInput["status"],
 ) => {
-  const company = await Company.findOne({ ownerId });
+  const company = await Company.findOne({ ownerId }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -195,24 +195,24 @@ import Education from "../models/education.model.js";
 import { getCandidateAIMatch } from "./gemini.service.js";
 
 export const getCandidateJobAIMatch = async (userId: string, jobId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
 
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
-  const job = await Job.findById(jobId);
+  const job = await Job.findById(jobId).lean();
   if (!job) {
     throw new AppError("Job not found", 404);
   }
 
-  const skills = await Skill.find({ candidateId: candidate._id }).select("name");
-  const experiences = await Experience.find({ candidateId: candidate._id });
-  const educations = await Education.find({ candidateId: candidate._id });
+  const skills = await Skill.find({ candidateId: candidate._id }).select("name").lean();
+  const experiences = await Experience.find({ candidateId: candidate._id }).lean();
+  const educations = await Education.find({ candidateId: candidate._id }).lean();
 
   const candidateData = {
     fullName: user.name,

@@ -98,17 +98,18 @@ export const getAllUsers = async (query: {
     .select("-password")
     .sort({ createdAt: -1 })
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .lean();
 
   const usersWithImages = await Promise.all(
-    users.map(async (u) => {
-      const userObj: any = u.toObject();
+    users.map(async (u: any) => {
+      const userObj: any = { ...u };
       let profileImage = null;
       if (u.role === "candidate") {
-        const candidate = await Candidate.findOne({ userId: u._id }).select("profileImage");
+        const candidate = await Candidate.findOne({ userId: u._id }).select("profileImage").lean();
         if (candidate?.profileImage) profileImage = typeof candidate.profileImage === "object" ? candidate.profileImage.url || "" : candidate.profileImage;
       } else if (u.role === "recruiter") {
-        const company = await CompanyProfile.findOne({ ownerId: u._id }).select("logo");
+        const company = await CompanyProfile.findOne({ ownerId: u._id }).select("logo").lean();
         if (company?.logo) profileImage = typeof company.logo === "object" ? company.logo.url || "" : company.logo;
       }
       userObj.profileImage = profileImage;
@@ -356,7 +357,7 @@ export const getAllJobs = async (query: {
   if (query.search) {
     const searchRegex = new RegExp(query.search, "i");
     // Find matching companies
-    const matchedCompanies = await CompanyProfile.find({ companyName: searchRegex }).select("_id");
+    const matchedCompanies = await CompanyProfile.find({ companyName: searchRegex }).select("_id").lean();
     const companyIds = matchedCompanies.map((c) => c._id);
     
     filter.$or = [
@@ -370,13 +371,14 @@ export const getAllJobs = async (query: {
       path: "companyId",
       select: "companyName logo location industry",
     })
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
   const jobsWithCount = await Promise.all(
-    jobs.map(async (job) => {
+    jobs.map(async (job: any) => {
       const appsCount = await Application.countDocuments({ jobId: job._id });
       return {
-        ...job.toObject(),
+        ...job,
         applicationsCount: appsCount,
       };
     })
@@ -434,7 +436,8 @@ export const getAllApplications = async (query: {
     })
     .populate("jobId")
     .populate("companyId")
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .lean();
 
   if (query.search) {
     const searchLower = query.search.toLowerCase();
@@ -454,16 +457,18 @@ export const getAllApplications = async (query: {
 };
 
 export const getJobByIdForAdmin = async (jobId: string) => {
-  const job = await Job.findById(jobId).populate({
-    path: "companyId",
-    select: "companyName logo location industry verified description website",
-  });
+  const job: any = await Job.findById(jobId)
+    .populate({
+      path: "companyId",
+      select: "companyName logo location industry verified description website",
+    })
+    .lean();
   if (!job) {
     throw new AppError("Job not found", 404);
   }
   const appsCount = await Application.countDocuments({ jobId: job._id });
   return {
-    ...job.toObject(),
+    ...job,
     applicationsCount: appsCount,
   };
 };
@@ -483,7 +488,8 @@ export const getApplicationByIdForAdmin = async (applicationId: string) => {
       path: "jobId",
       select: "title description location salaryMin salaryMax employmentType experienceLevel requirements responsibilities",
     })
-    .populate("companyId");
+    .populate("companyId")
+    .lean();
 
   if (!application) {
     throw new AppError("Application not found", 404);
@@ -526,10 +532,12 @@ export const updateApplicationStatusByAdmin = async (
 };
 
 export const getCompanyByIdForAdmin = async (companyId: string) => {
-  const company = await CompanyProfile.findById(companyId).populate({
-    path: "ownerId",
-    select: "name email",
-  });
+  const company: any = await CompanyProfile.findById(companyId)
+    .populate({
+      path: "ownerId",
+      select: "name email",
+    })
+    .lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
@@ -537,7 +545,7 @@ export const getCompanyByIdForAdmin = async (companyId: string) => {
 
   const jobsCount = await Job.countDocuments({ companyId: company._id });
   return {
-    ...company.toObject(),
+    ...company,
     jobsPosted: jobsCount,
   };
 };

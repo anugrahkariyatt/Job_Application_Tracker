@@ -79,7 +79,7 @@ export const applyForJob = async (userId: string, jobId: string) => {
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
   if (!candidate) {
     return [];
   }
@@ -99,10 +99,11 @@ export const FetchAllAppliedApplications = async (userId: string) => {
           select: "preferences",
         },
       },
-    });
+    })
+    .lean();
 
   return applications.map((app: any) => {
-    const appObj = app.toObject();
+    const appObj = { ...app };
     const recruiterPrefs = appObj.jobId?.companyId?.ownerId?.preferences;
     appObj.allowWithdraw = recruiterPrefs?.candidateWithdrew !== false;
     return appObj;
@@ -163,13 +164,13 @@ export const deleteApplication = async (
 
 // recruiter
 export const getApplicationsByJob = async (userId: string, jobId: string) => {
-  const company = await CompanyProfile.findOne({ ownerId: userId });
+  const company = await CompanyProfile.findOne({ ownerId: userId }).lean();
 
   if (!company) {
     throw new AppError("Company not found", 404);
   }
 
-  const job = await Job.findById(jobId);
+  const job = await Job.findById(jobId).lean();
 
   if (!job) {
     throw new AppError("Job not found", 404);
@@ -181,7 +182,9 @@ export const getApplicationsByJob = async (userId: string, jobId: string) => {
 
   const applications = await Application.find({
     jobId: job._id,
-  }).populate("candidateId");
+  })
+    .populate("candidateId")
+    .lean();
 
   return applications;
 };
@@ -352,19 +355,19 @@ export const getApplicationAIScreening = async (
 
   console.log(`[AI SCREENING SERVICE] No cached report found. Gathering candidate & job data for Gemini AI...`);
 
-  const candidate = await Candidate.findById(application.candidateId);
+  const candidate = await Candidate.findById(application.candidateId).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
   }
 
-  const user = await User.findById(candidate.userId);
+  const user = await User.findById(candidate.userId).lean();
 
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
-  const job = await Job.findById(application.jobId);
+  const job = await Job.findById(application.jobId).lean();
 
   if (!job) {
     throw new AppError("Job not found", 404);
@@ -372,15 +375,17 @@ export const getApplicationAIScreening = async (
 
   const skills = await Skill.find({
     candidateId: candidate._id,
-  }).select("name");
+  })
+    .select("name")
+    .lean();
 
   const experiences = await Experience.find({
     candidateId: candidate._id,
-  });
+  }).lean();
 
   const educations = await Education.find({
     candidateId: candidate._id,
-  });
+  }).lean();
 
   const candidateData = {
     fullName: user.name,

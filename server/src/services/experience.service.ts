@@ -10,7 +10,7 @@ export const addExperience = async (
   userId: string,
   data: CreateExperienceInput,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -21,7 +21,7 @@ export const addExperience = async (
     companyName: data.companyName,
     jobTitle: data.jobTitle,
     startDate: data.startDate,
-  });
+  }).lean();
 
   if (existingExperience) {
     throw new AppError("Experience already exists", 400);
@@ -36,7 +36,7 @@ export const addExperience = async (
 };
 
 export const getMyExperience = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -44,9 +44,11 @@ export const getMyExperience = async (userId: string) => {
 
   const experience = await Experience.find({
     candidateId: candidate._id,
-  }).sort({
-    startDate: -1,
-  });
+  })
+    .sort({
+      startDate: -1,
+    })
+    .lean();
 
   return experience;
 };
@@ -56,7 +58,7 @@ export const updateExperience = async (
   experienceId: string,
   data: UpdateExperienceInput,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -83,7 +85,7 @@ export const deleteExperience = async (
   userId: string,
   experienceId: string,
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);

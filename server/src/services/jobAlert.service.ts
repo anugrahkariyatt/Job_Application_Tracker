@@ -17,7 +17,7 @@ export const createJobAlert = async (
   remote: boolean,
   frequency: "Daily" | "Weekly" | "Monthly" = "Daily",
 ) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -47,7 +47,7 @@ export const createJobAlert = async (
 };
 
 export const getMyJobAlerts = async (userId: string) => {
-  const candidate = await Candidate.findOne({ userId });
+  const candidate = await Candidate.findOne({ userId }).lean();
 
   if (!candidate) {
     return [];
@@ -55,7 +55,7 @@ export const getMyJobAlerts = async (userId: string) => {
 
   const jobAlerts = await JobAlert.find({
     candidateId: candidate._id,
-  });
+  }).lean();
 
   return jobAlerts;
 };

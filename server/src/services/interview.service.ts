@@ -224,13 +224,13 @@ export const getMyInterviews = async (
   const filter: any = {};
 
   if (role === "candidate") {
-    const candidate = await Candidate.findOne({ userId });
+    const candidate = await Candidate.findOne({ userId }).lean();
     if (!candidate) {
       return [];
     }
     filter.candidateId = candidate._id;
   } else if (role === "recruiter") {
-    const company = await Company.findOne({ ownerId: userId });
+    const company = await Company.findOne({ ownerId: userId }).lean();
     if (!company) {
       return [];
     }
@@ -262,7 +262,8 @@ export const getMyInterviews = async (
     return await Interview.find(filter)
       .populate("jobId", "title location jobType")
       .populate("companyId", "companyName logo industry")
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .lean();
   } else if (role === "recruiter") {
     return await Interview.find(filter)
       .populate("jobId", "title location jobType")
@@ -270,7 +271,8 @@ export const getMyInterviews = async (
         path: "candidateId",
         populate: { path: "userId", select: "name email" },
       })
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .lean();
   }
   return [];
 };

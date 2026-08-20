@@ -8,7 +8,7 @@ export const createNotification = async (
   message: string,
   type: "APPLICATION" | "JOB_ALERT" | "SUBSCRIPTION" | "SYSTEM",
 ) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -71,7 +71,7 @@ export const createNotification = async (
 };
 
 export const getMyNotifications = async (userId: string) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -79,9 +79,11 @@ export const getMyNotifications = async (userId: string) => {
 
   const notifications = await Notification.find({
     userId: user._id,
-  }).sort({
-    createdAt: -1,
-  });
+  })
+    .sort({
+      createdAt: -1,
+    })
+    .lean();
 
   return notifications;
 };
@@ -90,7 +92,7 @@ export const markNotificationAsRead = async (
   userId: string,
   notificationId: string,
 ) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
 
   if (!user) {
     throw new AppError("User not found", 404);
@@ -124,7 +126,7 @@ export const deleteNotification = async (
   userId: string,
   notificationId: string,
 ) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
 
   if (!user) {
     throw new AppError("User not found", 404);
