@@ -48,15 +48,15 @@ export const updateCandidate = async (
     throw new AppError("Candidate profile not found", 404);
   }
 
-  if (data.fullName) {
-    await User.findByIdAndUpdate(userId, {
-      name: data.fullName,
-    });
+  const { fullName, ...candidateUpdateData } = data;
 
-    delete data.fullName;
+  if (fullName) {
+    await User.findByIdAndUpdate(userId, {
+      name: fullName,
+    });
   }
 
-  Object.assign(candidate, data);
+  Object.assign(candidate, candidateUpdateData);
 
   await candidate.save();
 
