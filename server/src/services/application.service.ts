@@ -526,8 +526,13 @@ export const getRecruiterApplicationsService = async (
     { $unwind: { path: "$jobId", preserveNullAndEmptyArrays: true } },
   ];
 
-  if (search) {
-    const searchRegex = new RegExp(search as string, "i");
+  let sortStage: any = { createdAt: -1 };
+
+  if (search && (search as string).trim()) {
+    const searchTrimmed = (search as string).trim();
+    const searchRegex = new RegExp(searchTrimmed, "i");
+    const prefixRegex = new RegExp("^" + searchTrimmed, "i");
+
     pipeline.push({
       $match: {
         $or: [
@@ -539,13 +544,33 @@ export const getRecruiterApplicationsService = async (
         ],
       },
     });
+
+    pipeline.push({
+      $addFields: {
+        searchWeight: {
+          $cond: {
+            if: { $regexMatch: { input: { $ifNull: ["$candidateUser.name", ""] }, regex: prefixRegex } },
+            then: 1,
+            else: {
+              $cond: {
+                if: { $regexMatch: { input: { $ifNull: ["$candidateUser.name", ""] }, regex: searchRegex } },
+                then: 2,
+                else: 3,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    sortStage = { searchWeight: 1, createdAt: -1 };
   }
 
   pipeline.push({
     $facet: {
       metadata: [{ $count: "totalCount" }],
       data: [
-        { $sort: { createdAt: -1 } },
+        { $sort: sortStage },
         { $skip: skipNum },
         { $limit: limitNum },
         {

@@ -183,21 +183,12 @@ export const getAllPublicCompaniesService = async (query: {
   const { search, industry, location, page, limit } = query;
   const filter: any = { isActive: { $ne: false }, verified: true };
 
-  if (search) {
-    const regex = new RegExp(search, "i");
-    filter.$or = [
-      { companyName: regex },
-      { description: regex },
-      { industry: regex },
-    ];
-  }
-
   if (industry && industry !== "All" && industry !== "all") {
     filter.industry = industry;
   }
 
-  if (location && location !== "all") {
-    const regex = new RegExp(location, "i");
+  if (location && location !== "all" && location.trim()) {
+    const regex = new RegExp(location.trim(), "i");
     filter.headquarters = regex;
   }
 
@@ -205,13 +196,94 @@ export const getAllPublicCompaniesService = async (query: {
   const limitNum = limit ? Math.max(1, Number(limit)) : 9;
   const skip = (pageNum - 1) * limitNum;
 
-  const totalCount = await Company.countDocuments(filter);
-  const companies = await Company.find(filter)
-    .sort({ companyName: 1 })
-    .skip(skip)
-    .limit(limitNum)
-    .lean();
+  const pipeline: any[] = [
+    { $match: filter },
+    {
+      $lookup: {
+        from: "jobs",
+        let: { compId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$companyId", "$$compId"] },
+                  { $eq: ["$status", "Open"] },
+                ],
+              },
+            },
+          },
+          { $count: "openCount" },
+        ],
+        as: "openJobsCountData",
+      },
+    },
+    {
+      $addFields: {
+        openJobsCount: {
+          $ifNull: [{ $arrayElemAt: ["$openJobsCountData.openCount", 0] }, 0],
+        },
+      },
+    },
+    {
+      $project: {
+        openJobsCountData: 0,
+      },
+    },
+  ];
 
+  let sortStage: any = { companyName: 1 };
+
+  if (search && search.trim()) {
+    const searchTrimmed = search.trim();
+    const regex = new RegExp(searchTrimmed, "i");
+    const prefixRegex = new RegExp("^" + searchTrimmed, "i");
+
+    pipeline.push({
+      $match: {
+        $or: [
+          { companyName: regex },
+          { description: regex },
+          { industry: regex },
+        ],
+      },
+    });
+
+    pipeline.push({
+      $addFields: {
+        searchWeight: {
+          $cond: {
+            if: { $regexMatch: { input: "$companyName", regex: prefixRegex } },
+            then: 1,
+            else: {
+              $cond: {
+                if: { $regexMatch: { input: "$companyName", regex: regex } },
+                then: 2,
+                else: 3,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    sortStage = { searchWeight: 1, companyName: 1 };
+  }
+
+  pipeline.push({
+    $facet: {
+      metadata: [{ $count: "totalCount" }],
+      companies: [
+        { $sort: sortStage },
+        { $skip: skip },
+        { $limit: limitNum },
+      ],
+    },
+  });
+
+  const [facetResult] = await Company.aggregate(pipeline);
+  const totalCount = facetResult?.metadata[0]?.totalCount || 0;
+  const companies = facetResult?.companies || [];
   const totalPages = Math.ceil(totalCount / limitNum);
 
   return {
