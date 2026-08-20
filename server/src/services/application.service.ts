@@ -164,7 +164,11 @@ export const deleteApplication = async (
 };
 
 // recruiter
-export const getApplicationsByJob = async (userId: string, jobId: string) => {
+export const getApplicationsByJob = async (
+  userId: string,
+  jobId: string,
+  query: { page?: string | number; limit?: string | number } = {},
+) => {
   const company = await CompanyProfile.findOne({ ownerId: userId }).lean();
 
   if (!company) {
@@ -181,13 +185,30 @@ export const getApplicationsByJob = async (userId: string, jobId: string) => {
     throw new AppError("You are not authorized to access this job", 403);
   }
 
+  const pageNum = query.page ? Math.max(1, Number(query.page)) : 1;
+  const limitNum = query.limit ? Math.max(1, Number(query.limit)) : 10;
+  const skip = (pageNum - 1) * limitNum;
+
+  const totalCount = await Application.countDocuments({ jobId: job._id });
   const applications = await Application.find({
     jobId: job._id,
   })
-    .populate("candidateId")
+    .populate({
+      path: "candidateId",
+      populate: { path: "userId", select: "name email" },
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limitNum)
     .lean();
 
-  return applications;
+  return {
+    applications,
+    totalCount,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(totalCount / limitNum),
+  };
 };
 export const updateApplicationStatus = async (
   userId: string,

@@ -111,6 +111,7 @@ export const FetchApplicantByJobIdController = async (
     const result = await getApplicationsByJob(
       req.user!.id,
       validation.data.jobId,
+      req.query,
     );
 
     return res.status(200).json({

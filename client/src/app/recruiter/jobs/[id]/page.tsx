@@ -31,9 +31,11 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
       }
 
       try {
-        const appResponse = await axiosInstance.get(`/api/application/job/${id}`);
+        const appResponse = await axiosInstance.get(`/api/application/job/${id}?limit=5`);
         if (appResponse.data?.success) {
-          setApplicants(appResponse.data.data);
+          const resData = appResponse.data.data;
+          const appsList = Array.isArray(resData) ? resData : resData?.applications || [];
+          setApplicants(appsList);
         }
       } catch (err) {
         console.error('Error fetching job applicants:', err);
