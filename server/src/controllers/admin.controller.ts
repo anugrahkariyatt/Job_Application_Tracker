@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { getCache, setCache, invalidateCachePattern } from "../config/redis.config.js";
 import { z } from "zod";
 import {
   getUserSchema,
@@ -29,7 +30,23 @@ export const getDashboardController = async (
   next: NextFunction,
 ) => {
   try {
+    const cacheKey = "admin:dashboard:stats";
+
+    const cachedDashboard = await getCache(cacheKey);
+    if (cachedDashboard) {
+      console.log(`[REDIS HIT] Admin dashboard stats served from Redis cache for key: ${cacheKey}`);
+      return res.status(200).json({
+        success: true,
+        message: "Dashboard fetched successfully (Cached)",
+        data: cachedDashboard,
+      });
+    }
+
+    console.log(`[REDIS MISS] Admin dashboard stats not in Redis cache. Running heavy aggregations for key: ${cacheKey}`);
+
     const result = await getDashboard();
+
+    await setCache(cacheKey, result, 60);
 
     return res.status(200).json({
       success: true,
@@ -90,6 +107,8 @@ export const updateUserStatusController = async (
       bodyValidation.data.isActive,
     );
 
+    await invalidateCachePattern("admin:*");
+
     return res.status(200).json({
       success: true,
       message: "User status updated successfully",
@@ -148,6 +167,8 @@ export const updateCompanyVerificationController = async (
       bodyValidation.data.verified,
     );
 
+    await invalidateCachePattern("admin:*");
+
     return res.status(200).json({
       success: true,
       message: "Company verification updated successfully",
@@ -187,6 +208,8 @@ export const updateCompanyStatusController = async (
       bodyValidation.data.isActive,
     );
 
+    await invalidateCachePattern("admin:*");
+
     return res.status(200).json({
       success: true,
       message: "Company status updated successfully",
@@ -213,6 +236,8 @@ export const deleteUserController = async (
 
     await deleteUserByAdmin(paramsValidation.data.userId);
 
+    await invalidateCachePattern("admin:*");
+
     return res.status(200).json({
       success: true,
       message: "User deleted successfully",
@@ -237,6 +262,8 @@ export const deleteCompanyController = async (
     }
 
     await deleteCompanyService(paramsValidation.data.companyId);
+
+    await invalidateCachePattern("admin:*");
 
     return res.status(200).json({
       success: true,

@@ -9,6 +9,7 @@ import {
   UpdateJobInput,
   UpdateJobStatusInput,
 } from "../validations/jobs.validation.js";
+import { getCache, setCache, invalidateCachePattern } from "../config/redis.config.js";
 
 const FREE_RECRUITER_MAX_JOBS = 3;
 
@@ -53,6 +54,8 @@ export const createJob = async (ownerId: string, data: CreateJobInput) => {
     }
   })();
 
+  await invalidateCachePattern("jobs:*");
+
   return job;
 };
 
@@ -81,6 +84,14 @@ export const getMyJobs = async (
   const limit = Number(filters.limit) || 9;
   const skip = (page - 1) * limit;
 
+  const cacheKey = `jobs:recruiter:${company._id}:${filters.status || "all"}:${filters.search || "none"}:${page}:${limit}`;
+  const cached = await getCache<{ jobs: any[]; totalCount: number }>(cacheKey);
+  if (cached) {
+    console.log(`[REDIS HIT] Data taken from Redis cache for key: ${cacheKey}`);
+    return cached;
+  }
+
+  console.log(`[REDIS MISS] Data not in Redis cache. Fetching from MongoDB for key: ${cacheKey}`);
   const totalCount = await Job.countDocuments(query);
   const jobs = await Job.find(query)
     .sort({ createdAt: -1 })
@@ -88,10 +99,21 @@ export const getMyJobs = async (
     .limit(limit)
     .lean();
 
-  return { jobs, totalCount };
+  const result = { jobs, totalCount };
+  await setCache(cacheKey, result, 300);
+
+  return result;
 };
 
 export const getJobById = async (jobId: string) => {
+  const cacheKey = `jobs:details:${jobId}`;
+  const cached = await getCache<any>(cacheKey);
+  if (cached) {
+    console.log(`[REDIS HIT] Data taken from Redis cache for key: ${cacheKey}`);
+    return cached;
+  }
+
+  console.log(`[REDIS MISS] Data not in Redis cache. Fetching from MongoDB for key: ${cacheKey}`);
   const job = await Job.findById(jobId)
     .populate("companyId", "companyName logo headquarters")
     .lean();
@@ -100,6 +122,7 @@ export const getJobById = async (jobId: string) => {
     throw new AppError("Job not found", 404);
   }
 
+  await setCache(cacheKey, job, 300);
   return job;
 };
 
@@ -129,6 +152,7 @@ export const updateJob = async (
   Object.assign(job, data);
 
   await job.save();
+  await invalidateCachePattern("jobs:*");
 
   return job;
 };
@@ -152,6 +176,7 @@ export const deleteJob = async (ownerId: string, jobId: string) => {
     throw new AppError("You are not authorized to delete this job", 403);
   }
   await job.deleteOne();
+  await invalidateCachePattern("jobs:*");
 
   return;
 };
@@ -184,6 +209,7 @@ export const updateJobStatus = async (
   job.status = status;
 
   await job.save();
+  await invalidateCachePattern("jobs:*");
 
   return job;
 };
@@ -195,6 +221,15 @@ import Education from "../models/education.model.js";
 import { getCandidateAIMatch } from "./gemini.service.js";
 
 export const getCandidateJobAIMatch = async (userId: string, jobId: string) => {
+  const cacheKey = `ai:match:${userId}:${jobId}`;
+  const cached = await getCache<any>(cacheKey);
+  if (cached) {
+    console.log(`[REDIS HIT] Candidate AI match served from Redis cache for key: ${cacheKey}`);
+    return cached;
+  }
+
+  console.log(`[REDIS MISS] Candidate AI match not in Redis cache. Running Gemini AI for key: ${cacheKey}`);
+
   const candidate = await Candidate.findOne({ userId }).lean();
   if (!candidate) {
     throw new AppError("Candidate profile not found", 404);
@@ -236,5 +271,8 @@ export const getCandidateJobAIMatch = async (userId: string, jobId: string) => {
 
   console.log(`[CANDIDATE AI MATCH SERVICE] Running Gemini AI match for Candidate "${user.name}" against Job "${job.title}"...`);
   const aiResult = await getCandidateAIMatch(candidateData, jobData);
+
+  await setCache(cacheKey, aiResult, 86400);
+
   return aiResult;
 };

@@ -15,6 +15,7 @@ import { getRecruiterAIMatch } from "./gemini.service.js";
 import Skill from "../models/skill.model.js";
 import Experience from "../models/experience.model.js";
 import Education from "../models/education.model.js";
+import { getCache, setCache, invalidateCachePattern } from "../config/redis.config.js";
 export const applyForJob = async (userId: string, jobId: string) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -77,6 +78,8 @@ export const applyForJob = async (userId: string, jobId: string) => {
     }
   });
 
+  await invalidateCachePattern("candidate:applications:*");
+
   return application;
 };
 export const FetchAllAppliedApplications = async (userId: string) => {
@@ -84,6 +87,15 @@ export const FetchAllAppliedApplications = async (userId: string) => {
   if (!candidate) {
     return [];
   }
+
+  const cacheKey = `candidate:applications:${candidate._id}`;
+  const cached = await getCache<any[]>(cacheKey);
+  if (cached) {
+    console.log(`[REDIS HIT] Candidate applied applications served from Redis cache for key: ${cacheKey}`);
+    return cached;
+  }
+
+  console.log(`[REDIS MISS] Candidate applied applications not in Redis cache for key: ${cacheKey}`);
 
   const applications = await Application.find({
     candidateId: candidate._id,
@@ -103,12 +115,16 @@ export const FetchAllAppliedApplications = async (userId: string) => {
     })
     .lean();
 
-  return applications.map((app: any) => {
+  const result = applications.map((app: any) => {
     const appObj = { ...app };
     const recruiterPrefs = appObj.jobId?.companyId?.ownerId?.preferences;
     appObj.allowWithdraw = recruiterPrefs?.candidateWithdrew !== false;
     return appObj;
   });
+
+  await setCache(cacheKey, result, 300);
+
+  return result;
 };
 
 export const deleteApplication = async (
@@ -160,6 +176,7 @@ export const deleteApplication = async (
   }
 
   await application.deleteOne();
+  await invalidateCachePattern("candidate:applications:*");
   return;
 };
 
@@ -352,7 +369,14 @@ export const getApplicationAIScreening = async (
   userId: string,
   applicationId: string,
 ) => {
-  console.log(`[AI SCREENING SERVICE] Fetching AI screening for Application ID: ${applicationId}`);
+  const cacheKey = `ai:screening:${applicationId}`;
+  const cached = await getCache<any>(cacheKey);
+  if (cached) {
+    console.log(`[REDIS HIT] Recruiter AI screening report served from Redis cache for key: ${cacheKey}`);
+    return cached;
+  }
+
+  console.log(`[REDIS MISS] Recruiter AI screening report not in Redis cache for key: ${cacheKey}`);
 
   const company = await CompanyProfile.findOne({ ownerId: userId });
 
@@ -372,6 +396,7 @@ export const getApplicationAIScreening = async (
 
   if (application.aiScreening?.generatedAt) {
     console.log(`[AI SCREENING SERVICE] Returning cached aiScreening report from database for App ID: ${applicationId} (Score: ${application.aiScreening.score}%)`);
+    await setCache(cacheKey, application.aiScreening, 86400);
     return application.aiScreening;
   }
 
@@ -457,6 +482,8 @@ export const getApplicationAIScreening = async (
 
   await application.save();
   console.log(`[AI SCREENING SERVICE SUCCESS] Saved new Gemini screening report to database for App ID: ${applicationId}`);
+
+  await setCache(cacheKey, application.aiScreening, 86400);
 
   return application.aiScreening;
 };
