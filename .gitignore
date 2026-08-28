@@ -7,11 +7,14 @@ server/node_modules/
 # ==========================
 # Environment Variables
 # ==========================
+.env
+.env.*
+*.env
 client/.env
 client/.env.*
 server/.env
 server/.env.*
-
+!*.example
 # ==========================
 # Next.js
 # ==========================

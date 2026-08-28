@@ -47,7 +47,7 @@ export function GoogleAuthButton({
         }
       } catch (error: any) {
         toast.error(
-          error.response?.data?.message || "Google authentication failed."
+          error.response?.data?.message || "Google authentication failed.",
         );
       }
     },
@@ -62,7 +62,7 @@ export function GoogleAuthButton({
       onClick={() => handleGoogleLogin()}
       className={cn(
         "flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 font-medium text-foreground transition hover:bg-accent cursor-pointer shadow-xs",
-        className
+        className,
       )}
     >
       <FcGoogle size={22} />

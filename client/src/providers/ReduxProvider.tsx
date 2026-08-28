@@ -8,14 +8,11 @@ interface ReduxProviderProps {
   children: React.ReactNode;
 }
 
-export default function ReduxProvider({
-  children,
-}: ReduxProviderProps) {
- 
+export default function ReduxProvider({ children }: ReduxProviderProps) {
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+
   return (
-    <GoogleOAuthProvider
-      clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
-    >
+    <GoogleOAuthProvider clientId={googleClientId}>
       <Provider store={store}>{children}</Provider>
     </GoogleOAuthProvider>
   );

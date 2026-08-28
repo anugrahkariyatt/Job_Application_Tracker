@@ -137,7 +137,10 @@ export const processScheduledJobAlertsController = async (
   next: NextFunction,
 ) => {
   try {
-    const cronSecret = process.env.CRON_SECRET || process.env.N8N_CRON_SECRET;
+    const cronSecret =
+      process.env.CRON_SECRET ||
+      process.env.N8N_CRON_SECRET ||
+      process.env.cronSecret;
     if (cronSecret) {
       const providedSecret =
         req.headers["x-cron-secret"] || req.headers["x-n8n-secret"];

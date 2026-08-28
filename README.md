@@ -6,7 +6,6 @@
 ![Express](https://img.shields.io/badge/Express.js-Backend-000000?logo=express)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Database-47A248?logo=mongodb)
 
-
 A modern **full-stack Job Application Tracker** built with **Next.js, Express.js, MongoDB, and TypeScript**. The platform enables candidates to discover and apply for jobs, recruiters to manage job postings and applicants, and administrators to oversee the platform.
 
 ---
@@ -14,6 +13,7 @@ A modern **full-stack Job Application Tracker** built with **Next.js, Express.js
 # Features
 
 ## Candidate
+
 - Secure Email & Google Authentication
 - Complete Candidate Profile
 - Search & Filter Jobs
@@ -26,6 +26,7 @@ A modern **full-stack Job Application Tracker** built with **Next.js, Express.js
 - Dashboard
 
 ## Recruiter
+
 - Company Profile Management
 - Create, Update & Delete Jobs
 - View Applicants
@@ -33,6 +34,7 @@ A modern **full-stack Job Application Tracker** built with **Next.js, Express.js
 - Recruiter Dashboard
 
 ## Admin
+
 - Dashboard
 - User Management
 - Company Management
@@ -46,6 +48,7 @@ A modern **full-stack Job Application Tracker** built with **Next.js, Express.js
 # Tech Stack
 
 ## Frontend
+
 - Next.js 16 (App Router)
 - React 19
 - TypeScript
@@ -59,6 +62,7 @@ A modern **full-stack Job Application Tracker** built with **Next.js, Express.js
 - Lucide React
 
 ## Backend
+
 - Node.js
 - Express.js
 - TypeScript
@@ -131,7 +135,9 @@ job-application-tracker
 - HTTP-only Cookies
 - Role-Based Authorization
 - Protected Routes
+
 ---
+
 # Workflow Automation
 
 This project integrates **n8n** for background automation and transactional email processing.
@@ -179,16 +185,63 @@ Track Application
 
 ---
 
-# Installation
+# Installation & Setup
 
-## Clone
+## Option 1: Quick Start with Docker (Recommended)
+
+Run the entire application (Next.js Client, Express Server, MongoDB, Redis, and n8n) with a single command:
+
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/anugrahkariyatt/Job_Application_Tracker
-cd job-application-tracker
+git clone https://github.com/anugrahkariyatt/Job_Application_Tracker.git
+cd Job_Application_Tracker
 ```
 
-## Backend
+### 2. Configure Environment Variables
+
+Create `.env` files in both `server/` and `client/` directories:
+
+- **Server**: Create `server/.env` (see template below)
+- **Client**: Create `client/.env` (see template below)
+
+### 3. Start All Containers
+
+```bash
+docker compose up --build -d
+```
+
+### 4. Access the Services
+
+| Service              | URL                                            | Description            |
+| :------------------- | :--------------------------------------------- | :--------------------- |
+| **Frontend Web App** | [http://localhost:3000](http://localhost:3000) | Next.js Client         |
+| **Backend REST API** | [http://localhost:5000](http://localhost:5000) | Express.js API         |
+| **n8n Automation**   | [http://localhost:5678](http://localhost:5678) | Workflow Engine Editor |
+| **MongoDB**          | `localhost:27017`                              | Database Container     |
+| **Redis**            | `localhost:6380`                               | In-Memory Cache Store  |
+
+### Useful Docker Commands
+
+```bash
+# View live logs for all services
+docker compose logs -f
+
+# View live logs for server only
+docker compose logs -f server
+
+# Stop all containers (data is safely preserved in Docker volumes)
+docker compose down
+
+# Rebuild containers after code modifications
+docker compose up --build -d
+```
+
+---
+
+## Option 2: Manual Local Setup (Without Docker)
+
+### 1. Backend Setup
 
 ```bash
 cd server
@@ -196,7 +249,7 @@ npm install
 npm run dev
 ```
 
-## Frontend
+### 2. Frontend Setup
 
 ```bash
 cd client
@@ -204,53 +257,65 @@ npm install
 npm run dev
 ```
 
-## n8n
+### 3. n8n Automation Setup
 
-1. Import the workflow from the `n8n/` directory.
-2. Configure the required environment variables.
-3. Activate the workflow.
-4. Update the backend webhook URL if necessary.
+1. Install and start n8n: `npx n8n`
+2. Import the workflow from the `n8n/` directory.
+3. Configure your Brevo credentials and activate the workflow.
 
 ---
 
 # Environment Variables
 
-## Server (.env)
+## Server (`server/.env`)
 
 ```env
-PORT=
-NODE_ENV=
-CLIENT_URL=
+CLIENT_URL=http://localhost:3000
+
 MONGODB_URI=
-
-ACCESS_TOKEN_SECRET=
-ACCESS_TOKEN_EXPIRES=
-
-REFRESH_TOKEN_SECRET=
-REFRESH_TOKEN_EXPIRES=
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
+
+ACCESS_TOKEN_SECRET=your-access-token-secret
+
+REFRESH_TOKEN_SECRET=your-refresh-token-secret
+
+PASSWORD_VERIFICATION_SECRET=your-password-vefification-token-secret
+
+PASSWORD_RESET_TOKEN_SECRET=your-password-reset-token-secret
+
+EMAIL_VERIFICATION_TOKEN_SECRET=your_secret_here
+
+EMAIL_USER=
+EMAIL_PASS=
+
+
+N8N_WEBHOOK_URL=http://localhost:5678/webhook
+#https://n8n-service-production-e73d.up.railway.app/webhook
+# http://localhost:5678/webhook
+
+STRIPE_SECRET_KEY=
+
+GOOGLE_CLIENT_ID=
+
+GEMINI_API_KEY=
+
+
+cronSecret=
+
+N8N_WEBHOOK_SECRET=your_super_secret_webhook_key_2026
+
+REDIS_URL=redis://127.0.0.1:6380
+
 ```
 
-## Client (.env.local)
+## Client (`client/.env`)
 
 ```env
-NEXT_PUBLIC_API_URL=
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=
-```
-
-## n8n (.env)
-
-```env
-BREVO_API_KEY=
-SENDER_EMAIL=
-API_URL=
-CRON_SECRET=
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 ```
 
 ---
@@ -260,32 +325,30 @@ CRON_SECRET=
 ## Client
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
+npm run dev     # Start Next.js development server
+npm run build   # Build production Next.js bundle
+npm run start   # Start production Next.js server
+npm run lint    # Run ESLint checks
 ```
 
 ## Server
 
 ```bash
-npm run dev
-npm run build
-npm run start
+npm run dev     # Start development server with nodemon / tsx
+npm run build   # Compile TypeScript to dist/
+npm run start   # Start compiled production server
 ```
 
 ---
 
 # Future Enhancements
 
-- Docker & Docker Compose
-- Redis Caching
-- BullMQ Queue
-- WebSocket Notifications
-- AI Resume Review
-- AI Job Recommendations
-- Interview Scheduling
-- Resume Parsing
+- [x] Docker & Docker Compose Multi-Container Orchestration
+- [x] Redis Caching & In-Memory Store
+- [x] AI Resume Review & Match Scoring (Gemini AI)
+- [ ] WebSocket Real-Time Notifications
+- [ ] AI Personalized Job Recommendations
+- [ ] Automated Interview Scheduling
 
 ---
 
